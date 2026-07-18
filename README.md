@@ -140,6 +140,10 @@ See [docs/project-guide.md](docs/project-guide.md) for the public product model,
 
 ## How Codex was used
 
+### How GPT-5.6 was used
+
+GPT-5.6 was selected inside Codex for long-context reasoning across financial edge cases. It helped distinguish transfers from actual spending, preserve auditability, and turn ambiguous cases into explicit domain rules and regression tests.
+
 Codex was used throughout development as a collaborative engineering agent to:
 
 - turn real-world financial inconsistencies into explicit domain rules;

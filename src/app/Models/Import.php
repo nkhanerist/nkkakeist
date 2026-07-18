@@ -61,6 +61,16 @@ class Import extends Model
         return $this->hasMany(AccountSnapshot::class);
     }
 
+    public function investmentPositionSnapshots(): HasMany
+    {
+        return $this->hasMany(InvestmentPositionSnapshot::class);
+    }
+
+    public function assetHistorySnapshots(): HasMany
+    {
+        return $this->hasMany(AssetHistorySnapshot::class);
+    }
+
     protected function casts(): array
     {
         return [

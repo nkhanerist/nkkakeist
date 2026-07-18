@@ -29,6 +29,11 @@ export default function AuthenticatedLayout({
             active: route().current('accounts.*'),
         },
         {
+            label: '証券',
+            href: route('securities.index'),
+            active: route().current('securities.*'),
+        },
+        {
             label: 'カテゴリ',
             href: route('categories.index'),
             active: route().current('categories.*'),
@@ -64,7 +69,7 @@ export default function AuthenticatedLayout({
                     <div className="flex items-center justify-between px-6 py-5 lg:block">
                         <Link href={route('dashboard')} className="space-y-1">
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                NKKakeist
+                                Asset Manager
                             </p>
                             <p className="text-lg font-semibold">
                                 個人用資産管理

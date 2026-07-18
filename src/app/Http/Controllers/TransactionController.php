@@ -35,6 +35,14 @@ class TransactionController extends Controller
             'date_to' => request()->string('date_to')->toString(),
             'account_id' => request()->string('account_id')->toString(),
             'category_id' => request()->string('category_id')->toString(),
+            'category_state' => in_array(
+                request()->string('category_state')->toString(),
+                ['all', 'categorized', 'uncategorized'],
+                true,
+            )
+                ? request()->string('category_state')->toString()
+                : 'all',
+            'currency' => request()->string('currency')->toString(),
             'type' => request()->string('type')->toString(),
             'keyword' => request()->string('keyword')->toString(),
             'is_confirmed' => request()->has('is_confirmed')
@@ -90,6 +98,7 @@ class TransactionController extends Controller
             'typeOptions' => $this->transactionOptionsService->typeOptions(),
             'accountOptions' => $this->transactionOptionsService->accountOptions(request()->user()),
             'categoryOptions' => $this->transactionOptionsService->categoryOptions(request()->user()),
+            'currencyOptions' => $this->transactionOptionsService->currencyOptions(request()->user()),
         ]);
     }
 

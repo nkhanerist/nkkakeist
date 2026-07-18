@@ -24,7 +24,7 @@ class StoreImportRequest extends FormRequest
         $isBalanceSnapshot = $this->input('source_name') === 'balance_snapshot';
 
         return [
-            'source_name' => ['required', 'string', Rule::in(['money_forward', 'mobile_suica', 'jre_point', 'balance_snapshot'])],
+            'source_name' => ['required', 'string', Rule::in(['money_forward', 'mobile_suica', 'jre_point', 'balance_snapshot', 'asset_history'])],
             'account_id' => [
                 ($isMobileSuica || $isJrePoint) ? 'required' : 'nullable',
                 'integer',

@@ -85,6 +85,11 @@ class Account extends Model
         return $this->hasMany(AccountSnapshot::class);
     }
 
+    public function investmentPositionSnapshots(): HasMany
+    {
+        return $this->hasMany(InvestmentPositionSnapshot::class);
+    }
+
     protected function casts(): array
     {
         return [

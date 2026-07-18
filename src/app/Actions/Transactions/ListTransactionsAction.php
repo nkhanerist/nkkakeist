@@ -24,11 +24,27 @@ class ListTransactionsAction
             )
             ->when(
                 filled($filters['account_id'] ?? null),
-                fn ($query) => $query->where('account_id', $filters['account_id']),
+                fn ($query) => $query->where(function ($accountQuery) use ($filters): void {
+                    $accountQuery
+                        ->where('account_id', $filters['account_id'])
+                        ->orWhere('transfer_account_id', $filters['account_id']);
+                }),
             )
             ->when(
                 filled($filters['category_id'] ?? null),
                 fn ($query) => $query->where('category_id', $filters['category_id']),
+            )
+            ->when(
+                ($filters['category_state'] ?? 'all') === 'categorized',
+                fn ($query) => $query->whereNotNull('category_id'),
+            )
+            ->when(
+                ($filters['category_state'] ?? 'all') === 'uncategorized',
+                fn ($query) => $query->whereNull('category_id'),
+            )
+            ->when(
+                filled($filters['currency'] ?? null),
+                fn ($query) => $query->where('currency', $filters['currency']),
             )
             ->when(
                 filled($filters['type'] ?? null),

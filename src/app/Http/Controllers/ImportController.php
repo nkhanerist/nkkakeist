@@ -9,13 +9,16 @@ use App\Actions\Imports\ListImportsAction;
 use App\Actions\Imports\ParseImportAction;
 use App\Actions\Imports\StoreImportAction;
 use App\Actions\Imports\UpdateImportRowAccountAction;
+use App\Actions\Imports\UpdateImportRowReplacementAction;
 use App\Actions\Imports\UpdateImportRowTransferAccountAction;
 use App\Http\Requests\Imports\CommitImportRequest;
 use App\Http\Requests\Imports\StoreImportRequest;
 use App\Http\Requests\Imports\UpdateImportRowAccountRequest;
+use App\Http\Requests\Imports\UpdateImportRowReplacementRequest;
 use App\Http\Requests\Imports\UpdateImportRowTransferAccountRequest;
 use App\Models\Import;
 use App\Models\ImportRow;
+use App\Services\Imports\BalanceSnapshotConflictService;
 use App\Services\Imports\ImportOptionsService;
 use App\Services\Imports\JrePointReconciliationService;
 use App\Services\Imports\ResolveTransferImportRowService;
@@ -34,10 +37,12 @@ class ImportController extends Controller
         private readonly CommitImportAction $commitImportAction,
         private readonly UpdateImportRowTransferAccountAction $updateImportRowTransferAccountAction,
         private readonly UpdateImportRowAccountAction $updateImportRowAccountAction,
+        private readonly UpdateImportRowReplacementAction $updateImportRowReplacementAction,
         private readonly DeleteImportAction $deleteImportAction,
         private readonly ImportOptionsService $importOptionsService,
         private readonly ResolveTransferImportRowService $resolveTransferImportRowService,
         private readonly JrePointReconciliationService $jrePointReconciliationService,
+        private readonly BalanceSnapshotConflictService $balanceSnapshotConflictService,
     ) {}
 
     public function index(): Response
@@ -118,6 +123,8 @@ class ImportController extends Controller
                     'currency' => $importRow->resolvedAccount->currency,
                 ],
                 'manual_resolved_account_id' => $importRow->manual_resolved_account_id,
+                'replace_account_snapshot_id' => $importRow->replace_account_snapshot_id,
+                'same_day_snapshot' => $this->sameDaySnapshotItem($import, $importRow),
                 'resolved_transfer_account' => $importRow->resolvedTransferAccount === null ? null : [
                     'id' => $importRow->resolvedTransferAccount->id,
                     'name' => $importRow->resolvedTransferAccount->name,
@@ -217,6 +224,21 @@ class ImportController extends Controller
             $request->filled('resolved_account_id')
                 ? (int) $request->input('resolved_account_id')
                 : null,
+            $request->boolean('remember_mapping'),
+        );
+
+        return to_route('imports.preview', $import);
+    }
+
+    public function updateReplacement(
+        UpdateImportRowReplacementRequest $request,
+        Import $import,
+        ImportRow $importRow,
+    ): RedirectResponse {
+        $this->updateImportRowReplacementAction->handle(
+            $import,
+            $importRow,
+            $request->boolean('replace_existing'),
         );
 
         return to_route('imports.preview', $import);
@@ -236,5 +258,29 @@ class ImportController extends Controller
         }
 
         return to_route('imports.index');
+    }
+
+    /**
+     * @return array<string, int|string|null>|null
+     */
+    private function sameDaySnapshotItem(Import $import, ImportRow $importRow): ?array
+    {
+        if ($import->source_name !== 'balance_snapshot') {
+            return null;
+        }
+
+        $snapshot = $this->balanceSnapshotConflictService->find($import, $importRow);
+
+        if ($snapshot === null) {
+            return null;
+        }
+
+        return [
+            'id' => $snapshot->id,
+            'balance_date' => $snapshot->captured_at->toDateString(),
+            'balance' => (string) $snapshot->balance,
+            'source_name' => $snapshot->source_name,
+            'import_id' => $snapshot->import_id,
+        ];
     }
 }

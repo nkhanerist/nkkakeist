@@ -70,6 +70,28 @@ class TransactionOptionsService
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function currencyOptions(User $user): array
+    {
+        $accountCurrencies = $user->accounts()
+            ->distinct()
+            ->pluck('currency');
+        $transactionCurrencies = $user->transactions()
+            ->distinct()
+            ->pluck('currency');
+
+        return $accountCurrencies
+            ->merge($transactionCurrencies)
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values()
+            ->map(fn ($currency): string => (string) $currency)
+            ->all();
+    }
+
+    /**
      * @return array<int, array{id: int, category_id: int, name: string, is_active: bool}>
      */
     public function subcategoryOptions(User $user): array

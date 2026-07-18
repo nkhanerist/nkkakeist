@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class BalanceSnapshotImportValidationService
 {
+    public function __construct(
+        private readonly BalanceSnapshotConflictService $conflictService,
+    ) {}
+
     public function handle(Import $import): Import
     {
         $import->loadMissing('user', 'importRows');
@@ -24,7 +28,7 @@ class BalanceSnapshotImportValidationService
             foreach ($import->importRows as $importRow) {
                 $resolvedAccount = $this->resolveAccount($importRow, $accounts);
                 $errors = $this->validationErrors($importRow, $resolvedAccount);
-                $purpose = $this->purpose($importRow);
+                $purpose = $this->conflictService->purpose($importRow);
                 $duplicateHash = $resolvedAccount === null || $purpose === null
                     ? null
                     : $this->duplicateHash($import, $importRow, $resolvedAccount, $purpose);
@@ -34,18 +38,21 @@ class BalanceSnapshotImportValidationService
                         ->exists();
                 $isFileDuplicate = $duplicateHash !== null && isset($seenHashes[$duplicateHash]);
                 $isDuplicate = $isExistingDuplicate || $isFileDuplicate;
+                $sameDaySnapshot = $resolvedAccount === null || $purpose === null
+                    ? null
+                    : $this->conflictService->find($import, $importRow, $resolvedAccount);
+                $replaceSnapshotId = null;
 
                 if (
                     ! $isDuplicate
                     && $errors === []
-                    && $resolvedAccount !== null
-                    && $purpose !== null
-                    && $resolvedAccount->snapshots()
-                        ->where('purpose', $purpose)
-                        ->whereDate('captured_at', $importRow->transaction_date?->toDateString())
-                        ->exists()
+                    && $sameDaySnapshot !== null
                 ) {
-                    $errors[] = '同じ日の残高がすでにあります。既存値を確認してから取り込んでください。';
+                    if ($importRow->replace_account_snapshot_id === $sameDaySnapshot->id) {
+                        $replaceSnapshotId = $sameDaySnapshot->id;
+                    } else {
+                        $errors[] = '同じ日の残高がすでにあります。既存値を確認してから取り込んでください。';
+                    }
                 }
 
                 if ($duplicateHash !== null) {
@@ -58,6 +65,7 @@ class BalanceSnapshotImportValidationService
 
                 $importRow->update([
                     'resolved_account_id' => $resolvedAccount?->id,
+                    'replace_account_snapshot_id' => $replaceSnapshotId,
                     'resolved_transfer_account_id' => null,
                     'resolved_category_id' => null,
                     'resolved_subcategory_id' => null,
@@ -143,15 +151,6 @@ class BalanceSnapshotImportValidationService
         }
 
         return $errors;
-    }
-
-    private function purpose(ImportRow $importRow): ?string
-    {
-        return match ($this->kind($importRow)) {
-            'valuation' => 'valuation',
-            'account_balance', 'card_outstanding' => 'official_balance',
-            default => null,
-        };
     }
 
     private function kind(ImportRow $importRow): ?string

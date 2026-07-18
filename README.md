@@ -1,41 +1,87 @@
 # NKKakeist
 
-NKKakeist is a personal finance and asset management web application that turns fragmented financial exports into trustworthy, explainable records.
+NKKakeist is a personal finance and asset management application that turns fragmented financial exports into reviewable, explainable records.
 
-It is built for a common problem: banks, credit cards, mobile payments, e-money, investments, and reward points all describe money differently. Naive imports can count the same spending twice or produce balances that cannot be reconciled. NKKakeist keeps every import reviewable and makes the accounting decisions explicit.
+Banks, credit cards, mobile payments, e-money, investment accounts, and reward programs all describe money differently. A naive import can count the same purchase twice, confuse a card payment with new spending, or leave balances that cannot be reconciled. NKKakeist makes those decisions explicit and keeps every import inspectable before it changes the ledger.
 
-This project is an **OpenAI Build Week** submission in the **Apps for Your Life** category.
+This project was created for **OpenAI Build Week** in the **Apps for Your Life** category.
 
-## What it does
+## Highlights
 
-- Manages cash, bank, credit card, e-money, payment, investment, and point accounts.
-- Tracks income, expenses, and transfers without double-counting internal money movements.
-- Imports Money Forward CSV, Mobile Suica PDF, JRE POINT JSON, and balance snapshot JSON files.
-- Uses a staged upload, parse, validate, preview, and commit workflow.
-- Detects duplicate and unresolved rows with row-level explanations.
-- Supports category review and reusable classification rules.
-- Reconciles calculated ledger balances against official balances.
-- Displays monthly and yearly income, expenses, trends, and account balances.
-- Keeps every user-owned resource isolated to its authenticated user.
+- Manage cash, bank, credit card, e-money, payment, securities, pension, and point accounts.
+- Track `income`, `expense`, and `transfer` records without double-counting internal money movements.
+- Import Money Forward CSV, Mobile Suica PDF, JRE POINT JSON, official balance JSON, and Money Forward asset-history CSV files.
+- Use a staged upload, parse, validate, preview, and explicit commit workflow.
+- Detect duplicate, unresolved, conflicting, and replacement candidates with row-level explanations.
+- Review uncategorized transactions and create reusable classification rules.
+- Compare calculated ledger balances with official bank and card balances.
+- Store daily account valuations and per-instrument investment positions.
+- Explore monthly reports, net-worth history, account trends, and security-level valuation history.
+- Keep every user-owned resource isolated to its authenticated user.
 
-The core safety rule is simple: when an imported financial record cannot be explained, it is not silently committed.
+The core safety rule is simple: **if an imported financial record cannot be explained, it is not silently committed.**
 
-## Built with
+## Screens and workflows
+
+### Explainable imports
+
+Every source uses the same safety-oriented lifecycle:
+
+1. Upload an untrusted file.
+2. Parse the source-specific format.
+3. Normalize records while preserving useful raw fields.
+4. Resolve accounts, categories, and transfer direction.
+5. Validate values and detect deterministic duplicate candidates.
+6. Preview every row with its status and explanation.
+7. Commit only confirmed, valid, non-duplicate rows.
+
+Balance snapshots support an explicit same-day replacement flow. A different value for an existing account and date is never overwritten without review.
+
+### Monthly reporting
+
+The monthly dashboard includes:
+
+- income, expenses, and monthly balance by currency;
+- previous-month and previous-year comparisons;
+- transaction count, average expense, and largest expense;
+- top merchants;
+- uncategorized, unconfirmed, and pending-import indicators;
+- account and category drill-down links; and
+- net-worth change between actually stored snapshot dates.
+
+No missing valuation dates are interpolated.
+
+### Assets and securities
+
+NKKakeist stores account-level valuations and instrument-level daily snapshots. The securities area provides:
+
+- account valuation history;
+- latest portfolio composition;
+- instrument valuation, quantity, current price, acquisition cost, and unrealized gain;
+- period changes and daily history; and
+- links back to the import that created each snapshot.
+
+### Human-in-the-loop acquisition
+
+For sites without a suitable public API, NKKakeist uses an explicit semi-automatic approach: the user signs in on the financial institution's own site, exports structured data from that authenticated browser session, and uploads it through the same preview workflow.
+
+NKKakeist does not store financial-site passwords, authentication cookies, or second-factor credentials.
+
+## Technology
 
 - Laravel 13 and PHP 8.3
-- Inertia.js, React, and TypeScript
-- Tailwind CSS
+- Inertia.js 2, React 18, and TypeScript
+- Tailwind CSS and Vite 8
 - MySQL 8.4
-- Docker Compose and Vite
-- PHPUnit
-- Codex with GPT-5.5 and GPT-5.6
+- Docker Compose
+- PHPUnit 12
 
 ## Quick start
 
 Prerequisites:
 
 - Docker with Docker Compose
-- Ports `8000`, `5190`, and `13306` available locally
+- ports `8000`, `5190`, and `13306` available locally
 
 Start the application from the repository root:
 
@@ -45,35 +91,35 @@ docker compose up --build
 
 The container installs Composer and npm dependencies, creates `src/.env`, generates an application key, runs migrations, and starts Laravel and Vite.
 
-Seed the included fictional demo data:
+Seed fictional demo data:
 
 ```bash
 docker compose exec app php artisan db:seed
 ```
 
-Open [http://localhost:8000](http://localhost:8000). In the local Docker environment, the login screen provides a development-only one-click login. The seeded account is `developer@example.test`; it is not used outside local or test environments.
+Open [http://localhost:8000](http://localhost:8000). In the local Docker environment, the login screen provides a development-only one-click login. The seeded user is `developer@example.test`; this shortcut is unavailable outside `local` and `testing` environments.
 
 ## Verification
 
-Run the automated test suite:
+Run the test suite:
 
 ```bash
 docker compose exec app php artisan test
 ```
 
-Run the frontend production build:
+Build the frontend:
 
 ```bash
 docker compose exec app npm run build
 ```
 
-Run the PHP formatter:
+Format PHP code:
 
 ```bash
 docker compose exec app ./vendor/bin/pint
 ```
 
-Repository wrappers under `scripts/` provide the same container-based workflow:
+Repository wrappers provide the same container-based workflow:
 
 ```bash
 scripts/dev artisan test
@@ -81,51 +127,43 @@ scripts/dev npm run build
 scripts/dev pint
 ```
 
-## Import safety model
+## Architecture
 
-Every supported source follows the same lifecycle:
+- **Controllers** handle HTTP concerns, authorization entry points, and Inertia responses.
+- **Form Requests** validate input and related-resource ownership.
+- **Actions** define use cases and transaction boundaries.
+- **Services** contain parsing, aggregation, classification, duplicate detection, diagnostics, and reconciliation logic.
+- **Feature tests** cover authentication, user isolation, imports, dashboards, and correction workflows.
+- **Unit tests** cover parsers, normalization, and balance calculations.
 
-1. Upload an untrusted file.
-2. Parse the source-specific format.
-3. Normalize records while preserving useful raw fields.
-4. Resolve accounts, categories, and transfers.
-5. Validate values and detect deterministic duplicate candidates.
-6. Preview every row with an explanation.
-7. Commit only confirmed, valid, non-duplicate rows.
+See [docs/project-guide.md](docs/project-guide.md) for the public product model, supported sources, safety rules, and roadmap. Development conventions are documented in [AGENTS.md](AGENTS.md).
 
-Transfers are deliberately separated from income and expenses. They affect account balances but are excluded from income and expense aggregation, preventing card payments and wallet charges from being counted as new spending.
+## How Codex was used
 
-## How Codex and GPT-5.6 were used
-
-The initial foundation was developed with Codex using GPT-5.5. From July 2026 onward, Codex with GPT-5.6 was used throughout the project to:
+Codex was used throughout development as a collaborative engineering agent to:
 
 - turn real-world financial inconsistencies into explicit domain rules;
-- design the staged import and reconciliation architecture;
-- implement source-specific parsers and deterministic duplicate detection;
-- keep controllers small by separating validation, actions, and services;
-- diagnose data inconsistencies and design safe, auditable corrections;
+- design the staged import, reconciliation, and snapshot architecture;
+- implement parsers and deterministic duplicate detection;
+- keep controllers small by separating requests, actions, and services;
+- diagnose data inconsistencies and design auditable corrections;
 - write and refine feature and unit tests;
 - identify and remove an N+1 query in category review; and
 - verify user-facing flows in the browser.
 
-Codex was used as a development collaborator, not as a runtime dependency. NKKakeist does not send personal financial data to an AI service.
-
-## Architecture
-
-- Controllers handle HTTP concerns, authorization entry points, and Inertia responses.
-- Form Requests validate input and related-resource ownership.
-- Actions define use cases and transaction boundaries.
-- Services contain parsing, aggregation, classification, duplicate detection, diagnostics, and reconciliation logic.
-- Feature tests cover authentication, user isolation, CRUD, imports, dashboards, and correction workflows.
-- Unit tests cover parsers and balance calculations.
-
-See [docs/project-guide.md](docs/project-guide.md) for the public product and domain overview.
+Codex is a development tool for this repository, not a runtime dependency. NKKakeist does not send personal financial data to an AI service.
 
 ## Data and privacy
 
-The repository contains only fictional seed and test data. Real exports, uploaded statements, environment files, database volumes, logs, and backups are excluded from version control.
+This repository contains only fictional seed and test data. Real exports, uploaded statements, environment files, database volumes, logs, screenshots, generated media, and backups are excluded from version control.
 
-Do not expose a development instance containing personal data to the internet. Use a separate database with fictional demo data for public demonstrations.
+Do not expose a development instance containing personal data to the internet. Use a separate database with fictional data for public demonstrations.
+
+## Scope
+
+NKKakeist is a personal project, not a bank, broker, accounting service, or financial adviser. External website formats may change, and users must review imported data before relying on it.
+
+Unattended bank aggregation and automatic commit of externally acquired financial records are intentionally outside the current scope.
 
 ## License
 

@@ -2,6 +2,7 @@ import AppPage from '@/Components/AppPage';
 import DangerButton from '@/Components/DangerButton';
 import PrimaryButton from '@/Components/PrimaryButton';
 import BalanceSnapshotPreview from '@/Components/Imports/BalanceSnapshotPreview';
+import AssetHistoryPreview from '@/Components/Imports/AssetHistoryPreview';
 import { PageProps } from '@/types';
 import {
     ImportAccountOption,
@@ -47,6 +48,7 @@ export default function Show({
 
     const transferRowsExist = rows.some((row) => row.detected_type === 'transfer');
     const isBalanceSnapshot = importRecord.source_name === 'balance_snapshot';
+    const isAssetHistory = importRecord.source_name === 'asset_history';
     const formatPoints = (value: string) => `${Number(value).toLocaleString('ja-JP')} pt`;
 
     const transferAccountErrorMessage = (rowId: number) => {
@@ -118,10 +120,12 @@ export default function Show({
 
     return (
         <AppPage
-            title={isBalanceSnapshot ? '残高取得プレビュー' : '取込プレビュー'}
+            title={isBalanceSnapshot ? '残高取得プレビュー' : isAssetHistory ? '資産推移プレビュー' : '取込プレビュー'}
             description={
                 isBalanceSnapshot
                     ? '取得した公式残高と評価額の口座対応を確認して反映します。'
+                    : isAssetHistory
+                      ? 'Money Forwardの総資産・資産分類の長期履歴を確認して反映します。'
                     : '解析結果と重複候補を確認して取引へ反映します。'
             }
         >
@@ -166,6 +170,8 @@ export default function Show({
                         <p className="mt-2 text-sm font-medium text-slate-900">
                             {isBalanceSnapshot
                                 ? '項目ごとに判定'
+                                : isAssetHistory
+                                  ? '口座への配分なし'
                                 : importRecord.account
                                 ? `${importRecord.account.name} (${importRecord.account.currency})`
                                 : '未選択'}
@@ -249,7 +255,7 @@ export default function Show({
                     {importRecord.status !== 'imported' ? (
                         <>
                             <PrimaryButton type="button" onClick={handleCommit}>
-                                {isBalanceSnapshot ? '残高を反映' : '取込を確定'}
+                                {isBalanceSnapshot ? '残高を反映' : isAssetHistory ? '資産推移を反映' : '取込を確定'}
                             </PrimaryButton>
 
                             <PrimaryButton
@@ -280,6 +286,8 @@ export default function Show({
                         accountOptions={accountOptions}
                         rows={rows}
                     />
+                ) : isAssetHistory ? (
+                    <AssetHistoryPreview importRecord={importRecord} rows={rows} />
                 ) : rows.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p className="text-sm text-slate-600">

@@ -17,6 +17,7 @@ class ImportOptionsService
             ['value' => 'mobile_suica', 'label' => 'モバイルSuica PDF'],
             ['value' => 'jre_point', 'label' => 'JRE POINT 履歴'],
             ['value' => 'balance_snapshot', 'label' => '公式残高・評価額'],
+            ['value' => 'asset_history', 'label' => 'Money Forward 資産推移'],
         ];
     }
 

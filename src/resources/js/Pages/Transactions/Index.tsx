@@ -18,6 +18,7 @@ type IndexProps = {
     typeOptions: TransactionTypeOption[];
     accountOptions: TransactionAccountOption[];
     categoryOptions: TransactionCategoryOption[];
+    currencyOptions: string[];
 };
 
 export default function Index({
@@ -26,12 +27,15 @@ export default function Index({
     typeOptions,
     accountOptions,
     categoryOptions,
+    currencyOptions,
 }: IndexProps) {
     const { data, setData, get, processing } = useForm<TransactionFilters>({
         date_from: filters.date_from ?? '',
         date_to: filters.date_to ?? '',
         account_id: filters.account_id ?? '',
         category_id: filters.category_id ?? '',
+        category_state: filters.category_state ?? 'all',
+        currency: filters.currency ?? '',
         type: filters.type ?? '',
         keyword: filters.keyword ?? '',
         is_confirmed: filters.is_confirmed ?? '',
@@ -55,6 +59,8 @@ export default function Index({
                 date_to: '',
                 account_id: '',
                 category_id: '',
+                category_state: 'all',
+                currency: '',
                 type: '',
                 keyword: '',
                 is_confirmed: '',
@@ -161,7 +167,7 @@ export default function Index({
                             htmlFor="account_id"
                             className="text-sm font-medium text-slate-700"
                         >
-                            口座
+                            関連口座
                         </label>
                         <select
                             id="account_id"
@@ -178,6 +184,9 @@ export default function Index({
                                 </option>
                             ))}
                         </select>
+                        <p className="mt-1 text-xs text-slate-500">
+                            振替元・振替先の両方を対象にします。
+                        </p>
                     </div>
 
                     <div>
@@ -191,14 +200,80 @@ export default function Index({
                             id="category_id"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.category_id}
-                            onChange={(event) =>
-                                setData('category_id', event.target.value)
-                            }
+                            onChange={(event) => {
+                                const categoryId = event.target.value;
+
+                                setData({
+                                    ...data,
+                                    category_id: categoryId,
+                                    category_state:
+                                        categoryId === ''
+                                            ? data.category_state
+                                            : 'categorized',
+                                });
+                            }}
                         >
                             <option value="">すべて</option>
                             {categoryOptions.map((category) => (
                                 <option key={category.id} value={category.id}>
                                     {category.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="category_state"
+                            className="text-sm font-medium text-slate-700"
+                        >
+                            カテゴリ状態
+                        </label>
+                        <select
+                            id="category_state"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={data.category_state}
+                            onChange={(event) => {
+                                const categoryState = event.target.value as
+                                    | 'all'
+                                    | 'categorized'
+                                    | 'uncategorized';
+
+                                setData({
+                                    ...data,
+                                    category_id:
+                                        categoryState === 'uncategorized'
+                                            ? ''
+                                            : data.category_id,
+                                    category_state: categoryState,
+                                });
+                            }}
+                        >
+                            <option value="all">すべて</option>
+                            <option value="categorized">カテゴリ設定済み</option>
+                            <option value="uncategorized">カテゴリ未設定</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="currency"
+                            className="text-sm font-medium text-slate-700"
+                        >
+                            通貨
+                        </label>
+                        <select
+                            id="currency"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={data.currency}
+                            onChange={(event) =>
+                                setData('currency', event.target.value)
+                            }
+                        >
+                            <option value="">すべて</option>
+                            {currencyOptions.map((currency) => (
+                                <option key={currency} value={currency}>
+                                    {currency}
                                 </option>
                             ))}
                         </select>

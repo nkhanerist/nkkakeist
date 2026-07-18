@@ -26,6 +26,11 @@ class AppNavigationTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('Accounts/Index'));
 
         $this->actingAs($user)
+            ->get(route('securities.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Securities/Index'));
+
+        $this->actingAs($user)
             ->get(route('categories.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Categories/Index'));
@@ -50,6 +55,7 @@ class AppNavigationTest extends TestCase
     {
         $this->get(route('dashboard'))->assertRedirect(route('login'));
         $this->get(route('accounts.index'))->assertRedirect(route('login'));
+        $this->get(route('securities.index'))->assertRedirect(route('login'));
         $this->get(route('categories.index'))->assertRedirect(route('login'));
         $this->get(route('transactions.index'))->assertRedirect(route('login'));
         $this->get(route('imports.index'))->assertRedirect(route('login'));
@@ -66,6 +72,10 @@ class AppNavigationTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('accounts.index'))
+            ->assertRedirect(route('verification.notice'));
+
+        $this->actingAs($user)
+            ->get(route('securities.index'))
             ->assertRedirect(route('verification.notice'));
 
         $this->actingAs($user)

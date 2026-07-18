@@ -54,6 +54,14 @@ export type ImportPreviewRow = {
     affects_account_balance: boolean | null;
     resolved_account: { id: number; name: string; currency: string } | null;
     manual_resolved_account_id: number | null;
+    replace_account_snapshot_id: number | null;
+    same_day_snapshot: {
+        id: number;
+        balance_date: string;
+        balance: string;
+        source_name: string | null;
+        import_id: number | null;
+    } | null;
     resolved_transfer_account: { id: number; name: string; currency: string } | null;
     manual_resolved_transfer_account_id: number | null;
     resolved_category: { id: number; name: string } | null;

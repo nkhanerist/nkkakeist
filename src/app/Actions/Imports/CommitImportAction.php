@@ -19,12 +19,17 @@ class CommitImportAction
         private readonly BuildImportPreviewAction $buildImportPreviewAction,
         private readonly JrePointReconciliationService $jrePointReconciliationService,
         private readonly CommitBalanceSnapshotImportAction $commitBalanceSnapshotImportAction,
+        private readonly CommitAssetHistoryImportAction $commitAssetHistoryImportAction,
     ) {}
 
     public function handle(Import $import): Import
     {
         if ($import->source_name === 'balance_snapshot') {
             return $this->commitBalanceSnapshotImportAction->handle($import);
+        }
+
+        if ($import->source_name === 'asset_history') {
+            return $this->commitAssetHistoryImportAction->handle($import);
         }
 
         if ($import->status === 'imported') {

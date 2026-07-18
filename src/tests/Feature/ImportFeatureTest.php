@@ -1626,7 +1626,7 @@ class ImportFeatureTest extends TestCase
             'name' => 'dカード',
             'type' => 'credit_card',
             'currency' => 'JPY',
-            'import_aliases' => ['カード MasterCard(1234)'],
+            'import_aliases' => ['カード MasterCard(8658)'],
         ]);
         $walletAccount = Account::factory()->for($user)->create([
             'name' => 'kyash',
@@ -1638,7 +1638,7 @@ class ImportFeatureTest extends TestCase
             'source_name' => 'money_forward',
             'account_id' => '',
             'csv_file' => $this->moneyForwardUpload([
-                ['1', '2026/04/10', 'カード MasterCard(1234)', '3000', 'kyash', '未分類', '未分類', '', '1', 'row-kyash-side-1'],
+                ['1', '2026/04/10', 'カード MasterCard(8658)', '3000', 'kyash', '未分類', '未分類', '', '1', 'row-kyash-side-1'],
                 ['1', '2026/04/10', 'Kyash', '-3000', 'dカード', '未分類', '未分類', '', '1', 'row-card-side-1'],
             ]),
         ])->assertRedirect();
@@ -1731,7 +1731,7 @@ class ImportFeatureTest extends TestCase
             'name' => 'dカード',
             'type' => 'credit_card',
             'currency' => 'JPY',
-            'import_aliases' => ['MasterCard(1234)', 'カード MasterCard(1234)'],
+            'import_aliases' => ['MasterCard(8658)', 'カード MasterCard(8658)'],
         ]);
         $kyashAccount = Account::factory()->for($user)->create([
             'name' => 'kyash',
@@ -1743,7 +1743,7 @@ class ImportFeatureTest extends TestCase
             'source_name' => 'money_forward',
             'account_id' => '',
             'csv_file' => $this->moneyForwardUpload([
-                ['1', '2026/04/10', 'カード MasterCard(1234)', '980', 'kyash', '未分類', '未分類', '', '1', 'row-alias-1'],
+                ['1', '2026/04/10', 'カード MasterCard(8658)', '980', 'kyash', '未分類', '未分類', '', '1', 'row-alias-1'],
             ]),
         ])->assertRedirect();
 
@@ -1806,7 +1806,7 @@ class ImportFeatureTest extends TestCase
             'name' => 'dカード',
             'type' => 'credit_card',
             'currency' => 'JPY',
-            'import_aliases' => ['カード MasterCard(1234)'],
+            'import_aliases' => ['カード MasterCard(8658)'],
         ]);
         $kyashAccount = Account::factory()->for($user)->create([
             'name' => 'kyash',
@@ -1818,7 +1818,7 @@ class ImportFeatureTest extends TestCase
             'source_name' => 'money_forward',
             'account_id' => '',
             'csv_file' => $this->moneyForwardUpload([
-                ['1', '2026/04/10', 'kyash', '-980', 'カード MasterCard(1234)', '未分類', '未分類', '', '1', 'row-source-alias-1'],
+                ['1', '2026/04/10', 'kyash', '-980', 'カード MasterCard(8658)', '未分類', '未分類', '', '1', 'row-source-alias-1'],
             ]),
         ])->assertRedirect();
 

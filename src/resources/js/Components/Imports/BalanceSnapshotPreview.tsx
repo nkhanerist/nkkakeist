@@ -11,6 +11,16 @@ type BalanceSnapshotPreviewProps = {
     rows: ImportPreviewRow[];
 };
 
+type InvestmentPosition = {
+    instrument_name: string;
+    quantity: string | null;
+    average_acquisition_price: string | null;
+    unit_price: string | null;
+    valuation: string;
+    unrealized_gain: string | null;
+    currency: string;
+};
+
 const kindLabels: Record<string, string> = {
     valuation: '時価評価額',
     account_balance: '公式口座残高',
@@ -21,6 +31,51 @@ function rawString(row: ImportPreviewRow, key: string): string | null {
     const value = row.raw_payload[key];
 
     return typeof value === 'string' && value !== '' ? value : null;
+}
+
+function rawPositions(row: ImportPreviewRow, fallbackCurrency: string): InvestmentPosition[] {
+    const value = row.raw_payload.positions;
+
+    if (! Array.isArray(value)) {
+        return [];
+    }
+
+    return value.flatMap((position) => {
+        if (typeof position !== 'object' || position === null) {
+            return [];
+        }
+
+        const candidate = position as Record<string, unknown>;
+
+        if (
+            typeof candidate.instrument_name !== 'string' ||
+            typeof candidate.valuation !== 'string'
+        ) {
+            return [];
+        }
+
+        const optionalString = (key: string) => {
+            const value = candidate[key];
+
+            return typeof value === 'string' ? value : null;
+        };
+
+        return [{
+            instrument_name: candidate.instrument_name,
+            quantity: optionalString('quantity'),
+            average_acquisition_price: optionalString('average_acquisition_price'),
+            unit_price: optionalString('unit_price'),
+            valuation: candidate.valuation,
+            unrealized_gain: optionalString('unrealized_gain'),
+            currency: optionalString('currency') ?? fallbackCurrency,
+        }];
+    });
+}
+
+function formatQuantity(value: string): string {
+    return new Intl.NumberFormat('ja-JP', {
+        maximumFractionDigits: 8,
+    }).format(Number(value));
 }
 
 export default function BalanceSnapshotPreview({
@@ -43,9 +98,20 @@ export default function BalanceSnapshotPreview({
     const [selections, setSelections] = useState<Record<number, string>>(
         buildSelections,
     );
+    const buildRememberMappings = () =>
+        Object.fromEntries(
+            rows.map((row) => [
+                row.id,
+                row.account_name === 'Money Forward 年金' && row.resolved_account === null,
+            ]),
+        );
+    const [rememberMappings, setRememberMappings] = useState<Record<number, boolean>>(
+        buildRememberMappings,
+    );
 
     useEffect(() => {
         setSelections(buildSelections());
+        setRememberMappings(buildRememberMappings());
     }, [rows]);
 
     const rowError = (rowId: number) => {
@@ -57,7 +123,18 @@ export default function BalanceSnapshotPreview({
     const updateAccount = (rowId: number) => {
         router.put(
             route('imports.rows.update-account', [importRecord.id, rowId]),
-            { resolved_account_id: selections[rowId] || null },
+            {
+                resolved_account_id: selections[rowId] || null,
+                remember_mapping: rememberMappings[rowId] ?? false,
+            },
+            { preserveScroll: true },
+        );
+    };
+
+    const updateReplacement = (rowId: number, replaceExisting: boolean) => {
+        router.put(
+            route('imports.rows.update-replacement', [importRecord.id, rowId]),
+            { replace_existing: replaceExisting },
             { preserveScroll: true },
         );
     };
@@ -98,6 +175,21 @@ export default function BalanceSnapshotPreview({
                 const nextPaymentAmount = rawString(row, 'next_payment_amount');
                 const nextPaymentDate = rawString(row, 'next_payment_date');
                 const sourceUpdatedAt = rawString(row, 'source_updated_at');
+                const positions = rawPositions(row, currency);
+                const positionValuationTotal = positions.reduce(
+                    (total, position) => total + Number(position.valuation),
+                    0,
+                );
+                const sameDaySnapshot = row.same_day_snapshot;
+                const hasDifferentSameDayBalance = sameDaySnapshot !== null
+                    && row.amount !== null
+                    && Number(sameDaySnapshot.balance) !== Number(row.amount)
+                    && ! row.is_duplicate_candidate;
+                const replacementSelected = sameDaySnapshot !== null
+                    && row.replace_account_snapshot_id === sameDaySnapshot.id;
+                const replacementError = page.props.errors?.[
+                    `replace_existing.${row.id}`
+                ];
 
                 return (
                     <div
@@ -149,6 +241,154 @@ export default function BalanceSnapshotPreview({
                             </div>
                         ) : null}
 
+                        {hasDifferentSameDayBalance && sameDaySnapshot ? (
+                            <div
+                                className={`mt-4 rounded-lg border px-4 py-3 ${
+                                    replacementSelected
+                                        ? 'border-emerald-200 bg-emerald-50'
+                                        : 'border-amber-200 bg-amber-50'
+                                }`}
+                            >
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <p className={`text-sm font-semibold ${
+                                            replacementSelected
+                                                ? 'text-emerald-900'
+                                                : 'text-amber-900'
+                                        }`}>
+                                            同日残高の置き換え
+                                        </p>
+                                        <p className={`mt-1 text-sm ${
+                                            replacementSelected
+                                                ? 'text-emerald-800'
+                                                : 'text-amber-800'
+                                        }`}>
+                                            既存値{' '}
+                                            {formatMoney(
+                                                sameDaySnapshot.balance,
+                                                currency,
+                                            )}{' '}
+                                            → 新しい値{' '}
+                                            {formatMoney(row.amount ?? '0', currency)}{' '}
+                                            {currency}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-600">
+                                            {sameDaySnapshot.balance_date}
+                                            {sameDaySnapshot.source_name
+                                                ? ` / ${sameDaySnapshot.source_name}`
+                                                : ''}
+                                            {sameDaySnapshot.import_id
+                                                ? ` / import ${sameDaySnapshot.import_id}`
+                                                : ''}
+                                        </p>
+                                    </div>
+                                    {importRecord.status !== 'imported' ? (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                updateReplacement(
+                                                    row.id,
+                                                    ! replacementSelected,
+                                                )
+                                            }
+                                            className={`rounded-md border px-3 py-2 text-sm font-semibold shadow-sm ${
+                                                replacementSelected
+                                                    ? 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                                                    : 'border-amber-300 bg-white text-amber-800 hover:bg-amber-100'
+                                            }`}
+                                        >
+                                            {replacementSelected
+                                                ? '置き換えを取り消す'
+                                                : 'この値で置き換える'}
+                                        </button>
+                                    ) : null}
+                                </div>
+                                <p className={`mt-2 text-xs ${
+                                    replacementSelected
+                                        ? 'text-emerald-700'
+                                        : 'text-amber-700'
+                                }`}>
+                                    {replacementSelected
+                                        ? '確定時に既存の同日残高を削除し、この残高と銘柄明細へ置き換えます。'
+                                        : 'まだ置き換えは実行されません。新旧の金額を確認して選択してください。'}
+                                </p>
+                                {replacementError ? (
+                                    <p className="mt-2 text-xs text-rose-700">
+                                        {Array.isArray(replacementError)
+                                            ? replacementError[0]
+                                            : replacementError}
+                                    </p>
+                                ) : null}
+                            </div>
+                        ) : null}
+
+                        {positions.length > 0 ? (
+                            <details className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-800">
+                                    銘柄別内訳 {positions.length}件 / 評価額計{' '}
+                                    {formatMoney(positionValuationTotal, currency)} {currency}
+                                </summary>
+                                <div className="overflow-x-auto border-t border-slate-200 bg-white">
+                                    <table className="min-w-full divide-y divide-slate-200 text-sm">
+                                        <thead className="bg-slate-50 text-xs text-slate-500">
+                                            <tr>
+                                                <th className="px-4 py-2 text-left font-medium">銘柄</th>
+                                                <th className="px-4 py-2 text-right font-medium">保有数</th>
+                                                <th className="px-4 py-2 text-right font-medium">平均取得単価</th>
+                                                <th className="px-4 py-2 text-right font-medium">現在値</th>
+                                                <th className="px-4 py-2 text-right font-medium">評価額</th>
+                                                <th className="px-4 py-2 text-right font-medium">評価損益</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 text-slate-700">
+                                            {positions.map((position, index) => (
+                                                <tr key={`${position.instrument_name}-${index}`}>
+                                                    <td className="whitespace-nowrap px-4 py-2 font-medium text-slate-900">
+                                                        {position.instrument_name}
+                                                    </td>
+                                                    <td className="whitespace-nowrap px-4 py-2 text-right">
+                                                        {position.quantity
+                                                            ? formatQuantity(position.quantity)
+                                                            : '—'}
+                                                    </td>
+                                                    <td className="whitespace-nowrap px-4 py-2 text-right">
+                                                        {position.average_acquisition_price
+                                                            ? formatMoney(
+                                                                  position.average_acquisition_price,
+                                                                  position.currency,
+                                                              )
+                                                            : '—'}
+                                                    </td>
+                                                    <td className="whitespace-nowrap px-4 py-2 text-right">
+                                                        {position.unit_price
+                                                            ? formatMoney(
+                                                                  position.unit_price,
+                                                                  position.currency,
+                                                              )
+                                                            : '—'}
+                                                    </td>
+                                                    <td className="whitespace-nowrap px-4 py-2 text-right font-medium text-slate-900">
+                                                        {formatMoney(
+                                                            position.valuation,
+                                                            position.currency,
+                                                        )}
+                                                    </td>
+                                                    <td className="whitespace-nowrap px-4 py-2 text-right">
+                                                        {position.unrealized_gain
+                                                            ? formatMoney(
+                                                                  position.unrealized_gain,
+                                                                  position.currency,
+                                                              )
+                                                            : '—'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </details>
+                        ) : null}
+
                         <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
                             <div>
                                 <label
@@ -176,6 +416,26 @@ export default function BalanceSnapshotPreview({
                                         </option>
                                     ))}
                                 </select>
+                                <label className="mt-2 flex items-start gap-2 text-xs text-slate-600">
+                                    <input
+                                        type="checkbox"
+                                        checked={rememberMappings[row.id] ?? false}
+                                        onChange={(event) =>
+                                            setRememberMappings((current) => ({
+                                                ...current,
+                                                [row.id]: event.target.checked,
+                                            }))
+                                        }
+                                        disabled={
+                                            importRecord.status === 'imported'
+                                            || ! selections[row.id]
+                                        }
+                                        className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                                    />
+                                    <span>
+                                        この取得名を口座の取込用別名に追加し、今後も自動対応する
+                                    </span>
+                                </label>
                             </div>
                             {importRecord.status !== 'imported' ? (
                                 <PrimaryButton
@@ -206,7 +466,7 @@ export default function BalanceSnapshotPreview({
                         ) : (
                             <p className="mt-3 text-xs text-slate-500">
                                 {row.is_duplicate_candidate
-                                    ? '同じ残高は確定時に安全にスキップします。'
+                                    ? '同じ残高はスキップし、未保存の銘柄内訳がある場合だけ追記します。'
                                     : row.status === 'imported'
                                       ? '残高へ反映済みです。'
                                       : '反映準備ができています。'}

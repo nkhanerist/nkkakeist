@@ -357,7 +357,7 @@ export default function AccountForm({
                 />
                 <p className="mt-2 text-xs text-slate-500">
                     Money Forward の振替取込で、摘要 / 店舗名に出る別表記を1行ずつ登録できます。例:
-                    MasterCard(1234)
+                    MasterCard(8658)
                 </p>
                 <InputError
                     className="mt-2"

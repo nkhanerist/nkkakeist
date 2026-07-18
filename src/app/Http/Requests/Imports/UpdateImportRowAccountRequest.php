@@ -34,6 +34,7 @@ class UpdateImportRowAccountRequest extends FormRequest
     {
         return [
             'resolved_account_id' => ['nullable'],
+            'remember_mapping' => ['boolean'],
         ];
     }
 
@@ -41,6 +42,16 @@ class UpdateImportRowAccountRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             $value = $this->input('resolved_account_id');
+
+            if ($this->boolean('remember_mapping') && $value === null) {
+                $importRow = $this->route('import_row');
+                $errorKey = $importRow instanceof ImportRow
+                    ? self::errorKey($importRow)
+                    : 'resolved_account_id';
+                $validator->errors()->add($errorKey, '対応を記憶する場合は取込先口座を選択してください。');
+
+                return;
+            }
 
             if ($value === null) {
                 return;
@@ -75,6 +86,7 @@ class UpdateImportRowAccountRequest extends FormRequest
             'resolved_account_id' => $this->filled('resolved_account_id')
                 ? $this->input('resolved_account_id')
                 : null,
+            'remember_mapping' => $this->boolean('remember_mapping'),
         ]);
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\ClassificationRuleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SecuritiesController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\TransactionCategoryReviewController;
 use App\Http\Controllers\TransactionController;
@@ -23,6 +24,8 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/securities', [SecuritiesController::class, 'index'])->name('securities.index');
+    Route::get('/securities/{account}', [SecuritiesController::class, 'show'])->name('securities.show');
 
     Route::prefix('accounts')->name('accounts.')->group(function (): void {
         Route::get('/', [AccountController::class, 'index'])->name('index');
@@ -81,6 +84,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('rows.update-transfer-account');
         Route::put('/{import}/rows/{import_row}/account', [ImportController::class, 'updateAccount'])
             ->name('rows.update-account');
+        Route::put('/{import}/rows/{import_row}/replacement', [ImportController::class, 'updateReplacement'])
+            ->name('rows.update-replacement');
         Route::post('/{import}/commit', [ImportController::class, 'commit'])->name('commit');
         Route::delete('/{import}', [ImportController::class, 'destroy'])->name('destroy');
     });

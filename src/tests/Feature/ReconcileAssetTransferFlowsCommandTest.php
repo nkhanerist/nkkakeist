@@ -113,7 +113,7 @@ class ReconcileAssetTransferFlowsCommandTest extends TestCase
         $dCard = Account::factory()->for($user)->create([
             'name' => 'dカード',
             'type' => 'credit_card',
-            'import_aliases' => ['MasterCard(1234)', 'THEO積立/SMBC日興証券'],
+            'import_aliases' => ['MasterCard(8658)', 'THEO積立/SMBC日興証券'],
         ]);
         $dPay = Account::factory()->for($user)->create([
             'name' => 'd払い',
@@ -142,7 +142,7 @@ class ReconcileAssetTransferFlowsCommandTest extends TestCase
             'duplicate_rows' => 0,
         ]);
 
-        $kyashMirrorRow = $this->importRow($import, 1, $kyash, $dCard, 'カード MasterCard(1234)', '3000.00');
+        $kyashMirrorRow = $this->importRow($import, 1, $kyash, $dCard, 'カード MasterCard(8658)', '3000.00');
         $kyashCanonicalRow = $this->importRow($import, 2, $dCard, $kyash, 'Kyash', '3000.00');
         $theoCardRow = $this->importRow($import, 3, $dCard, $theo, 'THEO積立/SMBC日興証券', '30000.00');
         $theoDpayRow = $this->importRow($import, 4, $dPay, $theo, 'THEO+docomo(dカード積立)', '30000.00');
@@ -156,7 +156,7 @@ class ReconcileAssetTransferFlowsCommandTest extends TestCase
             'user_id' => $user->id,
             'transaction_date' => '2026-02-01',
             'amount' => '9000.00',
-            'merchant_name' => 'カード MasterCard(1234)',
+            'merchant_name' => 'カード MasterCard(8658)',
             'currency' => 'JPY',
         ]);
 

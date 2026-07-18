@@ -87,6 +87,8 @@ export type TransactionFilters = {
     date_to: string;
     account_id: string;
     category_id: string;
+    category_state: 'all' | 'categorized' | 'uncategorized';
+    currency: string;
     type: string;
     keyword: string;
     is_confirmed: string;

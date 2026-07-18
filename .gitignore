@@ -30,3 +30,8 @@ docker/mysql/backups/*.sql.gz
 Thumbs.db
 .idea/
 .vscode/
+
+# Local development and submission artifacts
+artifacts/
+.codex/
+/firststep

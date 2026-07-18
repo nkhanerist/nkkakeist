@@ -30,6 +30,8 @@ class DeleteImportAction
         DB::transaction(function () use ($import): void {
             $import->loadMissing('accountSnapshots.account');
 
+            $import->assetHistorySnapshots()->delete();
+
             foreach ($import->accountSnapshots as $snapshot) {
                 $metadata = $snapshot->metadata ?? [];
 

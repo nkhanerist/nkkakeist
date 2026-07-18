@@ -11,6 +11,7 @@ class ImportParserService
         private readonly MobileSuicaPdfParser $mobileSuicaPdfParser,
         private readonly JrePointJsonParser $jrePointJsonParser,
         private readonly BalanceSnapshotJsonParser $balanceSnapshotJsonParser,
+        private readonly MoneyForwardAssetHistoryCsvParser $moneyForwardAssetHistoryCsvParser,
     ) {}
 
     /**
@@ -23,6 +24,7 @@ class ImportParserService
             'mobile_suica' => ['rows' => $this->mobileSuicaPdfParser->parse($contents), 'metadata' => null],
             'jre_point' => $this->jrePointJsonParser->parse($contents),
             'balance_snapshot' => $this->balanceSnapshotJsonParser->parse($contents),
+            'asset_history' => $this->moneyForwardAssetHistoryCsvParser->parse($contents),
             default => throw new RuntimeException('対応していない取込フォーマットです。'),
         };
     }

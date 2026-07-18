@@ -53,6 +53,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(AccountSnapshot::class);
     }
 
+    public function investmentPositionSnapshots(): HasMany
+    {
+        return $this->hasMany(InvestmentPositionSnapshot::class);
+    }
+
+    public function assetHistorySnapshots(): HasMany
+    {
+        return $this->hasMany(AssetHistorySnapshot::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

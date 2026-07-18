@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'duplicate_hash',
     'resolved_account_id',
     'manual_resolved_account_id',
+    'replace_account_snapshot_id',
     'resolved_transfer_account_id',
     'manual_resolved_transfer_account_id',
     'resolved_category_id',
@@ -87,6 +88,11 @@ class ImportRow extends Model
         return $this->belongsTo(Account::class, 'manual_resolved_account_id');
     }
 
+    public function replacementAccountSnapshot(): BelongsTo
+    {
+        return $this->belongsTo(AccountSnapshot::class, 'replace_account_snapshot_id');
+    }
+
     public function resolvedTransferAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'resolved_transfer_account_id');
@@ -125,6 +131,7 @@ class ImportRow extends Model
             'amount' => 'decimal:2',
             'resolved_account_id' => 'integer',
             'manual_resolved_account_id' => 'integer',
+            'replace_account_snapshot_id' => 'integer',
             'resolved_transfer_account_id' => 'integer',
             'manual_resolved_transfer_account_id' => 'integer',
             'resolved_category_id' => 'integer',

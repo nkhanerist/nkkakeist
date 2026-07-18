@@ -605,6 +605,90 @@ class TransactionCrudTest extends TestCase
                 ->where('filters.calculation_target', 'all'));
     }
 
+    public function test_transactions_index_account_filter_includes_transfer_destination(): void
+    {
+        $user = User::factory()->create();
+        $targetAccount = Account::factory()->for($user)->create();
+        $sourceAccount = Account::factory()->for($user)->create();
+        $unrelatedAccount = Account::factory()->for($user)->create();
+
+        $directTransaction = Transaction::factory()
+            ->forAccount($targetAccount)
+            ->create([
+                'user_id' => $user->id,
+                'transaction_date' => '2026-04-01',
+            ]);
+        $incomingTransfer = Transaction::factory()
+            ->transfer($sourceAccount, $targetAccount)
+            ->create(['transaction_date' => '2026-04-02']);
+        Transaction::factory()
+            ->forAccount($unrelatedAccount)
+            ->create(['user_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->get(route('transactions.index', [
+                'account_id' => $targetAccount->id,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('transactions.data', 2)
+                ->where('transactions.data.0.id', $incomingTransfer->id)
+                ->where('transactions.data.1.id', $directTransaction->id)
+                ->where('filters.account_id', (string) $targetAccount->id));
+    }
+
+    public function test_transactions_index_filters_by_currency_and_category_state(): void
+    {
+        $user = User::factory()->create();
+        $account = Account::factory()->for($user)->create(['currency' => 'JPY']);
+        $usdAccount = Account::factory()->for($user)->create(['currency' => 'USD']);
+        $category = Category::factory()->for($user)->create(['type' => 'expense']);
+
+        $uncategorizedJpy = Transaction::factory()
+            ->forAccount($account)
+            ->create([
+                'user_id' => $user->id,
+                'category_id' => null,
+                'currency' => 'JPY',
+            ]);
+        Transaction::factory()
+            ->forAccount($account)
+            ->forCategory($category)
+            ->create([
+                'user_id' => $user->id,
+                'currency' => 'JPY',
+            ]);
+        Transaction::factory()
+            ->forAccount($usdAccount)
+            ->create([
+                'user_id' => $user->id,
+                'category_id' => null,
+                'currency' => 'USD',
+            ]);
+
+        $this->actingAs($user)
+            ->get(route('transactions.index', [
+                'currency' => 'JPY',
+                'category_state' => 'uncategorized',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('transactions.data', 1)
+                ->where('transactions.data.0.id', $uncategorizedJpy->id)
+                ->where('filters.currency', 'JPY')
+                ->where('filters.category_state', 'uncategorized')
+                ->where('currencyOptions', ['JPY', 'USD']));
+
+        $this->actingAs($user)
+            ->get(route('transactions.index', [
+                'category_state' => 'invalid',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('transactions.data', 3)
+                ->where('filters.category_state', 'all'));
+    }
+
     public function test_transactions_index_combines_calculation_target_with_other_filters(): void
     {
         $user = User::factory()->create();

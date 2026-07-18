@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+SERVICE_NAME="${DOCKER_COMPOSE_DB_SERVICE:-db}"
+MYSQL_DATABASE="${DOCKER_COMPOSE_DB_DATABASE:-asset_manager}"
+MYSQL_USER="${DOCKER_COMPOSE_DB_USER:-laravel}"
+MYSQL_PASSWORD="${DOCKER_COMPOSE_DB_PASSWORD:-secret}"
+WAIT_TIMEOUT_SECONDS="${DOCKER_COMPOSE_DB_WAIT_TIMEOUT_SECONDS:-60}"
+
+cd "${PROJECT_DIR}"
+
+wait_for_service_health() {
+    local container_id
+    local status
+    local elapsed=0
+
+    while [ "${elapsed}" -lt "${WAIT_TIMEOUT_SECONDS}" ]; do
+        container_id="$(docker compose ps -q "${SERVICE_NAME}")"
+
+        if [ -n "${container_id}" ]; then
+            status="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "${container_id}")"
+
+            if [ "${status}" = "healthy" ] || [ "${status}" = "running" ]; then
+                return 0
+            fi
+        fi
+
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+
+    echo "Timed out waiting for ${SERVICE_NAME} to become healthy." >&2
+    return 1
+}
+
+if ! docker compose ps --status running --services "${SERVICE_NAME}" | grep -qx "${SERVICE_NAME}"; then
+    docker compose up -d "${SERVICE_NAME}"
+fi
+
+wait_for_service_health
+
+exec_options=()
+if [ ! -t 0 ] || [ ! -t 1 ]; then
+    exec_options=(-T)
+fi
+
+exec docker compose exec \
+    "${exec_options[@]}" \
+    -e MYSQL_PWD="${MYSQL_PASSWORD}" \
+    "${SERVICE_NAME}" \
+    mysql \
+    --user="${MYSQL_USER}" \
+    "${MYSQL_DATABASE}" \
+    "$@"

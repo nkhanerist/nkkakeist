@@ -56,6 +56,9 @@ export default function Index({ imports }: IndexProps) {
                                                 {t('table.duplicates')}
                                             </th>
                                             <th className="px-4 py-3">
+                                                {t('table.issues')}
+                                            </th>
+                                            <th className="px-4 py-3">
                                                 {t('table.createdAt')}
                                             </th>
                                             <th className="px-4 py-3">
@@ -109,7 +112,66 @@ export default function Index({ imports }: IndexProps) {
                                                     {item.imported_rows}
                                                 </td>
                                                 <td className="px-4 py-4">
-                                                    {item.duplicate_rows}
+                                                    {item.source_name ===
+                                                        'asset_history' &&
+                                                    item.duplicate_rows > 0 ? (
+                                                        <span className="text-xs text-slate-500">
+                                                            {t(
+                                                                'table.assetHistoryDuplicates',
+                                                                {
+                                                                    count: item.duplicate_rows,
+                                                                },
+                                                            )}
+                                                        </span>
+                                                    ) : (
+                                                        item.duplicate_rows
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    <div className="flex flex-col items-start gap-1.5">
+                                                        {item.issue_rows_count >
+                                                        0 ? (
+                                                            <Link
+                                                                href={`${route(
+                                                                    'imports.show',
+                                                                    item.id,
+                                                                )}#import-issues`}
+                                                                className="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200"
+                                                            >
+                                                                {t(
+                                                                    'table.issueRows',
+                                                                    {
+                                                                        count: item.issue_rows_count,
+                                                                    },
+                                                                )}
+                                                            </Link>
+                                                        ) : null}
+                                                        {item.advisory_rows_count >
+                                                        0 ? (
+                                                            <Link
+                                                                href={`${route(
+                                                                    'imports.show',
+                                                                    item.id,
+                                                                )}#import-advisories`}
+                                                                className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
+                                                            >
+                                                                {t(
+                                                                    'table.advisoryRows',
+                                                                    {
+                                                                        count: item.advisory_rows_count,
+                                                                    },
+                                                                )}
+                                                            </Link>
+                                                        ) : null}
+                                                    </div>
+                                                    {item.issue_rows_count ===
+                                                        0 &&
+                                                    item.advisory_rows_count ===
+                                                        0 ? (
+                                                        <span className="text-slate-400">
+                                                            -
+                                                        </span>
+                                                    ) : null}
                                                 </td>
                                                 <td className="px-4 py-4">
                                                     {item.created_at ?? '-'}

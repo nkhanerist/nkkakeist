@@ -5,6 +5,7 @@ import BalanceSnapshotPreview from '@/Components/Imports/BalanceSnapshotPreview'
 import AssetHistoryPreview from '@/Components/Imports/AssetHistoryPreview';
 import { PageProps } from '@/types';
 import {
+    EditableReimport,
     ImportAccountOption,
     ImportListItem,
     ImportPreviewRow,
@@ -20,6 +21,7 @@ type ShowProps = {
     accountOptions: ImportAccountOption[];
     rows: ImportPreviewRow[];
     jrePointReconciliation: JrePointReconciliation | null;
+    editableReimport: EditableReimport | null;
 };
 
 export default function Show({
@@ -27,6 +29,7 @@ export default function Show({
     accountOptions,
     rows,
     jrePointReconciliation,
+    editableReimport,
 }: ShowProps) {
     const { t, i18n } = useTranslation('imports');
     const page = usePage<PageProps>();
@@ -51,6 +54,10 @@ export default function Show({
     const transferRowsExist = rows.some(
         (row) => row.detected_type === 'transfer',
     );
+    const issueRows = rows.filter((row) => row.validation_errors.length > 0);
+    const advisoryRows = rows.filter(
+        (row) => row.validation_warnings.length > 0,
+    );
     const isBalanceSnapshot = importRecord.source_name === 'balance_snapshot';
     const isAssetHistory = importRecord.source_name === 'asset_history';
     const formatPoints = (value: string) =>
@@ -70,6 +77,9 @@ export default function Show({
 
         return error ?? null;
     };
+
+    const transferAliasCandidate = (row: ImportPreviewRow) =>
+        row.merchant_name?.trim() || row.description?.trim() || null;
 
     const handleCommit = () => {
         router.post(route('imports.commit', importRecord.id));
@@ -225,6 +235,153 @@ export default function Show({
                     </div>
                 ) : null}
 
+                {issueRows.length > 0 ? (
+                    <section
+                        id="import-issues"
+                        className="scroll-mt-6 rounded-xl border border-rose-200 bg-rose-50 p-5"
+                    >
+                        <h2 className="font-semibold text-rose-950">
+                            {t('preview.issueSummary.title', {
+                                count: issueRows.length,
+                            })}
+                        </h2>
+                        <p className="mt-1 text-sm text-rose-800">
+                            {importRecord.status === 'imported'
+                                ? t(
+                                      'preview.issueSummary.importedDescription',
+                                  )
+                                : t('preview.issueSummary.description')}
+                        </p>
+                        {importRecord.status === 'imported' ? (
+                            editableReimport ? (
+                                <Link
+                                    href={`${route(
+                                        'imports.show',
+                                        editableReimport.id,
+                                    )}#import-row-${editableReimport.row_id}`}
+                                    className="mt-3 inline-flex rounded-md bg-rose-700 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-800"
+                                >
+                                    {t(
+                                        'preview.issueSummary.openEditableReimport',
+                                        {
+                                            filename:
+                                                editableReimport.original_filename,
+                                            row: editableReimport.row_number,
+                                        },
+                                    )}
+                                </Link>
+                            ) : (
+                                <p className="mt-3 rounded-lg border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800">
+                                    {t(
+                                        'preview.issueSummary.reimportRequired',
+                                    )}
+                                </p>
+                            )
+                        ) : null}
+                        <ul className="mt-3 space-y-3">
+                            {issueRows.map((row) => (
+                                <li
+                                    key={row.id}
+                                    className="rounded-lg border border-rose-200 bg-white p-4"
+                                >
+                                    <a
+                                        href={`#import-row-${row.id}`}
+                                        className="inline-flex text-sm font-semibold text-rose-800 underline decoration-rose-300 underline-offset-4 hover:text-rose-950"
+                                    >
+                                        {t('preview.issueSummary.jumpToRow', {
+                                            row: row.row_number,
+                                            message:
+                                                row.validation_errors[0] ?? '',
+                                        })}
+                                    </a>
+                                    {row.detected_type === 'transfer' &&
+                                    transferAliasCandidate(row) ? (
+                                        <div className="mt-3 space-y-2 border-t border-rose-100 pt-3 text-sm text-slate-700">
+                                            <p className="font-semibold text-slate-900">
+                                                {t(
+                                                    'preview.transferResolutionHelp.title',
+                                                )}
+                                            </p>
+                                            {importRecord.status !==
+                                            'imported' ? (
+                                                <p>
+                                                    {t(
+                                                        'preview.transferResolutionHelp.currentImport',
+                                                    )}
+                                                </p>
+                                            ) : null}
+                                            <p>
+                                                {t(
+                                                    'preview.transferResolutionHelp.futureImports',
+                                                )}
+                                            </p>
+                                            <code className="inline-block break-all rounded bg-slate-100 px-2 py-1 font-mono text-sm text-slate-900">
+                                                {transferAliasCandidate(row)}
+                                            </code>
+                                            <div>
+                                                <Link
+                                                    href={route(
+                                                        'accounts.index',
+                                                    )}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="font-semibold text-indigo-700 hover:text-indigo-900"
+                                                >
+                                                    {t(
+                                                        'preview.transferResolutionHelp.openAccounts',
+                                                    )}
+                                                </Link>
+                                            </div>
+                                            <p className="text-xs text-slate-500">
+                                                {t(
+                                                    'preview.transferResolutionHelp.reparseAfterEdit',
+                                                )}
+                                            </p>
+                                        </div>
+                                    ) : null}
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                ) : null}
+
+                {advisoryRows.length > 0 ? (
+                    <section
+                        id="import-advisories"
+                        className="scroll-mt-6 rounded-xl border border-sky-200 bg-sky-50 px-5 py-4"
+                    >
+                        <h2 className="font-semibold text-sky-950">
+                            {t('preview.advisorySummary.title', {
+                                count: advisoryRows.length,
+                            })}
+                        </h2>
+                        <p className="mt-1 text-sm text-sky-800">
+                            {t('preview.advisorySummary.description')}
+                        </p>
+                        <ul className="mt-3 space-y-2 text-sm text-sky-900">
+                            {advisoryRows.map((row) => (
+                                <li key={row.id}>
+                                    <a
+                                        href={`#import-row-${row.id}`}
+                                        className="font-medium underline decoration-sky-300 underline-offset-4 hover:text-sky-950"
+                                    >
+                                        {t(
+                                            'preview.advisorySummary.jumpToRow',
+                                            {
+                                                row: row.row_number,
+                                                message:
+                                                    row
+                                                        .validation_warnings[0] ??
+                                                    '',
+                                            },
+                                        )}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                ) : null}
+
                 {jrePointReconciliation ? (
                     <div className="space-y-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
                         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -374,7 +531,7 @@ export default function Show({
                 ) : (
                     <div className="overflow-hidden rounded-xl border border-slate-200">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-slate-200">
+                            <table className="min-w-[1800px] divide-y divide-slate-200">
                                 <thead className="bg-slate-50">
                                     <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                                         <th className="px-4 py-3">
@@ -423,7 +580,16 @@ export default function Show({
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 bg-white text-sm text-slate-700">
                                     {rows.map((row) => (
-                                        <tr key={row.id}>
+                                        <tr
+                                            id={`import-row-${row.id}`}
+                                            key={row.id}
+                                            className={`scroll-mt-6 ${
+                                                row.validation_errors.length >
+                                                0
+                                                    ? 'bg-rose-50/60'
+                                                    : ''
+                                            }`}
+                                        >
                                             <td className="px-4 py-4">
                                                 {row.row_number}
                                             </td>
@@ -616,6 +782,31 @@ export default function Show({
                                                                             row.id,
                                                                         )}
                                                                     </p>
+                                                                ) : null}
+                                                                {transferAccountSelections[
+                                                                    row.id
+                                                                ] &&
+                                                                transferAliasCandidate(
+                                                                    row,
+                                                                ) ? (
+                                                                    <Link
+                                                                        href={route(
+                                                                            'accounts.edit',
+                                                                            Number(
+                                                                                transferAccountSelections[
+                                                                                    row
+                                                                                        .id
+                                                                                ],
+                                                                            ),
+                                                                        )}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="inline-flex text-xs font-semibold text-indigo-700 hover:text-indigo-900"
+                                                                    >
+                                                                        {t(
+                                                                            'preview.transferResolutionHelp.editSelectedAccount',
+                                                                        )}
+                                                                    </Link>
                                                                 ) : null}
                                                             </div>
                                                         ) : null}
@@ -844,7 +1035,27 @@ export default function Show({
                                                             )}
                                                         </ul>
                                                     ) : null}
+                                                    {row.validation_warnings
+                                                        .length > 0 ? (
+                                                        <ul className="space-y-1 text-xs text-sky-700">
+                                                            {row.validation_warnings.map(
+                                                                (warning) => (
+                                                                    <li
+                                                                        key={
+                                                                            warning
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            warning
+                                                                        }
+                                                                    </li>
+                                                                ),
+                                                            )}
+                                                        </ul>
+                                                    ) : null}
                                                     {row.validation_errors
+                                                        .length === 0 &&
+                                                    row.validation_warnings
                                                         .length === 0 &&
                                                     !row.is_duplicate_candidate ? (
                                                         <span className="text-xs text-slate-500">

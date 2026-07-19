@@ -192,5 +192,7 @@ return [
         'transfer_destination_exact_name' => 'The transfer destination was resolved by an exact account-name match in the description or details.',
         'transfer_destination_exact_alias' => 'The transfer destination was resolved by an exact import-alias match.',
         'transfer_destination_partial' => 'The transfer destination was resolved by a partial match in the description or details.',
+        'mirror_charge_skipped' => 'Safely skipped: the same charge exists on the card side, so the mirrored entry was not imported. No action is needed.',
+        'kyash_mirror_charge_skipped' => 'Safely skipped: this Kyash entry mirrors the same d-card charge. It was not imported to prevent double counting, so no action is needed.',
     ],
 ];

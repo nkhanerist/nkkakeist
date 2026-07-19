@@ -17,6 +17,13 @@ export type ImportSuggestedAccountIds = Partial<
     Record<'mobile_suica' | 'jre_point', number>
 >;
 
+export type EditableReimport = {
+    id: number;
+    original_filename: string;
+    row_id: number;
+    row_number: number;
+};
+
 export type ImportListItem = {
     id: number;
     source_name: string | null;
@@ -29,6 +36,8 @@ export type ImportListItem = {
     imported_rows: number;
     skipped_rows: number;
     duplicate_rows: number;
+    issue_rows_count: number;
+    advisory_rows_count: number;
     error_message: string | null;
     imported_at: string | null;
     created_at: string | null;
@@ -88,6 +97,7 @@ export type ImportPreviewRow = {
     is_duplicate_candidate: boolean;
     duplicate_hash: string | null;
     validation_errors: string[];
+    validation_warnings: string[];
     raw_payload: Record<string, unknown>;
     transfer_resolution: TransferResolution;
 };

@@ -74,6 +74,8 @@ class ImportMessageLocalizer
             '振替先口座は摘要 / 説明の口座名完全一致で解決しました。' => 'transfer_destination_exact_name',
             '振替先口座は取込用別名の完全一致で解決しました。' => 'transfer_destination_exact_alias',
             '振替先口座は摘要 / 説明の部分一致で解決しました。' => 'transfer_destination_partial',
+            '資産残高補正: カード側にも同一チャージがあるため鏡像行をスキップしました。' => 'mirror_charge_skipped',
+            'Kyash残高補正: 同じdカードチャージの反対側明細があるため鏡像行をスキップしました。' => 'kyash_mirror_charge_skipped',
             default => null,
         };
 

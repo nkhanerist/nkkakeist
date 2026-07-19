@@ -43,6 +43,10 @@
         "totalRows": "総行数",
         "importedRows": "取り込み済み",
         "duplicates": "重複候補",
+        "assetHistoryDuplicates": "取込済み {{count}}件（対応不要）",
+        "issues": "確認事項",
+        "issueRows": "要対応 {{count}}件",
+        "advisoryRows": "情報 {{count}}件",
         "createdAt": "作成日時",
         "importedAt": "取り込み日時",
         "actions": "操作",
@@ -102,10 +106,11 @@
             "steps": [
                 "Money Forward Web版の「資産推移」を開きます。",
                 "画面下部のCSVダウンロードから資産推移CSVを保存します。",
-                "保存したCSVを選択し、過去の総資産・資産分類を確認して反映します。"
+                "保存したCSVを選択し、過去の総資産・資産分類を確認して反映します。",
+                "この取り込みは初期設定時に原則1回だけ行います。"
             ],
             "open": "Money Forward 資産推移を開く ↗",
-            "hint": "銘柄別の過去データは公式CSVに含まれません。現在の銘柄を残高取得で起点登録し、以後の日次取得で銘柄別推移を蓄積します。"
+            "hint": "初回取り込み後は、公式残高・評価額の取得で日次推移を蓄積します。銘柄別の過去データは公式CSVに含まれません。"
         }
     },
     "preview": {
@@ -147,6 +152,27 @@
             "points": "{{value}} pt"
         },
         "transferHelp": "振替の手動補正では「相手口座」を固定します。最終的な振替方向は、選んだ相手口座を候補に固定したうえで、金額の符号と口座種別から再判定します。返金や払戻しでは通常と逆向きになることがあります。",
+        "issueSummary": {
+            "title": "反映できない行が{{count}}件あります",
+            "description": "各行のエラーを解消してから反映してください。すでに反映済みの履歴では、この行はスキップされている可能性があります。",
+            "importedDescription": "このImportは取り込み済みのため、ここでは行を変更できません。エラー行は取り込み時にスキップされています。",
+            "openEditableReimport": "確認待ちの「{{filename}}」{{row}}行目で補正する →",
+            "reimportRequired": "補正するには、同じ期間を含む最新のCSVをもう一度取り込んでください。重複行は自動でスキップされ、未解決行だけ補正できます。",
+            "jumpToRow": "{{row}}行目: {{message}}"
+        },
+        "advisorySummary": {
+            "title": "安全にスキップした行が{{count}}件あります",
+            "description": "二重計上を防ぐため、意図的に取り込まなかった明細です。内容の記録は残しますが、対応は不要です。",
+            "jumpToRow": "{{row}}行目: {{message}}"
+        },
+        "transferResolutionHelp": {
+            "title": "振替先が見つからないとき",
+            "currentImport": "今回だけ補正する場合は、該当行へ移動し、相手口座を選んで「適用」します。",
+            "futureImports": "次回から自動解決する場合は、相手口座の「取込用別名」に次の摘要を追加します。",
+            "editSelectedAccount": "選択した口座の別名を編集 →",
+            "openAccounts": "口座一覧から別名を設定 →",
+            "reparseAfterEdit": "別名を保存したらこの画面へ戻り、「再解析」で解決結果を確認してください。"
+        },
         "actions": {
             "applyBalance": "残高を反映",
             "applyAssetHistory": "資産推移を反映",
@@ -263,11 +289,13 @@
     },
     "assetHistoryPreview": {
         "empty": "解析済みの資産推移がありません。",
+        "initialImportTitle": "資産推移CSVは初期設定用です",
+        "initialImportDescription": "過去の月次推移は原則1回取り込めば完了です。すでに保存済みの月は自動でスキップされ、確認や補正は不要です。以後の日次推移は公式残高・評価額の取得で蓄積します。",
         "date": "日付",
         "totalAssets": "総資産",
         "breakdown": "資産内訳",
         "status": "状態",
-        "alreadyImported": "取り込み済み",
+        "alreadyImported": "取り込み済み（自動スキップ・対応不要）",
         "applied": "反映済み",
         "ready": "反映対象"
     }

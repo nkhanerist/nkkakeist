@@ -43,6 +43,10 @@
         "totalRows": "Total Rows",
         "importedRows": "Imported",
         "duplicates": "Duplicates",
+        "assetHistoryDuplicates": "{{count}} already imported (no action needed)",
+        "issues": "Review Notes",
+        "issueRows": "Action Required: {{count}}",
+        "advisoryRows": "Info: {{count}}",
         "createdAt": "Created At",
         "importedAt": "Imported At",
         "actions": "Actions",
@@ -102,10 +106,11 @@
             "steps": [
                 "Open Asset History in the Money Forward web app.",
                 "Download the asset history CSV from the bottom of the page.",
-                "Select the CSV, review past total assets and asset classes, and apply it."
+                "Select the CSV, review past total assets and asset classes, and apply it.",
+                "In general, run this import only once during initial setup."
             ],
             "open": "Open Money Forward Asset History ↗",
-            "hint": "The official CSV does not include historical data by holding. Register current holdings from a balance import, then build holding-level history with daily imports."
+            "hint": "After the initial import, build daily history with official balance and valuation imports. The official CSV does not include historical data by holding."
         }
     },
     "preview": {
@@ -147,6 +152,27 @@
             "points": "{{value}} pt"
         },
         "transferHelp": "Manual transfer correction fixes the counterparty account. The final direction is recalculated from the amount sign and account types with that account fixed as the candidate. Refunds may run in the opposite direction.",
+        "issueSummary": {
+            "title": "Rows that cannot be applied: {{count}}",
+            "description": "Resolve each row error before applying the import. In an already applied import, the affected row may have been skipped.",
+            "importedDescription": "This import has already been applied, so its rows cannot be changed here. Rows with errors were skipped when the import was applied.",
+            "openEditableReimport": "Fix row {{row}} in pending “{{filename}}” →",
+            "reimportRequired": "To fix this row, import a current CSV that covers the same period. Existing rows will be skipped automatically, leaving only unresolved rows to correct.",
+            "jumpToRow": "Row {{row}}: {{message}}"
+        },
+        "advisorySummary": {
+            "title": "Rows safely skipped: {{count}}",
+            "description": "These entries were intentionally not imported to prevent double counting. The audit note remains, but no action is needed.",
+            "jumpToRow": "Row {{row}}: {{message}}"
+        },
+        "transferResolutionHelp": {
+            "title": "When the transfer destination is not found",
+            "currentImport": "To fix only this import, open the affected row, select a counterparty account, and choose Apply.",
+            "futureImports": "To resolve it automatically next time, add the following description to the counterparty account's import aliases.",
+            "editSelectedAccount": "Edit aliases for the selected account →",
+            "openAccounts": "Set an alias from Accounts →",
+            "reparseAfterEdit": "After saving the alias, return here and choose Reanalyze to verify the result."
+        },
         "actions": {
             "applyBalance": "Apply Balances",
             "applyAssetHistory": "Apply Asset History",
@@ -263,11 +289,13 @@
     },
     "assetHistoryPreview": {
         "empty": "No parsed asset history.",
+        "initialImportTitle": "Asset history CSV is for initial setup",
+        "initialImportDescription": "Historical monthly data generally needs to be imported only once. Months already stored are skipped automatically and need no review or correction. Build ongoing daily history with official balance and valuation imports.",
         "date": "Date",
         "totalAssets": "Total Assets",
         "breakdown": "Asset Breakdown",
         "status": "Status",
-        "alreadyImported": "Imported",
+        "alreadyImported": "Already imported (automatically skipped; no action needed)",
         "applied": "Applied",
         "ready": "Ready"
     }

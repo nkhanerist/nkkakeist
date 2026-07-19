@@ -19,8 +19,10 @@ use App\Http\Requests\Imports\UpdateImportRowTransferAccountRequest;
 use App\Models\Import;
 use App\Models\ImportRow;
 use App\Services\Imports\BalanceSnapshotConflictService;
+use App\Services\Imports\FindEditableReimportService;
 use App\Services\Imports\ImportMessageLocalizer;
 use App\Services\Imports\ImportOptionsService;
+use App\Services\Imports\ImportRowIssueService;
 use App\Services\Imports\JrePointReconciliationService;
 use App\Services\Imports\ResolveTransferImportRowService;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +44,8 @@ class ImportController extends Controller
         private readonly DeleteImportAction $deleteImportAction,
         private readonly ImportOptionsService $importOptionsService,
         private readonly ImportMessageLocalizer $importMessageLocalizer,
+        private readonly ImportRowIssueService $importRowIssueService,
+        private readonly FindEditableReimportService $findEditableReimportService,
         private readonly ResolveTransferImportRowService $resolveTransferImportRowService,
         private readonly JrePointReconciliationService $jrePointReconciliationService,
         private readonly BalanceSnapshotConflictService $balanceSnapshotConflictService,
@@ -107,72 +111,82 @@ class ImportController extends Controller
             'import' => $this->importOptionsService->importListItem($import),
             'accountOptions' => $this->importOptionsService->accountOptions($import->user),
             'jrePointReconciliation' => $this->jrePointReconciliationService->handle($import),
-            'rows' => $import->importRows->map(fn ($importRow): array => [
-                'id' => $importRow->id,
-                'row_number' => $importRow->row_number,
-                'transaction_date' => $importRow->transaction_date?->format('Y-m-d'),
-                'amount' => $importRow->amount,
-                'account_name' => $importRow->account_name,
-                'category_name' => $importRow->detected_type === 'transfer' ? null : $importRow->category_name,
-                'subcategory_name' => $importRow->detected_type === 'transfer' ? null : $importRow->subcategory_name,
-                'merchant_name' => $importRow->merchant_name,
-                'description' => $importRow->description,
-                'detected_type' => $importRow->detected_type,
-                'is_calculation_target' => $importRow->resolved_is_calculation_target,
-                'affects_account_balance' => $importRow->resolved_affects_account_balance,
-                'resolved_account' => $importRow->resolvedAccount === null ? null : [
-                    'id' => $importRow->resolvedAccount->id,
-                    'name' => $importRow->resolvedAccount->name,
-                    'currency' => $importRow->resolvedAccount->currency,
-                ],
-                'manual_resolved_account_id' => $importRow->manual_resolved_account_id,
-                'remember_mapping_recommended' => $import->source_name === 'balance_snapshot'
-                    && $importRow->account_name === 'Money Forward 年金'
-                    && $importRow->resolved_account_id === null,
-                'replace_account_snapshot_id' => $importRow->replace_account_snapshot_id,
-                'same_day_snapshot' => $this->sameDaySnapshotItem($import, $importRow),
-                'resolved_transfer_account' => $importRow->resolvedTransferAccount === null ? null : [
-                    'id' => $importRow->resolvedTransferAccount->id,
-                    'name' => $importRow->resolvedTransferAccount->name,
-                    'currency' => $importRow->resolvedTransferAccount->currency,
-                ],
-                'manual_resolved_transfer_account_id' => $importRow->manual_resolved_transfer_account_id,
-                'resolved_category' => $importRow->resolvedCategory === null ? null : [
-                    'id' => $importRow->resolvedCategory->id,
-                    'name' => $importRow->resolvedCategory->name,
-                ],
-                'resolved_subcategory' => $importRow->resolvedSubcategory === null ? null : [
-                    'id' => $importRow->resolvedSubcategory->id,
-                    'name' => $importRow->resolvedSubcategory->name,
-                ],
-                'matched_classification_rule' => $importRow->matchedClassificationRule === null ? null : [
-                    'id' => $importRow->matchedClassificationRule->id,
-                    'name' => $importRow->matchedClassificationRule->name,
-                    'priority' => $importRow->matchedClassificationRule->priority,
-                ],
-                'rule_applied_fields' => $importRow->rule_applied_fields ?? [],
-                'category_resolution_source' => $importRow->resolved_category_id === null
-                    ? null
-                    : (in_array('category', $importRow->rule_applied_fields ?? [], true) ? 'rule' : 'csv'),
-                'subcategory_resolution_source' => $importRow->resolved_subcategory_id === null
-                    ? null
-                    : (in_array('subcategory', $importRow->rule_applied_fields ?? [], true) ? 'rule' : 'csv'),
-                'calculation_target_source' => $importRow->detected_type === 'transfer'
-                    ? null
-                    : ($importRow->is_calculation_target === null
-                        ? ($importRow->resolved_is_calculation_target === null ? null : 'rule')
-                        : (in_array('is_calculation_target', $importRow->rule_applied_fields ?? [], true) ? 'rule' : 'csv')),
-                'status' => $importRow->status,
-                'is_duplicate_candidate' => $importRow->is_duplicate_candidate,
-                'duplicate_hash' => $importRow->duplicate_hash,
-                'validation_errors' => $this->importMessageLocalizer->messages(
+            'editableReimport' => $this->findEditableReimportService->handle($import),
+            'rows' => $import->importRows->map(function ($importRow) use ($import, $accounts): array {
+                $issues = $this->importRowIssueService->partition(
                     $importRow->validation_errors ?? [],
-                ),
-                'raw_payload' => $importRow->raw_payload,
-                'transfer_resolution' => $this->importMessageLocalizer->transferResolution(
-                    $this->resolveTransferImportRowService->explain($importRow, $accounts),
-                ),
-            ])->all(),
+                );
+
+                return [
+                    'id' => $importRow->id,
+                    'row_number' => $importRow->row_number,
+                    'transaction_date' => $importRow->transaction_date?->format('Y-m-d'),
+                    'amount' => $importRow->amount,
+                    'account_name' => $importRow->account_name,
+                    'category_name' => $importRow->detected_type === 'transfer' ? null : $importRow->category_name,
+                    'subcategory_name' => $importRow->detected_type === 'transfer' ? null : $importRow->subcategory_name,
+                    'merchant_name' => $importRow->merchant_name,
+                    'description' => $importRow->description,
+                    'detected_type' => $importRow->detected_type,
+                    'is_calculation_target' => $importRow->resolved_is_calculation_target,
+                    'affects_account_balance' => $importRow->resolved_affects_account_balance,
+                    'resolved_account' => $importRow->resolvedAccount === null ? null : [
+                        'id' => $importRow->resolvedAccount->id,
+                        'name' => $importRow->resolvedAccount->name,
+                        'currency' => $importRow->resolvedAccount->currency,
+                    ],
+                    'manual_resolved_account_id' => $importRow->manual_resolved_account_id,
+                    'remember_mapping_recommended' => $import->source_name === 'balance_snapshot'
+                        && $importRow->account_name === 'Money Forward 年金'
+                        && $importRow->resolved_account_id === null,
+                    'replace_account_snapshot_id' => $importRow->replace_account_snapshot_id,
+                    'same_day_snapshot' => $this->sameDaySnapshotItem($import, $importRow),
+                    'resolved_transfer_account' => $importRow->resolvedTransferAccount === null ? null : [
+                        'id' => $importRow->resolvedTransferAccount->id,
+                        'name' => $importRow->resolvedTransferAccount->name,
+                        'currency' => $importRow->resolvedTransferAccount->currency,
+                    ],
+                    'manual_resolved_transfer_account_id' => $importRow->manual_resolved_transfer_account_id,
+                    'resolved_category' => $importRow->resolvedCategory === null ? null : [
+                        'id' => $importRow->resolvedCategory->id,
+                        'name' => $importRow->resolvedCategory->name,
+                    ],
+                    'resolved_subcategory' => $importRow->resolvedSubcategory === null ? null : [
+                        'id' => $importRow->resolvedSubcategory->id,
+                        'name' => $importRow->resolvedSubcategory->name,
+                    ],
+                    'matched_classification_rule' => $importRow->matchedClassificationRule === null ? null : [
+                        'id' => $importRow->matchedClassificationRule->id,
+                        'name' => $importRow->matchedClassificationRule->name,
+                        'priority' => $importRow->matchedClassificationRule->priority,
+                    ],
+                    'rule_applied_fields' => $importRow->rule_applied_fields ?? [],
+                    'category_resolution_source' => $importRow->resolved_category_id === null
+                        ? null
+                        : (in_array('category', $importRow->rule_applied_fields ?? [], true) ? 'rule' : 'csv'),
+                    'subcategory_resolution_source' => $importRow->resolved_subcategory_id === null
+                        ? null
+                        : (in_array('subcategory', $importRow->rule_applied_fields ?? [], true) ? 'rule' : 'csv'),
+                    'calculation_target_source' => $importRow->detected_type === 'transfer'
+                        ? null
+                        : ($importRow->is_calculation_target === null
+                            ? ($importRow->resolved_is_calculation_target === null ? null : 'rule')
+                            : (in_array('is_calculation_target', $importRow->rule_applied_fields ?? [], true) ? 'rule' : 'csv')),
+                    'status' => $importRow->status,
+                    'is_duplicate_candidate' => $importRow->is_duplicate_candidate,
+                    'duplicate_hash' => $importRow->duplicate_hash,
+                    'validation_errors' => $this->importMessageLocalizer->messages(
+                        $issues['errors'],
+                    ),
+                    'validation_warnings' => $this->importMessageLocalizer->messages(
+                        $issues['advisories'],
+                    ),
+                    'raw_payload' => $importRow->raw_payload,
+                    'transfer_resolution' => $this->importMessageLocalizer->transferResolution(
+                        $this->resolveTransferImportRowService->explain($importRow, $accounts),
+                    ),
+                ];
+            })->all(),
         ]);
     }
 

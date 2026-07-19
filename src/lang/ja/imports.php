@@ -192,5 +192,7 @@ return [
         'transfer_destination_exact_name' => '振替先口座は摘要 / 説明の口座名完全一致で解決しました。',
         'transfer_destination_exact_alias' => '振替先口座は取込用別名の完全一致で解決しました。',
         'transfer_destination_partial' => '振替先口座は摘要 / 説明の部分一致で解決しました。',
+        'mirror_charge_skipped' => '安全にスキップ済み: カード側に同じチャージがあるため、反対側の明細は取り込みません。対応は不要です。',
+        'kyash_mirror_charge_skipped' => '安全にスキップ済み: 同じdカードチャージの反対側にあるKyash明細です。二重計上を防ぐため取り込んでいないので、対応は不要です。',
     ],
 ];

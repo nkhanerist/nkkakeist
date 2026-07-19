@@ -56,6 +56,19 @@ class ImportFeatureTest extends TestCase
             'duplicate_rows' => 0,
         ]);
 
+        $ownImport->importRows()->create([
+            'row_number' => 42,
+            'raw_payload' => ['content' => 'unresolved transfer'],
+            'validation_errors' => ['振替先口座を特定できません。'],
+            'status' => 'skipped',
+        ]);
+        $ownImport->importRows()->create([
+            'row_number' => 43,
+            'raw_payload' => ['content' => 'safe mirrored charge'],
+            'validation_errors' => ['Kyash残高補正: 同じdカードチャージの反対側明細があるため鏡像行をスキップしました。'],
+            'status' => 'skipped',
+        ]);
+
         $this->actingAs($user)
             ->get(route('imports.index'))
             ->assertOk()
@@ -63,7 +76,85 @@ class ImportFeatureTest extends TestCase
                 ->component('Imports/Index')
                 ->has('imports.data', 1)
                 ->where('imports.data.0.id', $ownImport->id)
-                ->where('imports.data.0.original_filename', 'own.csv'));
+                ->where('imports.data.0.original_filename', 'own.csv')
+                ->where('imports.data.0.issue_rows_count', 1)
+                ->where('imports.data.0.advisory_rows_count', 1));
+
+        $this->actingAs($user)
+            ->get(route('imports.show', $ownImport))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('rows.0.validation_errors.0', '振替先口座を特定できません。')
+                ->where('rows.0.validation_warnings', [])
+                ->where('rows.1.validation_errors', [])
+                ->where(
+                    'rows.1.validation_warnings.0',
+                    '安全にスキップ済み: 同じdカードチャージの反対側にあるKyash明細です。二重計上を防ぐため取り込んでいないので、対応は不要です。',
+                ));
+    }
+
+    public function test_imported_issue_links_to_a_matching_editable_reimport_row(): void
+    {
+        $user = User::factory()->create();
+        $originalImport = Import::create([
+            'user_id' => $user->id,
+            'account_id' => null,
+            'source_name' => 'money_forward',
+            'original_filename' => 'transactions.csv',
+            'storage_path' => 'imports/test/transactions.csv',
+            'status' => 'imported',
+            'total_rows' => 1,
+            'imported_rows' => 0,
+            'skipped_rows' => 1,
+            'duplicate_rows' => 0,
+            'imported_at' => now(),
+        ]);
+        $originalImport->importRows()->create([
+            'row_number' => 42,
+            'raw_payload' => ['content' => 'card withdrawal'],
+            'transaction_date' => '2026-04-10',
+            'amount' => '12345.00',
+            'account_name' => 'テスト銀行',
+            'merchant_name' => '振替 サンプルカード',
+            'description' => 'テスト銀行 / 振替 / カード引落',
+            'detected_type' => 'transfer',
+            'validation_errors' => ['振替先口座を特定できません。'],
+            'status' => 'skipped',
+        ]);
+
+        $editableImport = Import::create([
+            'user_id' => $user->id,
+            'account_id' => null,
+            'source_name' => 'money_forward',
+            'original_filename' => 'transactions(2).csv',
+            'storage_path' => 'imports/test/transactions-2.csv',
+            'status' => 'validated',
+            'total_rows' => 1,
+            'imported_rows' => 0,
+            'skipped_rows' => 0,
+            'duplicate_rows' => 0,
+        ]);
+        $editableRow = $editableImport->importRows()->create([
+            'row_number' => 43,
+            'raw_payload' => ['content' => 'card withdrawal'],
+            'transaction_date' => '2026-04-10',
+            'amount' => '12345.00',
+            'account_name' => 'テスト銀行',
+            'merchant_name' => '振替 サンプルカード',
+            'description' => 'テスト銀行 / 振替 / カード引落',
+            'detected_type' => 'transfer',
+            'validation_errors' => ['振替先口座を特定できません。'],
+            'status' => 'error',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('imports.show', $originalImport))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('editableReimport.id', $editableImport->id)
+                ->where('editableReimport.original_filename', 'transactions(2).csv')
+                ->where('editableReimport.row_id', $editableRow->id)
+                ->where('editableReimport.row_number', 43));
     }
 
     public function test_user_can_upload_csv_and_generate_import_rows(): void

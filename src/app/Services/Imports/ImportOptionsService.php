@@ -7,6 +7,10 @@ use App\Models\User;
 
 class ImportOptionsService
 {
+    public function __construct(
+        private readonly ImportRowIssueService $importRowIssueService,
+    ) {}
+
     /**
      * @return array<int, array{value: string, label: string}>
      */
@@ -92,7 +96,7 @@ class ImportOptionsService
     }
 
     /**
-     * @return array{id: int, source_name: string|null, source_label: string, source_metadata: array<string, mixed>|null, original_filename: string, status: string, status_label: string, total_rows: int, imported_rows: int, skipped_rows: int, duplicate_rows: int, error_message: string|null, imported_at: string|null, created_at: string|null, account: array{id: int, name: string, currency: string}|null}
+     * @return array{id: int, source_name: string|null, source_label: string, source_metadata: array<string, mixed>|null, original_filename: string, status: string, status_label: string, total_rows: int, imported_rows: int, skipped_rows: int, duplicate_rows: int, issue_rows_count: int, advisory_rows_count: int, error_message: string|null, imported_at: string|null, created_at: string|null, account: array{id: int, name: string, currency: string}|null}
      */
     public function importListItem(Import $import): array
     {
@@ -111,6 +115,22 @@ class ImportOptionsService
             'imported_rows' => $import->imported_rows,
             'skipped_rows' => $import->skipped_rows,
             'duplicate_rows' => $import->duplicate_rows,
+            'issue_rows_count' => (int) ($import->getAttribute('issue_rows_count')
+                ?? ($import->relationLoaded('importRows')
+                    ? $import->importRows->filter(
+                        fn ($row): bool => $this->importRowIssueService->partition(
+                            $row->validation_errors ?? [],
+                        )['errors'] !== [],
+                    )->count()
+                    : 0)),
+            'advisory_rows_count' => (int) ($import->getAttribute('advisory_rows_count')
+                ?? ($import->relationLoaded('importRows')
+                    ? $import->importRows->filter(
+                        fn ($row): bool => $this->importRowIssueService->partition(
+                            $row->validation_errors ?? [],
+                        )['advisories'] !== [],
+                    )->count()
+                    : 0)),
             'error_message' => $import->error_message,
             'imported_at' => $import->imported_at?->format('Y-m-d H:i:s'),
             'created_at' => $import->created_at?->format('Y-m-d H:i:s'),

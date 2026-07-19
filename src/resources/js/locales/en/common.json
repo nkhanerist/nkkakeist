@@ -1,0 +1,28 @@
+{
+    "app": {
+        "name": "NKKakeist",
+        "tagline": "Personal Finance Management"
+    },
+    "navigation": {
+        "dashboard": "Dashboard",
+        "accounts": "Accounts",
+        "securities": "Securities",
+        "categories": "Categories",
+        "transactions": "Transactions",
+        "categoryReview": "Category Review",
+        "imports": "Import",
+        "classificationRules": "Classification Rules",
+        "menu": "Menu",
+        "profile": "Profile",
+        "logout": "Log out"
+    },
+    "locale": {
+        "label": "Display language",
+        "short": {
+            "ja": "JA",
+            "en": "EN"
+        },
+        "ja": "Japanese",
+        "en": "English"
+    }
+}

@@ -8,6 +8,10 @@ use RuntimeException;
 
 class BalanceSnapshotJsonParser
 {
+    public function __construct(
+        private readonly InvestmentPositionIdentityService $positionIdentityService,
+    ) {}
+
     /**
      * @return array{rows: array<int, array<string, mixed>>, metadata: array<string, mixed>}
      */
@@ -16,31 +20,41 @@ class BalanceSnapshotJsonParser
         try {
             $payload = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException) {
-            throw new RuntimeException('残高取得JSONを読み取れませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.balance_json_unreadable'));
         }
 
         if (! is_array($payload)) {
-            throw new RuntimeException('残高取得JSONの構造が不正です。');
+            throw new RuntimeException(trans('imports.parse_errors.balance_json_structure_invalid'));
         }
 
         if (($payload['format'] ?? null) !== 'nkkakeist-balance-snapshot' || ($payload['version'] ?? null) !== 1) {
-            throw new RuntimeException('対応していない残高取得JSONです。');
+            throw new RuntimeException(trans('imports.parse_errors.balance_json_unsupported'));
         }
 
-        $source = $this->requiredString($payload, 'source', '取得元');
-        $capturedAt = $this->dateTime($payload['captured_at'] ?? null, '取得日時');
+        $source = $this->requiredString(
+            $payload,
+            'source',
+            trans('imports.parse_fields.balance_source'),
+        );
+        $capturedAt = $this->dateTime(
+            $payload['captured_at'] ?? null,
+            trans('imports.parse_fields.balance_captured_at'),
+        );
+        $diagnostics = $this->diagnostics($payload['diagnostics'] ?? null);
         $items = $payload['items'] ?? null;
         $assetHistory = $this->assetHistory($payload['asset_history'] ?? null, $capturedAt);
 
         if (! is_array($items) || $items === [] || count($items) > 100) {
-            throw new RuntimeException('残高取得JSONには1件以上100件以下の項目が必要です。');
+            throw new RuntimeException(trans('imports.parse_errors.balance_items_invalid'));
         }
 
         $rows = [];
 
         foreach (array_values($items) as $index => $item) {
             if (! is_array($item)) {
-                throw new RuntimeException(sprintf('残高取得JSONの%d件目が不正です。', $index + 1));
+                throw new RuntimeException(trans('imports.parse_errors.balance_item_invalid', [
+                    'row' => $index + 1,
+                ]));
             }
 
             $rows[] = $this->parseItem($item, $index + 1, $source, $capturedAt);
@@ -53,8 +67,55 @@ class BalanceSnapshotJsonParser
                 'version' => 1,
                 'source' => $source,
                 'captured_at' => $capturedAt->toIso8601String(),
+                'acquisition_diagnostics' => $diagnostics,
                 'asset_history' => $assetHistory,
             ],
+        ];
+    }
+
+    /**
+     * @return array{exporter_version: int, portfolio_summary_table: bool, investment_tables: int, deposit_table: bool, pension_table: bool, liability_tables: int}|null
+     */
+    private function diagnostics(mixed $value): ?array
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (! is_array($value)) {
+            throw new RuntimeException(trans('imports.parse_errors.balance_diagnostics_invalid'));
+        }
+
+        $exporterVersion = $value['exporter_version'] ?? null;
+        $portfolioSummaryTable = $value['portfolio_summary_table'] ?? null;
+        $investmentTables = $value['investment_tables'] ?? null;
+        $depositTable = $value['deposit_table'] ?? null;
+        $pensionTable = $value['pension_table'] ?? null;
+        $liabilityTables = $value['liability_tables'] ?? null;
+
+        if (
+            ! is_int($exporterVersion)
+            || $exporterVersion < 2
+            || ! is_bool($portfolioSummaryTable)
+            || ! is_int($investmentTables)
+            || $investmentTables < 0
+            || $investmentTables > 100
+            || ! is_bool($depositTable)
+            || ! is_bool($pensionTable)
+            || ! is_int($liabilityTables)
+            || $liabilityTables < 0
+            || $liabilityTables > 100
+        ) {
+            throw new RuntimeException(trans('imports.parse_errors.balance_diagnostics_invalid'));
+        }
+
+        return [
+            'exporter_version' => $exporterVersion,
+            'portfolio_summary_table' => $portfolioSummaryTable,
+            'investment_tables' => $investmentTables,
+            'deposit_table' => $depositTable,
+            'pension_table' => $pensionTable,
+            'liability_tables' => $liabilityTables,
         ];
     }
 
@@ -66,34 +127,44 @@ class BalanceSnapshotJsonParser
         }
 
         if (! is_array($value)) {
-            throw new RuntimeException('総資産サマリーが不正です。');
+            throw new RuntimeException(trans('imports.parse_errors.balance_summary_invalid'));
         }
 
-        $currency = strtoupper($this->requiredString($value, 'currency', '総資産サマリーの通貨'));
+        $currency = strtoupper($this->requiredString(
+            $value,
+            'currency',
+            trans('imports.parse_fields.balance_summary_currency'),
+        ));
 
         if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
-            throw new RuntimeException('総資産サマリーの通貨コードが不正です。');
+            throw new RuntimeException(trans('imports.parse_errors.balance_summary_currency_invalid'));
         }
 
         $breakdownValue = $value['breakdown'] ?? [];
 
         if (! is_array($breakdownValue) || count($breakdownValue) > 30) {
-            throw new RuntimeException('総資産サマリーの内訳が不正です。');
+            throw new RuntimeException(trans('imports.parse_errors.balance_summary_breakdown_invalid'));
         }
 
         $breakdown = [];
 
         foreach ($breakdownValue as $label => $amount) {
             if (! is_string($label) || trim($label) === '' || mb_strlen(trim($label)) > 64) {
-                throw new RuntimeException('総資産サマリーの内訳名が不正です。');
+                throw new RuntimeException(trans('imports.parse_errors.balance_summary_breakdown_label_invalid'));
             }
 
-            $breakdown[trim($label)] = $this->amount($amount, "総資産サマリーの{$label}");
+            $breakdown[trim($label)] = $this->amount(
+                $amount,
+                trans('imports.parse_fields.balance_summary_amount', ['label' => $label]),
+            );
         }
 
         return [
             'captured_on' => $this->balanceDate($value['captured_on'] ?? null, $capturedAt, 0),
-            'total_assets' => $this->amount($value['total_assets'] ?? null, '総資産サマリーの合計'),
+            'total_assets' => $this->amount(
+                $value['total_assets'] ?? null,
+                trans('imports.parse_fields.balance_summary_total'),
+            ),
             'currency' => $currency,
             'breakdown' => $breakdown,
         ];
@@ -105,37 +176,73 @@ class BalanceSnapshotJsonParser
      */
     private function parseItem(array $item, int $rowNumber, string $source, CarbonImmutable $capturedAt): array
     {
-        $accountName = $this->requiredString($item, 'source_account_name', "{$rowNumber}件目の口座名");
-        $balanceKind = $this->requiredString($item, 'balance_kind', "{$rowNumber}件目の残高種別");
+        $accountName = $this->requiredString(
+            $item,
+            'source_account_name',
+            trans('imports.parse_fields.balance_item_account', ['row' => $rowNumber]),
+        );
+        $balanceKind = $this->requiredString(
+            $item,
+            'balance_kind',
+            trans('imports.parse_fields.balance_item_kind', ['row' => $rowNumber]),
+        );
 
         if (! in_array($balanceKind, ['valuation', 'account_balance', 'card_outstanding'], true)) {
-            throw new RuntimeException(sprintf('%d件目の残高種別に対応していません。', $rowNumber));
+            throw new RuntimeException(trans('imports.parse_errors.balance_kind_unsupported', [
+                'row' => $rowNumber,
+            ]));
         }
 
-        $currency = strtoupper($this->requiredString($item, 'currency', "{$rowNumber}件目の通貨"));
+        $currency = strtoupper($this->requiredString(
+            $item,
+            'currency',
+            trans('imports.parse_fields.balance_item_currency', ['row' => $rowNumber]),
+        ));
 
         if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
-            throw new RuntimeException(sprintf('%d件目の通貨コードが不正です。', $rowNumber));
+            throw new RuntimeException(trans('imports.parse_errors.balance_currency_invalid', [
+                'row' => $rowNumber,
+            ]));
         }
 
-        $sourceBalance = $this->amount($item['balance'] ?? null, "{$rowNumber}件目の残高");
+        $sourceBalance = $this->amount(
+            $item['balance'] ?? null,
+            trans('imports.parse_fields.balance_item_balance', ['row' => $rowNumber]),
+        );
         $balance = $balanceKind === 'card_outstanding'
             ? $this->negativeAbsoluteAmount($sourceBalance)
             : $sourceBalance;
         $sourceUpdatedAt = array_key_exists('source_updated_at', $item) && $item['source_updated_at'] !== null
-            ? $this->dateTime($item['source_updated_at'], "{$rowNumber}件目の更新日時")
+            ? $this->dateTime(
+                $item['source_updated_at'],
+                trans('imports.parse_fields.balance_item_updated_at', ['row' => $rowNumber]),
+            )
             : null;
         $balanceDate = $this->balanceDate($item['balance_date'] ?? null, $sourceUpdatedAt ?? $capturedAt, $rowNumber);
         $nextPaymentAmount = array_key_exists('next_payment_amount', $item) && $item['next_payment_amount'] !== null
-            ? $this->amount($item['next_payment_amount'], "{$rowNumber}件目の次回引落額")
+            ? $this->amount(
+                $item['next_payment_amount'],
+                trans('imports.parse_fields.balance_item_next_payment_amount', ['row' => $rowNumber]),
+            )
             : null;
         $nextPaymentDate = array_key_exists('next_payment_date', $item) && $item['next_payment_date'] !== null
-            ? $this->date($item['next_payment_date'], "{$rowNumber}件目の次回引落日")
+            ? $this->date(
+                $item['next_payment_date'],
+                trans('imports.parse_fields.balance_item_next_payment_date', ['row' => $rowNumber]),
+            )
             : null;
-        $positions = $this->positions($item['positions'] ?? null, $rowNumber, $currency);
+        $positions = $this->positions(
+            $item['positions'] ?? null,
+            $rowNumber,
+            $currency,
+            $source,
+            $accountName,
+        );
 
         if ($positions !== [] && $balanceKind !== 'valuation') {
-            throw new RuntimeException(sprintf('%d件目の銘柄明細は時価評価額にのみ指定できます。', $rowNumber));
+            throw new RuntimeException(trans('imports.parse_errors.balance_positions_only_valuation', [
+                'row' => $rowNumber,
+            ]));
         }
 
         $rawPayload = [
@@ -174,67 +281,126 @@ class BalanceSnapshotJsonParser
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function positions(mixed $value, int $rowNumber, string $accountCurrency): array
-    {
+    private function positions(
+        mixed $value,
+        int $rowNumber,
+        string $accountCurrency,
+        string $source,
+        string $sourceAccountName,
+    ): array {
         if ($value === null) {
             return [];
         }
 
         if (! is_array($value) || count($value) > 200) {
-            throw new RuntimeException(sprintf('%d件目の銘柄明細は200件以下で指定してください。', $rowNumber));
+            throw new RuntimeException(trans('imports.parse_errors.balance_positions_limit', [
+                'row' => $rowNumber,
+            ]));
         }
 
         $positions = [];
-        $seenIdentities = [];
+        $seenPositionKeys = [];
+        $seenSemanticKeys = [];
 
         foreach (array_values($value) as $positionIndex => $position) {
-            $label = sprintf('%d件目の銘柄明細%d件目', $rowNumber, $positionIndex + 1);
+            $label = trans('imports.parse_fields.balance_position', [
+                'row' => $rowNumber,
+                'position' => $positionIndex + 1,
+            ]);
 
             if (! is_array($position)) {
-                throw new RuntimeException("{$label}が不正です。");
+                throw new RuntimeException(trans('imports.parse_errors.balance_position_invalid', [
+                    'position' => $label,
+                ]));
             }
 
             $currency = array_key_exists('currency', $position)
-                ? strtoupper($this->requiredString($position, 'currency', "{$label}の通貨"))
+                ? strtoupper($this->requiredString(
+                    $position,
+                    'currency',
+                    $this->positionFieldLabel($label, 'currency'),
+                ))
                 : $accountCurrency;
 
             if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
-                throw new RuntimeException("{$label}の通貨コードが不正です。");
+                throw new RuntimeException(trans('imports.parse_errors.balance_position_currency_invalid', [
+                    'position' => $label,
+                ]));
             }
 
             $normalizedPosition = [
-                'instrument_name' => $this->requiredString($position, 'instrument_name', "{$label}の銘柄名"),
-                'instrument_code' => $this->optionalString($position['instrument_code'] ?? null, "{$label}の銘柄コード", 64),
-                'external_id' => $this->optionalString($position['external_id'] ?? null, "{$label}の外部識別子"),
-                'asset_class' => $this->optionalString($position['asset_class'] ?? null, "{$label}の資産区分", 64),
-                'quantity' => $this->optionalDecimal($position['quantity'] ?? null, "{$label}の保有数量", 8),
+                'instrument_name' => $this->requiredString(
+                    $position,
+                    'instrument_name',
+                    $this->positionFieldLabel($label, 'instrument_name'),
+                ),
+                'instrument_code' => $this->optionalString(
+                    $position['instrument_code'] ?? null,
+                    $this->positionFieldLabel($label, 'instrument_code'),
+                    64,
+                ),
+                'external_id' => $this->optionalString(
+                    $position['external_id'] ?? null,
+                    $this->positionFieldLabel($label, 'external_id'),
+                ),
+                'asset_class' => $this->optionalString(
+                    $position['asset_class'] ?? null,
+                    $this->positionFieldLabel($label, 'asset_class'),
+                    64,
+                ),
+                'quantity' => $this->optionalDecimal(
+                    $position['quantity'] ?? null,
+                    $this->positionFieldLabel($label, 'quantity'),
+                    8,
+                ),
                 'average_acquisition_price' => $this->optionalDecimal(
                     $position['average_acquisition_price'] ?? null,
-                    "{$label}の平均取得単価",
+                    $this->positionFieldLabel($label, 'average_acquisition_price'),
                     6,
                 ),
-                'unit_price' => $this->optionalDecimal($position['unit_price'] ?? null, "{$label}の現在値", 6),
+                'unit_price' => $this->optionalDecimal(
+                    $position['unit_price'] ?? null,
+                    $this->positionFieldLabel($label, 'unit_price'),
+                    6,
+                ),
                 'acquisition_cost' => array_key_exists('acquisition_cost', $position)
                     && $position['acquisition_cost'] !== null
-                        ? $this->amount($position['acquisition_cost'], "{$label}の取得価額")
+                        ? $this->amount(
+                            $position['acquisition_cost'],
+                            $this->positionFieldLabel($label, 'acquisition_cost'),
+                        )
                         : null,
-                'valuation' => $this->amount($position['valuation'] ?? null, "{$label}の評価額"),
+                'valuation' => $this->amount(
+                    $position['valuation'] ?? null,
+                    $this->positionFieldLabel($label, 'valuation'),
+                ),
                 'unrealized_gain' => array_key_exists('unrealized_gain', $position)
                     && $position['unrealized_gain'] !== null
-                        ? $this->amount($position['unrealized_gain'], "{$label}の評価損益")
+                        ? $this->amount(
+                            $position['unrealized_gain'],
+                            $this->positionFieldLabel($label, 'unrealized_gain'),
+                        )
                         : null,
                 'currency' => $currency,
             ];
-            $identity = $normalizedPosition['external_id']
-                ?? $normalizedPosition['instrument_code']
-                ?? $normalizedPosition['instrument_name'];
-            $identityKey = mb_strtolower($identity.'|'.$currency, 'UTF-8');
+            $positionKey = $this->positionIdentityService->positionKey(
+                $normalizedPosition,
+                $source,
+                $sourceAccountName,
+            );
+            $semanticKey = $this->positionIdentityService->semanticKey(
+                $normalizedPosition['instrument_name'],
+                $currency,
+            );
 
-            if (isset($seenIdentities[$identityKey])) {
-                throw new RuntimeException("{$label}が同じ口座内で重複しています。");
+            if (isset($seenPositionKeys[$positionKey]) || isset($seenSemanticKeys[$semanticKey])) {
+                throw new RuntimeException(trans('imports.parse_errors.balance_position_duplicate', [
+                    'position' => $label,
+                ]));
             }
 
-            $seenIdentities[$identityKey] = true;
+            $seenPositionKeys[$positionKey] = true;
+            $seenSemanticKeys[$semanticKey] = true;
             $positions[] = $normalizedPosition;
         }
 
@@ -249,7 +415,9 @@ class BalanceSnapshotJsonParser
         $value = $values[$key] ?? null;
 
         if (! is_string($value) || trim($value) === '' || mb_strlen(trim($value)) > 255) {
-            throw new RuntimeException("{$label}がありません。");
+            throw new RuntimeException(trans('imports.parse_errors.field_missing', [
+                'field' => $label,
+            ]));
         }
 
         return trim($value);
@@ -262,7 +430,9 @@ class BalanceSnapshotJsonParser
         }
 
         if (! is_string($value) || mb_strlen(trim($value)) > $maxLength) {
-            throw new RuntimeException("{$label}が不正です。");
+            throw new RuntimeException(trans('imports.parse_errors.field_invalid', [
+                'field' => $label,
+            ]));
         }
 
         $normalized = trim($value);
@@ -273,13 +443,17 @@ class BalanceSnapshotJsonParser
     private function amount(mixed $value, string $label): string
     {
         if (! is_int($value) && ! is_float($value) && ! is_string($value)) {
-            throw new RuntimeException("{$label}が不正です。");
+            throw new RuntimeException(trans('imports.parse_errors.field_invalid', [
+                'field' => $label,
+            ]));
         }
 
         $normalized = trim((string) $value);
 
         if (preg_match('/^[+-]?\d{1,12}(?:\.\d{1,2})?$/', $normalized) !== 1) {
-            throw new RuntimeException("{$label}が不正です。");
+            throw new RuntimeException(trans('imports.parse_errors.field_invalid', [
+                'field' => $label,
+            ]));
         }
 
         $isNegative = str_starts_with($normalized, '-');
@@ -302,13 +476,17 @@ class BalanceSnapshotJsonParser
         }
 
         if (! is_int($value) && ! is_float($value) && ! is_string($value)) {
-            throw new RuntimeException("{$label}が不正です。");
+            throw new RuntimeException(trans('imports.parse_errors.field_invalid', [
+                'field' => $label,
+            ]));
         }
 
         $normalized = trim((string) $value);
 
         if (preg_match('/^[+-]?\d{1,16}(?:\.\d{1,'.$scale.'})?$/', $normalized) !== 1) {
-            throw new RuntimeException("{$label}が不正です。");
+            throw new RuntimeException(trans('imports.parse_errors.field_invalid', [
+                'field' => $label,
+            ]));
         }
 
         $isNegative = str_starts_with($normalized, '-');
@@ -322,30 +500,40 @@ class BalanceSnapshotJsonParser
     private function dateTime(mixed $value, string $label): CarbonImmutable
     {
         if (! is_string($value) || trim($value) === '') {
-            throw new RuntimeException("{$label}がありません。");
+            throw new RuntimeException(trans('imports.parse_errors.field_missing', [
+                'field' => $label,
+            ]));
         }
 
         try {
             return CarbonImmutable::parse($value, config('app.timezone'));
         } catch (\Throwable) {
-            throw new RuntimeException("{$label}を解釈できませんでした。");
+            throw new RuntimeException(trans('imports.parse_errors.field_unparseable', [
+                'field' => $label,
+            ]));
         }
     }
 
     private function date(mixed $value, string $label): string
     {
         if (! is_string($value) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
-            throw new RuntimeException("{$label}を解釈できませんでした。");
+            throw new RuntimeException(trans('imports.parse_errors.field_unparseable', [
+                'field' => $label,
+            ]));
         }
 
         try {
             $date = CarbonImmutable::createFromFormat('!Y-m-d', $value, config('app.timezone'));
         } catch (\Throwable) {
-            throw new RuntimeException("{$label}を解釈できませんでした。");
+            throw new RuntimeException(trans('imports.parse_errors.field_unparseable', [
+                'field' => $label,
+            ]));
         }
 
         if ($date === false || $date->format('Y-m-d') !== $value) {
-            throw new RuntimeException("{$label}を解釈できませんでした。");
+            throw new RuntimeException(trans('imports.parse_errors.field_unparseable', [
+                'field' => $label,
+            ]));
         }
 
         return $value;
@@ -357,6 +545,17 @@ class BalanceSnapshotJsonParser
             return $fallback->toDateString();
         }
 
-        return $this->date($value, "{$rowNumber}件目の残高日");
+        return $this->date(
+            $value,
+            trans('imports.parse_fields.balance_item_date', ['row' => $rowNumber]),
+        );
+    }
+
+    private function positionFieldLabel(string $position, string $field): string
+    {
+        return trans('imports.parse_fields.balance_position_field', [
+            'position' => $position,
+            'field' => trans("imports.parse_fields.{$field}"),
+        ]);
     }
 }

@@ -25,13 +25,13 @@ class UpdateImportRowAccountAction
 
         if ($import->status === 'imported') {
             throw ValidationException::withMessages([
-                $errorKey => '取込済みの import は再編集できません。',
+                $errorKey => trans('imports.messages.imported_not_editable'),
             ]);
         }
 
         if ($import->source_name !== 'balance_snapshot' || $importRow->import_id !== $import->id) {
             throw ValidationException::withMessages([
-                $errorKey => '公式残高の取込行だけ取込先口座を更新できます。',
+                $errorKey => trans('imports.messages.balance_account_only'),
             ]);
         }
 
@@ -69,7 +69,7 @@ class UpdateImportRowAccountAction
 
         if ($sourceAccountName === '' || ! $account instanceof Account) {
             throw ValidationException::withMessages([
-                $errorKey => '取得元の口座名または取込先口座を確認できないため、対応を記憶できません。',
+                $errorKey => trans('imports.messages.mapping_unavailable'),
             ]);
         }
 
@@ -90,7 +90,9 @@ class UpdateImportRowAccountAction
 
         if ($conflictingAccount instanceof Account) {
             throw ValidationException::withMessages([
-                $errorKey => "この取得名は「{$conflictingAccount->name}」に設定済みです。口座の取込用別名を確認してください。",
+                $errorKey => trans('imports.messages.mapping_conflict', [
+                    'account' => $conflictingAccount->name,
+                ]),
             ]);
         }
 

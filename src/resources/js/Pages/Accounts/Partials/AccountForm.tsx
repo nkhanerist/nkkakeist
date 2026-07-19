@@ -9,6 +9,7 @@ import {
 } from '@/types/account';
 import { Link, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type AccountFormProps = {
     account?: EditableAccount;
@@ -26,6 +27,7 @@ const defaultValues: AccountFormValues = {
     balance_role: 'asset',
     balance_method: 'ledger',
     include_in_net_worth: true,
+    monthly_close_required: false,
     currency: 'JPY',
     initial_balance: '0',
     opening_balance_date: '',
@@ -44,6 +46,7 @@ export default function AccountForm({
     balanceRoleOptions,
     balanceMethodOptions,
 }: AccountFormProps) {
+    const { t } = useTranslation('accounts');
     const { data, setData, post, put, processing, errors } =
         useForm<AccountFormValues>({
             name: account?.name ?? defaultValues.name,
@@ -54,6 +57,9 @@ export default function AccountForm({
             include_in_net_worth:
                 account?.include_in_net_worth ??
                 defaultValues.include_in_net_worth,
+            monthly_close_required:
+                account?.monthly_close_required ??
+                defaultValues.monthly_close_required,
             currency: account?.currency ?? defaultValues.currency,
             initial_balance:
                 account?.initial_balance ?? defaultValues.initial_balance,
@@ -82,6 +88,13 @@ export default function AccountForm({
             balance_role: balanceRole,
             balance_method: type === 'securities' ? 'snapshot' : 'ledger',
             include_in_net_worth: balanceRole !== 'clearing',
+            monthly_close_required: [
+                'bank',
+                'credit_card',
+                'e_money',
+                'securities',
+                'point',
+            ].includes(type),
         });
     };
 
@@ -105,7 +118,7 @@ export default function AccountForm({
         <form onSubmit={submit} className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                    <InputLabel htmlFor="name" value="口座名" />
+                    <InputLabel htmlFor="name" value={t('form.fields.name')} />
                     <TextInput
                         id="name"
                         className="mt-1 block w-full"
@@ -119,7 +132,7 @@ export default function AccountForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="type" value="種別" />
+                    <InputLabel htmlFor="type" value={t('form.fields.type')} />
                     <select
                         id="type"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -136,7 +149,7 @@ export default function AccountForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="currency" value="通貨" />
+                    <InputLabel htmlFor="currency" value={t('form.fields.currency')} />
                     <TextInput
                         id="currency"
                         className="mt-1 block w-full uppercase"
@@ -151,7 +164,7 @@ export default function AccountForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="initial_balance" value="初期残高" />
+                    <InputLabel htmlFor="initial_balance" value={t('form.fields.initialBalance')} />
                     <TextInput
                         id="initial_balance"
                         type="number"
@@ -172,7 +185,7 @@ export default function AccountForm({
                 <div>
                     <InputLabel
                         htmlFor="opening_balance_date"
-                        value="初期残高の基準日"
+                        value={t('form.fields.openingBalanceDate')}
                     />
                     <TextInput
                         id="opening_balance_date"
@@ -184,7 +197,7 @@ export default function AccountForm({
                         }
                     />
                     <p className="mt-2 text-xs leading-5 text-slate-500">
-                        初期残高は、この日の取引開始前の残高として扱います。未設定の場合は全期間の起点になります。
+                        {t('form.openingBalanceHint')}
                     </p>
                     <InputError
                         className="mt-2"
@@ -193,7 +206,7 @@ export default function AccountForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="display_order" value="表示順" />
+                    <InputLabel htmlFor="display_order" value={t('form.fields.displayOrder')} />
                     <TextInput
                         id="display_order"
                         type="number"
@@ -221,9 +234,9 @@ export default function AccountForm({
                         className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
                     <div>
-                        <InputLabel htmlFor="is_active" value="有効にする" />
+                        <InputLabel htmlFor="is_active" value={t('form.fields.active')} />
                         <p className="text-xs text-slate-500">
-                            無効にした口座は一覧上で状態が分かるように残ります。
+                            {t('form.activeHint')}
                         </p>
                     </div>
                 </div>
@@ -232,16 +245,16 @@ export default function AccountForm({
             <section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <div>
                     <h2 className="font-semibold text-slate-900">
-                        資産・負債と残高計算
+                        {t('form.balanceSectionTitle')}
                     </h2>
                     <p className="mt-1 text-sm leading-6 text-slate-500">
-                        口座の種類とは別に、純資産上の役割と残高の求め方を設定します。
+                        {t('form.balanceSectionDescription')}
                     </p>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                        <InputLabel htmlFor="balance_role" value="残高ロール" />
+                        <InputLabel htmlFor="balance_role" value={t('form.fields.balanceRole')} />
                         <select
                             id="balance_role"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -265,7 +278,7 @@ export default function AccountForm({
                             ))}
                         </select>
                         <p className="mt-2 text-xs leading-5 text-slate-500">
-                            中継口座は請求・チャージ経路の確認用で、純資産には含めません。
+                            {t('form.clearingHint')}
                         </p>
                         <InputError
                             className="mt-2"
@@ -276,7 +289,7 @@ export default function AccountForm({
                     <div>
                         <InputLabel
                             htmlFor="balance_method"
-                            value="残高計算方式"
+                            value={t('form.fields.balanceMethod')}
                         />
                         <select
                             id="balance_method"
@@ -296,7 +309,7 @@ export default function AccountForm({
                             ))}
                         </select>
                         <p className="mt-2 text-xs leading-5 text-slate-500">
-                            証券は評価額を基準にし、評価日より後の入出金だけを加減します。
+                            {t('form.snapshotHint')}
                         </p>
                         <InputError
                             className="mt-2"
@@ -319,10 +332,10 @@ export default function AccountForm({
                     <div>
                         <InputLabel
                             htmlFor="include_in_net_worth"
-                            value="純資産の集計に含める"
+                            value={t('form.fields.includeInNetWorth')}
                         />
                         <p className="mt-1 text-xs leading-5 text-slate-500">
-                            開発用口座や集計対象外にしたい口座では無効にします。
+                            {t('form.netWorthHint')}
                         </p>
                         <InputError
                             className="mt-2"
@@ -330,10 +343,35 @@ export default function AccountForm({
                         />
                     </div>
                 </div>
+
+                <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+                    <input
+                        id="monthly_close_required"
+                        type="checkbox"
+                        checked={data.monthly_close_required}
+                        onChange={(event) =>
+                            setData('monthly_close_required', event.target.checked)
+                        }
+                        className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div>
+                        <InputLabel
+                            htmlFor="monthly_close_required"
+                            value={t('form.fields.monthlyCloseRequired')}
+                        />
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                            {t('form.monthlyCloseHint')}
+                        </p>
+                        <InputError
+                            className="mt-2"
+                            message={errors.monthly_close_required}
+                        />
+                    </div>
+                </div>
             </section>
 
             <div>
-                <InputLabel htmlFor="note" value="メモ" />
+                <InputLabel htmlFor="note" value={t('form.fields.note')} />
                 <textarea
                     id="note"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -345,7 +383,7 @@ export default function AccountForm({
             </div>
 
             <div>
-                <InputLabel htmlFor="import_aliases" value="取込用別名" />
+                <InputLabel htmlFor="import_aliases" value={t('form.fields.importAliases')} />
                 <textarea
                     id="import_aliases"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -356,8 +394,7 @@ export default function AccountForm({
                     }
                 />
                 <p className="mt-2 text-xs text-slate-500">
-                    Money Forward の振替取込で、摘要 / 店舗名に出る別表記を1行ずつ登録できます。例:
-                    MasterCard(8658)
+                    {t('form.importAliasesHint')}
                 </p>
                 <InputError
                     className="mt-2"
@@ -370,7 +407,7 @@ export default function AccountForm({
                     href={route('accounts.index')}
                     className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                    キャンセル
+                    {t('actions.cancel')}
                 </Link>
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
             </div>

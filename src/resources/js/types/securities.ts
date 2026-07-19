@@ -42,6 +42,7 @@ export type SecuritiesPositionItem = {
     instrument_code: string | null;
     asset_class: string | null;
     valuation: string;
+    acquisition_cost: string | null;
     unrealized_gain: string | null;
     quantity: string | null;
     unit_price: string | null;
@@ -57,6 +58,7 @@ export type SecuritiesPositionHistory = {
     change_amount: string | null;
     quantity: string | null;
     unit_price: string | null;
+    acquisition_cost: string | null;
     unrealized_gain: string | null;
     source_name: string | null;
 };
@@ -78,5 +80,6 @@ export type SecuritiesPositionDetail = {
         source_name: string | null;
     };
     series: TrendSeries;
+    comparison_series: TrendSeries[];
     history: SecuritiesPositionHistory[];
 };

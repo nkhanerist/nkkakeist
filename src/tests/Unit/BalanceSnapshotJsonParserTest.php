@@ -8,6 +8,13 @@ use Tests\TestCase;
 
 class BalanceSnapshotJsonParserTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        app()->setLocale('ja');
+    }
+
     public function test_it_parses_valuation_and_card_outstanding_balances(): void
     {
         $result = app(BalanceSnapshotJsonParser::class)->parse(json_encode([
@@ -15,6 +22,14 @@ class BalanceSnapshotJsonParserTest extends TestCase
             'version' => 1,
             'source' => 'money_forward',
             'captured_at' => '2026-07-18T21:00:00+09:00',
+            'diagnostics' => [
+                'exporter_version' => 2,
+                'portfolio_summary_table' => true,
+                'investment_tables' => 2,
+                'deposit_table' => true,
+                'pension_table' => true,
+                'liability_tables' => 1,
+            ],
             'asset_history' => [
                 'captured_on' => '2026-07-18',
                 'total_assets' => '22667260',
@@ -53,6 +68,8 @@ class BalanceSnapshotJsonParserTest extends TestCase
         ], JSON_THROW_ON_ERROR));
 
         self::assertSame('money_forward', $result['metadata']['source']);
+        self::assertSame(2, $result['metadata']['acquisition_diagnostics']['exporter_version']);
+        self::assertSame(2, $result['metadata']['acquisition_diagnostics']['investment_tables']);
         self::assertSame('22667260.00', $result['metadata']['asset_history']['total_assets']);
         self::assertSame('15525499.00', $result['metadata']['asset_history']['breakdown']['投資信託']);
         self::assertCount(2, $result['rows']);
@@ -77,6 +94,61 @@ class BalanceSnapshotJsonParserTest extends TestCase
             'format' => 'unknown',
             'version' => 1,
         ], JSON_THROW_ON_ERROR));
+    }
+
+    public function test_it_rejects_invalid_screen_structure_diagnostics(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('画面構造チェック情報が不正です。');
+
+        app(BalanceSnapshotJsonParser::class)->parse(json_encode([
+            'format' => 'nkkakeist-balance-snapshot',
+            'version' => 1,
+            'source' => 'money_forward',
+            'captured_at' => '2026-07-18T21:00:00+09:00',
+            'diagnostics' => [
+                'exporter_version' => 2,
+                'portfolio_summary_table' => 'unknown',
+                'investment_tables' => 0,
+                'deposit_table' => false,
+                'pension_table' => false,
+                'liability_tables' => 0,
+            ],
+            'items' => [[
+                'source_account_name' => 'ソニー銀行',
+                'balance_kind' => 'account_balance',
+                'balance' => '1000',
+                'currency' => 'JPY',
+            ]],
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    public function test_it_accepts_missing_portfolio_summary_with_valid_detail_diagnostics(): void
+    {
+        $result = app(BalanceSnapshotJsonParser::class)->parse(json_encode([
+            'format' => 'nkkakeist-balance-snapshot',
+            'version' => 1,
+            'source' => 'money_forward',
+            'captured_at' => '2026-07-18T21:00:00+09:00',
+            'diagnostics' => [
+                'exporter_version' => 2,
+                'portfolio_summary_table' => false,
+                'investment_tables' => 1,
+                'deposit_table' => true,
+                'pension_table' => false,
+                'liability_tables' => 1,
+            ],
+            'items' => [[
+                'source_account_name' => 'ソニー銀行',
+                'balance_kind' => 'account_balance',
+                'balance' => '1000',
+                'currency' => 'JPY',
+            ]],
+        ], JSON_THROW_ON_ERROR));
+
+        self::assertFalse($result['metadata']['acquisition_diagnostics']['portfolio_summary_table']);
+        self::assertNull($result['metadata']['asset_history']);
+        self::assertSame('1000.00', $result['rows'][0]['amount']);
     }
 
     public function test_it_rejects_an_invalid_balance_date(): void
@@ -118,6 +190,37 @@ class BalanceSnapshotJsonParserTest extends TestCase
                     'instrument_name' => '不正な明細',
                     'valuation' => '1000',
                 ]],
+            ]],
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    public function test_it_rejects_semantically_duplicate_positions_with_different_external_ids(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('1件目の銘柄明細2件目が同じ口座内で重複しています。');
+
+        app(BalanceSnapshotJsonParser::class)->parse(json_encode([
+            'format' => 'nkkakeist-balance-snapshot',
+            'version' => 1,
+            'source' => 'money_forward',
+            'captured_at' => '2026-07-18T21:00:00+09:00',
+            'items' => [[
+                'source_account_name' => 'Money Forward 年金',
+                'balance_kind' => 'valuation',
+                'balance' => '2000',
+                'currency' => 'JPY',
+                'positions' => [
+                    [
+                        'instrument_name' => '同じ銘柄',
+                        'external_id' => 'money_forward:JIS&T:同じ銘柄',
+                        'valuation' => '1000',
+                    ],
+                    [
+                        'instrument_name' => ' 同じ銘柄 ',
+                        'external_id' => 'money_forward:pension:同じ銘柄',
+                        'valuation' => '1000',
+                    ],
+                ],
             ]],
         ], JSON_THROW_ON_ERROR));
     }

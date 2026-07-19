@@ -8,6 +8,7 @@ import {
 import { formatMoney } from '@/utils/currency';
 import { Link, useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type CategoryReviewCardProps = {
     suggestion: TransactionCategorySuggestion;
@@ -31,20 +32,21 @@ export default function CategoryReviewCard({
     subcategoryOptions,
     filters,
 }: CategoryReviewCardProps) {
+    const { t } = useTranslation('transactions');
     const ruleSources = [
         {
             value: 'merchant_name' as const,
-            label: '利用先・店舗名',
+            label: t('categoryReview.card.merchant'),
             source: suggestion.merchant_name ?? '',
         },
         {
             value: 'description' as const,
-            label: '摘要',
+            label: t('categoryReview.card.description'),
             source: suggestion.description ?? '',
         },
         {
             value: 'account_name' as const,
-            label: '口座名',
+            label: t('categoryReview.card.account'),
             source: suggestion.account_name ?? '',
         },
     ].filter((option) => option.source.trim() !== '');
@@ -52,14 +54,14 @@ export default function CategoryReviewCard({
     const alreadyHasRule = suggestion.matched_classification_rule_id !== null;
     const { data, setData, patch, processing, errors } =
         useForm<CategoryReviewForm>({
-        category_id: suggestion.suggested_category_id?.toString() ?? '',
-        subcategory_id:
-            suggestion.suggested_subcategory_id?.toString() ?? '',
-        create_rule: false,
-        rule_match_field: defaultRuleSource?.value ?? 'merchant_name',
-        rule_match_operator: 'equals',
-        rule_match_value: defaultRuleSource?.source ?? '',
-    });
+            category_id: suggestion.suggested_category_id?.toString() ?? '',
+            subcategory_id:
+                suggestion.suggested_subcategory_id?.toString() ?? '',
+            create_rule: false,
+            rule_match_field: defaultRuleSource?.value ?? 'merchant_name',
+            rule_match_operator: 'equals',
+            rule_match_value: defaultRuleSource?.source ?? '',
+        });
 
     const availableCategories = categoryOptions.filter(
         (category) =>
@@ -122,15 +124,24 @@ export default function CategoryReviewCard({
                     <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
                         <span>{suggestion.transaction_date}</span>
                         <span aria-hidden="true">·</span>
-                        <span>{suggestion.type === 'expense' ? '支出' : '収入'}</span>
+                        <span>
+                            {suggestion.type === 'expense'
+                                ? t('categoryReview.card.expense')
+                                : t('categoryReview.card.income')}
+                        </span>
                         <span aria-hidden="true">·</span>
-                        <span>{suggestion.account_name ?? '口座なし'}</span>
+                        <span>
+                            {suggestion.account_name ??
+                                t('categoryReview.card.noAccount')}
+                        </span>
                         <span
                             className={`ml-auto inline-flex rounded-full px-2.5 py-1 ${confidenceClass}`}
                         >
                             {suggestion.confidence > 0
-                                ? `信頼度 ${suggestion.confidence}%`
-                                : '提案なし'}
+                                ? t('categoryReview.card.confidence', {
+                                      confidence: suggestion.confidence,
+                                  })
+                                : t('categoryReview.card.noSuggestion')}
                         </span>
                     </div>
 
@@ -139,17 +150,21 @@ export default function CategoryReviewCard({
                             <h2 className="break-words text-lg font-semibold text-slate-900">
                                 {suggestion.merchant_name ??
                                     suggestion.description ??
-                                    '摘要なし'}
+                                    t('categoryReview.card.noDescription')}
                             </h2>
                             {suggestion.description &&
-                                suggestion.description !== suggestion.merchant_name && (
+                                suggestion.description !==
+                                    suggestion.merchant_name && (
                                     <p className="mt-1 break-words text-sm text-slate-600">
                                         {suggestion.description}
                                     </p>
                                 )}
                         </div>
                         <p className="shrink-0 text-lg font-semibold text-slate-900">
-                            {formatMoney(suggestion.amount, suggestion.currency)}{' '}
+                            {formatMoney(
+                                suggestion.amount,
+                                suggestion.currency,
+                            )}{' '}
                             <span className="text-xs font-medium text-slate-500">
                                 {suggestion.currency}
                             </span>
@@ -160,7 +175,9 @@ export default function CategoryReviewCard({
                         <dl className="mt-4 grid gap-2 rounded-xl bg-slate-50 p-3 text-sm sm:grid-cols-2">
                             {suggestion.payment_method_label && (
                                 <div>
-                                    <dt className="text-xs text-slate-500">支払方法</dt>
+                                    <dt className="text-xs text-slate-500">
+                                        {t('categoryReview.card.paymentMethod')}
+                                    </dt>
                                     <dd className="mt-0.5 text-slate-700">
                                         {suggestion.payment_method_label}
                                     </dd>
@@ -168,7 +185,9 @@ export default function CategoryReviewCard({
                             )}
                             {suggestion.memo && (
                                 <div>
-                                    <dt className="text-xs text-slate-500">メモ</dt>
+                                    <dt className="text-xs text-slate-500">
+                                        {t('categoryReview.card.memo')}
+                                    </dt>
                                     <dd className="mt-0.5 text-slate-700">
                                         {suggestion.memo}
                                     </dd>
@@ -179,7 +198,7 @@ export default function CategoryReviewCard({
 
                     <div className="mt-4 rounded-xl border border-slate-200 px-4 py-3">
                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            提案の根拠
+                            {t('categoryReview.card.reason')}
                         </p>
                         <p className="mt-1 text-sm text-slate-700">
                             {suggestion.reason}
@@ -187,7 +206,9 @@ export default function CategoryReviewCard({
                         <div className="mt-2 flex flex-wrap gap-3 text-xs">
                             {suggestion.reference_count > 0 && (
                                 <span className="text-slate-500">
-                                    一致履歴 {suggestion.reference_count}件
+                                    {t('categoryReview.card.matchingHistory', {
+                                        count: suggestion.reference_count,
+                                    })}
                                 </span>
                             )}
                             {suggestion.reference_transaction_id && (
@@ -198,7 +219,7 @@ export default function CategoryReviewCard({
                                     )}
                                     className="font-medium text-indigo-600 hover:text-indigo-500"
                                 >
-                                    参照取引を見る
+                                    {t('categoryReview.card.viewReference')}
                                 </Link>
                             )}
                             {suggestion.matched_classification_rule_id && (
@@ -209,7 +230,7 @@ export default function CategoryReviewCard({
                                     )}
                                     className="font-medium text-indigo-600 hover:text-indigo-500"
                                 >
-                                    分類ルールを見る
+                                    {t('categoryReview.card.viewRule')}
                                 </Link>
                             )}
                             <Link
@@ -219,7 +240,7 @@ export default function CategoryReviewCard({
                                 )}
                                 className="font-medium text-indigo-600 hover:text-indigo-500"
                             >
-                                取引詳細を開く
+                                {t('categoryReview.card.viewTransaction')}
                             </Link>
                         </div>
                     </div>
@@ -232,15 +253,15 @@ export default function CategoryReviewCard({
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                                カテゴリを確定
+                                {t('categoryReview.card.confirmCategory')}
                             </p>
                             <p className="mt-1 text-sm text-slate-600">
-                                提案を確認し、必要なら選び直してください。
+                                {t('categoryReview.card.confirmHint')}
                             </p>
                         </div>
                         {suggestion.suggested_category && (
                             <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-indigo-700 shadow-sm">
-                                提案入力済み
+                                {t('categoryReview.card.suggestionApplied')}
                             </span>
                         )}
                     </div>
@@ -250,7 +271,7 @@ export default function CategoryReviewCard({
                             htmlFor={`category-${suggestion.transaction_id}`}
                             className="text-sm font-medium text-slate-700"
                         >
-                            カテゴリ
+                            {t('categoryReview.card.category')}
                         </label>
                         <select
                             id={`category-${suggestion.transaction_id}`}
@@ -260,15 +281,22 @@ export default function CategoryReviewCard({
                             }
                             className="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
-                            <option value="">選択してください</option>
+                            <option value="">
+                                {t('categoryReview.card.choose')}
+                            </option>
                             {availableCategories.map((category) => (
                                 <option key={category.id} value={category.id}>
                                     {category.name}
-                                    {!category.is_active ? '（無効）' : ''}
+                                    {!category.is_active
+                                        ? t('categoryReview.card.inactive')
+                                        : ''}
                                 </option>
                             ))}
                         </select>
-                        <InputError message={errors.category_id} className="mt-2" />
+                        <InputError
+                            message={errors.category_id}
+                            className="mt-2"
+                        />
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                             <Link
                                 href={route('categories.create', {
@@ -279,13 +307,13 @@ export default function CategoryReviewCard({
                                 })}
                                 className="font-semibold text-indigo-700 hover:text-indigo-500"
                             >
-                                ＋ カテゴリを追加
+                                {t('categoryReview.card.addCategory')}
                             </Link>
                             <Link
                                 href={route('categories.index')}
                                 className="font-medium text-slate-500 hover:text-slate-700"
                             >
-                                カテゴリ・小分類を管理
+                                {t('categoryReview.card.manageCategories')}
                             </Link>
                         </div>
                     </div>
@@ -295,7 +323,7 @@ export default function CategoryReviewCard({
                             htmlFor={`subcategory-${suggestion.transaction_id}`}
                             className="text-sm font-medium text-slate-700"
                         >
-                            小分類
+                            {t('categoryReview.card.subcategory')}
                         </label>
                         <select
                             id={`subcategory-${suggestion.transaction_id}`}
@@ -306,11 +334,18 @@ export default function CategoryReviewCard({
                             }
                             className="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm disabled:bg-slate-100 focus:border-indigo-500 focus:ring-indigo-500"
                         >
-                            <option value="">指定なし</option>
+                            <option value="">
+                                {t('categoryReview.card.none')}
+                            </option>
                             {availableSubcategories.map((subcategory) => (
-                                <option key={subcategory.id} value={subcategory.id}>
+                                <option
+                                    key={subcategory.id}
+                                    value={subcategory.id}
+                                >
                                     {subcategory.name}
-                                    {!subcategory.is_active ? '（無効）' : ''}
+                                    {!subcategory.is_active
+                                        ? t('categoryReview.card.inactive')
+                                        : ''}
                                 </option>
                             ))}
                         </select>
@@ -322,7 +357,7 @@ export default function CategoryReviewCard({
 
                     {alreadyHasRule ? (
                         <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs leading-5 text-emerald-800">
-                            この提案には既存の分類ルールが使われています。確定時に重複ルールは作成しません。
+                            {t('categoryReview.card.existingRule')}
                         </div>
                     ) : ruleSources.length > 0 ? (
                         <div className="mt-4 rounded-xl border border-indigo-200 bg-white p-3">
@@ -335,20 +370,28 @@ export default function CategoryReviewCard({
                                     type="checkbox"
                                     checked={data.create_rule}
                                     onChange={(event) =>
-                                        setData('create_rule', event.target.checked)
+                                        setData(
+                                            'create_rule',
+                                            event.target.checked,
+                                        )
                                     }
                                     className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                                 />
                                 <span>
                                     <span className="block text-sm font-semibold text-slate-800">
-                                        今後も同じ明細を自動分類する
+                                        {t('categoryReview.card.autoClassify')}
                                     </span>
                                     <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-                                        次回以降のCSV取込みで、未分類の明細に適用します。
+                                        {t(
+                                            'categoryReview.card.autoClassifyHint',
+                                        )}
                                     </span>
                                 </span>
                             </label>
-                            <InputError message={errors.create_rule} className="mt-2" />
+                            <InputError
+                                message={errors.create_rule}
+                                className="mt-2"
+                            />
 
                             {data.create_rule && (
                                 <div className="mt-3 space-y-3 border-t border-slate-200 pt-3">
@@ -358,26 +401,34 @@ export default function CategoryReviewCard({
                                                 htmlFor={`rule-field-${suggestion.transaction_id}`}
                                                 className="text-xs font-medium text-slate-600"
                                             >
-                                                判定に使う項目
+                                                {t(
+                                                    'categoryReview.card.matchField',
+                                                )}
                                             </label>
                                             <select
                                                 id={`rule-field-${suggestion.transaction_id}`}
                                                 value={data.rule_match_field}
                                                 onChange={(event) =>
                                                     changeRuleField(
-                                                        event.target.value as CategoryReviewForm['rule_match_field'],
+                                                        event.target
+                                                            .value as CategoryReviewForm['rule_match_field'],
                                                     )
                                                 }
                                                 className="mt-1 block w-full rounded-md border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                             >
                                                 {ruleSources.map((source) => (
-                                                    <option key={source.value} value={source.value}>
+                                                    <option
+                                                        key={source.value}
+                                                        value={source.value}
+                                                    >
                                                         {source.label}
                                                     </option>
                                                 ))}
                                             </select>
                                             <InputError
-                                                message={errors.rule_match_field}
+                                                message={
+                                                    errors.rule_match_field
+                                                }
                                                 className="mt-2"
                                             />
                                         </div>
@@ -387,7 +438,9 @@ export default function CategoryReviewCard({
                                                 htmlFor={`rule-operator-${suggestion.transaction_id}`}
                                                 className="text-xs font-medium text-slate-600"
                                             >
-                                                一致方法
+                                                {t(
+                                                    'categoryReview.card.matchOperator',
+                                                )}
                                             </label>
                                             <select
                                                 id={`rule-operator-${suggestion.transaction_id}`}
@@ -395,17 +448,32 @@ export default function CategoryReviewCard({
                                                 onChange={(event) =>
                                                     setData(
                                                         'rule_match_operator',
-                                                        event.target.value as CategoryReviewForm['rule_match_operator'],
+                                                        event.target
+                                                            .value as CategoryReviewForm['rule_match_operator'],
                                                     )
                                                 }
                                                 className="mt-1 block w-full rounded-md border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                             >
-                                                <option value="equals">完全一致（推奨）</option>
-                                                <option value="contains">含む</option>
-                                                <option value="starts_with">前方一致</option>
+                                                <option value="equals">
+                                                    {t(
+                                                        'categoryReview.card.exactRecommended',
+                                                    )}
+                                                </option>
+                                                <option value="contains">
+                                                    {t(
+                                                        'categoryReview.card.contains',
+                                                    )}
+                                                </option>
+                                                <option value="starts_with">
+                                                    {t(
+                                                        'categoryReview.card.startsWith',
+                                                    )}
+                                                </option>
                                             </select>
                                             <InputError
-                                                message={errors.rule_match_operator}
+                                                message={
+                                                    errors.rule_match_operator
+                                                }
                                                 className="mt-2"
                                             />
                                         </div>
@@ -416,14 +484,19 @@ export default function CategoryReviewCard({
                                             htmlFor={`rule-value-${suggestion.transaction_id}`}
                                             className="text-xs font-medium text-slate-600"
                                         >
-                                            一致値
+                                            {t(
+                                                'categoryReview.card.matchValue',
+                                            )}
                                         </label>
                                         <input
                                             id={`rule-value-${suggestion.transaction_id}`}
                                             type="text"
                                             value={data.rule_match_value}
                                             onChange={(event) =>
-                                                setData('rule_match_value', event.target.value)
+                                                setData(
+                                                    'rule_match_value',
+                                                    event.target.value,
+                                                )
                                             }
                                             className="mt-1 block w-full rounded-md border-gray-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         />
@@ -434,31 +507,55 @@ export default function CategoryReviewCard({
                                     </div>
 
                                     <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">
-                                        <span className="font-semibold text-slate-700">
-                                            作成するルール：
-                                        </span>
-                                        {suggestion.type === 'expense' ? '支出' : '収入'}の
-                                        {ruleSources.find(
-                                            (source) => source.value === data.rule_match_field,
-                                        )?.label ?? '明細'}
-                                        が「{data.rule_match_value}」に
-                                        {data.rule_match_operator === 'equals'
-                                            ? '完全一致'
-                                            : data.rule_match_operator === 'contains'
-                                              ? 'を含む'
-                                              : 'で始まる'}
-                                        場合、{selectedCategory?.name ?? '選択したカテゴリ'}
-                                        {selectedSubcategory
-                                            ? ` / ${selectedSubcategory.name}`
-                                            : ''}
-                                        に分類
+                                        {t('categoryReview.card.rulePreview', {
+                                            type:
+                                                suggestion.type === 'expense'
+                                                    ? t(
+                                                          'categoryReview.card.expense',
+                                                      )
+                                                    : t(
+                                                          'categoryReview.card.income',
+                                                      ),
+                                            field:
+                                                ruleSources.find(
+                                                    (source) =>
+                                                        source.value ===
+                                                        data.rule_match_field,
+                                                )?.label ??
+                                                t(
+                                                    'categoryReview.card.details',
+                                                ),
+                                            value: data.rule_match_value,
+                                            operator:
+                                                data.rule_match_operator ===
+                                                'equals'
+                                                    ? t(
+                                                          'categoryReview.card.exactPhrase',
+                                                      )
+                                                    : data.rule_match_operator ===
+                                                        'contains'
+                                                      ? t(
+                                                            'categoryReview.card.containsPhrase',
+                                                        )
+                                                      : t(
+                                                            'categoryReview.card.startsWithPhrase',
+                                                        ),
+                                            category:
+                                                selectedCategory?.name ??
+                                                t(
+                                                    'categoryReview.card.selectedCategory',
+                                                ),
+                                            subcategory: selectedSubcategory
+                                                ? ` / ${selectedSubcategory.name}`
+                                                : '',
+                                        })}
                                     </p>
                                 </div>
                             )}
                         </div>
                     ) : (
                         <p className="mt-4 rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-600">
-                            利用先・摘要・口座名がないため、この取引から分類ルールは作成できません。
+                            {t('categoryReview.card.ruleUnavailable')}
                         </p>
                     )}
 
@@ -468,13 +565,13 @@ export default function CategoryReviewCard({
                         className="mt-5 inline-flex w-full items-center justify-center rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {processing
-                            ? '保存中…'
+                            ? t('categoryReview.card.saving')
                             : data.create_rule
-                              ? 'カテゴリ確定＋ルール作成'
-                              : 'このカテゴリで確定'}
+                              ? t('categoryReview.card.saveWithRule')
+                              : t('categoryReview.card.save')}
                     </button>
                     <p className="mt-2 text-center text-xs text-slate-500">
-                        金額や確認状態など、他の項目は変更しません。
+                        {t('categoryReview.card.unchangedHint')}
                     </p>
                 </form>
             </div>

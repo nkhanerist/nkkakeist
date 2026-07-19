@@ -1,38 +1,49 @@
-export const accountTypeLabels: Record<string, string> = {
-    cash: '現金',
-    bank: '銀行口座',
-    credit_card: 'クレジットカード',
-    e_money: '電子マネー',
-    securities: '証券',
-    point: 'ポイント',
-    other: 'その他',
-};
+import type { TFunction } from 'i18next';
 
-export const accountTypeBalanceLabels: Record<string, string> = {
-    credit_card: '未払残高相当',
-    e_money: '利用残高 / 請求待ち残高相当',
-    other: '利用残高 / 請求待ち残高相当',
-};
+const accountTypes = new Set([
+    'cash',
+    'bank',
+    'credit_card',
+    'e_money',
+    'securities',
+    'point',
+    'other',
+]);
 
-export const accountTypeDescriptions: Record<string, string> = {
-    credit_card:
-        'カード利用は expense、カード引落は transfer として扱うため、残高は未払残高に近い意味になります。',
-    e_money:
-        'コード決済利用は expense、請求付替やチャージは transfer として扱うため、残高は利用残高や請求待ち残高として確認します。',
-    other:
-        'コード決済や請求管理用の口座として使う場合、残高は利用残高や請求待ち残高として確認します。',
-    securities:
-        '証券口座への積立や資金移動は transfer として扱い、収支には重複計上しません。',
-};
+const accountTypesWithDescription = new Set([
+    'credit_card',
+    'e_money',
+    'other',
+    'securities',
+]);
 
-export function getAccountTypeLabel(type: string): string {
-    return accountTypeLabels[type] ?? type;
+const accountTypesWithSpecialBalanceLabel = new Set([
+    'credit_card',
+    'e_money',
+    'other',
+]);
+
+export function getAccountTypeLabel(
+    type: string,
+    translate: TFunction<'accounts'>,
+): string {
+    return accountTypes.has(type) ? translate(`types.${type}`) : type;
 }
 
-export function getAccountTypeDescription(type: string): string | null {
-    return accountTypeDescriptions[type] ?? null;
+export function getAccountTypeDescription(
+    type: string,
+    translate: TFunction<'accounts'>,
+): string | null {
+    return accountTypesWithDescription.has(type)
+        ? translate(`typeDescriptions.${type}`)
+        : null;
 }
 
-export function getAccountBalanceLabel(type: string): string {
-    return accountTypeBalanceLabels[type] ?? '現在残高相当';
+export function getAccountBalanceLabel(
+    type: string,
+    translate: TFunction<'accounts'>,
+): string {
+    return accountTypesWithSpecialBalanceLabel.has(type)
+        ? translate(`balanceLabels.${type}`)
+        : translate('balanceLabels.default');
 }

@@ -9,6 +9,13 @@ use Tests\TestCase;
 
 class MobileSuicaPdfParserTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        app()->setLocale('ja');
+    }
+
     public function test_it_parses_only_expenses_and_maps_transport_categories(): void
     {
         $parser = new MobileSuicaPdfParser(new PdfTextExtractorService);

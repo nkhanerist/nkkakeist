@@ -10,6 +10,7 @@ import {
 } from '@/types/category';
 import { useForm } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type SubcategoryManagerProps = {
     category: EditableCategory;
@@ -24,6 +25,7 @@ type EditingValues = {
 export default function SubcategoryManager({
     category,
 }: SubcategoryManagerProps) {
+    const { t } = useTranslation('categories');
     const [editingSubcategory, setEditingSubcategory] =
         useState<SubcategoryItem | null>(null);
 
@@ -76,7 +78,11 @@ export default function SubcategoryManager({
     };
 
     const handleDelete = (subcategory: SubcategoryItem) => {
-        if (! window.confirm(`「${subcategory.name}」を削除しますか？`)) {
+        if (
+            !window.confirm(
+                t('subcategories.confirmDelete', { name: subcategory.name }),
+            )
+        ) {
             return;
         }
 
@@ -89,16 +95,19 @@ export default function SubcategoryManager({
         <section className="space-y-6 rounded-2xl border border-slate-200 bg-slate-50 p-6">
             <div>
                 <h2 className="text-lg font-semibold text-slate-900">
-                    小分類
+                    {t('subcategories.title')}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                    このカテゴリに紐づく小分類を管理します。
+                    {t('subcategories.description')}
                 </p>
             </div>
 
             <form onSubmit={submitCreate} className="grid gap-4 md:grid-cols-4">
                 <div className="md:col-span-2">
-                    <InputLabel htmlFor="subcategory_name" value="小分類名" />
+                    <InputLabel
+                        htmlFor="subcategory_name"
+                        value={t('subcategories.name')}
+                    />
                     <TextInput
                         id="subcategory_name"
                         className="mt-1 block w-full"
@@ -117,7 +126,7 @@ export default function SubcategoryManager({
                 <div>
                     <InputLabel
                         htmlFor="subcategory_display_order"
-                        value="表示順"
+                        value={t('subcategories.displayOrder')}
                     />
                     <TextInput
                         id="subcategory_display_order"
@@ -140,7 +149,7 @@ export default function SubcategoryManager({
 
                 <div className="flex items-end">
                     <PrimaryButton disabled={createForm.processing}>
-                        追加する
+                        {t('actions.addSubcategory')}
                     </PrimaryButton>
                 </div>
 
@@ -150,13 +159,16 @@ export default function SubcategoryManager({
                         type="checkbox"
                         checked={createForm.data.is_active}
                         onChange={(event) =>
-                            createForm.setData('is_active', event.target.checked)
+                            createForm.setData(
+                                'is_active',
+                                event.target.checked,
+                            )
                         }
                         className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
                     <InputLabel
                         htmlFor="subcategory_is_active"
-                        value="有効にする"
+                        value={t('subcategories.active')}
                     />
                 </div>
             </form>
@@ -164,7 +176,7 @@ export default function SubcategoryManager({
             <div className="space-y-3">
                 {category.subcategories.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500">
-                        まだ小分類がありません。
+                        {t('subcategories.empty')}
                     </div>
                 ) : (
                     category.subcategories.map((subcategory) => (
@@ -180,7 +192,7 @@ export default function SubcategoryManager({
                                     <div className="md:col-span-2">
                                         <InputLabel
                                             htmlFor={`edit_subcategory_${subcategory.id}`}
-                                            value="小分類名"
+                                            value={t('subcategories.name')}
                                         />
                                         <TextInput
                                             id={`edit_subcategory_${subcategory.id}`}
@@ -203,7 +215,9 @@ export default function SubcategoryManager({
                                     <div>
                                         <InputLabel
                                             htmlFor={`edit_order_${subcategory.id}`}
-                                            value="表示順"
+                                            value={t(
+                                                'subcategories.displayOrder',
+                                            )}
                                         />
                                         <TextInput
                                             id={`edit_order_${subcategory.id}`}
@@ -220,7 +234,9 @@ export default function SubcategoryManager({
                                         />
                                         <InputError
                                             className="mt-2"
-                                            message={editForm.errors.display_order}
+                                            message={
+                                                editForm.errors.display_order
+                                            }
                                         />
                                     </div>
 
@@ -228,7 +244,7 @@ export default function SubcategoryManager({
                                         <PrimaryButton
                                             disabled={editForm.processing}
                                         >
-                                            保存
+                                            {t('actions.save')}
                                         </PrimaryButton>
                                         <button
                                             type="button"
@@ -237,7 +253,7 @@ export default function SubcategoryManager({
                                             }
                                             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                         >
-                                            キャンセル
+                                            {t('actions.cancel')}
                                         </button>
                                     </div>
 
@@ -256,7 +272,7 @@ export default function SubcategoryManager({
                                         />
                                         <InputLabel
                                             htmlFor={`edit_active_${subcategory.id}`}
-                                            value="有効にする"
+                                            value={t('subcategories.active')}
                                         />
                                     </div>
                                 </form>
@@ -267,10 +283,12 @@ export default function SubcategoryManager({
                                             {subcategory.name}
                                         </p>
                                         <p className="mt-1 text-xs text-slate-500">
-                                            表示順: {subcategory.display_order} /{' '}
-                                            {subcategory.is_active
-                                                ? '有効'
-                                                : '無効'}
+                                            {t('subcategories.summary', {
+                                                order: subcategory.display_order,
+                                                status: subcategory.is_active
+                                                    ? t('status.active')
+                                                    : t('status.inactive'),
+                                            })}
                                         </p>
                                     </div>
 
@@ -282,7 +300,7 @@ export default function SubcategoryManager({
                                             }
                                             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                         >
-                                            編集
+                                            {t('actions.edit')}
                                         </button>
                                         <DangerButton
                                             type="button"
@@ -290,7 +308,7 @@ export default function SubcategoryManager({
                                                 handleDelete(subcategory)
                                             }
                                         >
-                                            削除
+                                            {t('actions.delete')}
                                         </DangerButton>
                                     </div>
                                 </div>

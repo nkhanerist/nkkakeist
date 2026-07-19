@@ -19,15 +19,15 @@ class JrePointJsonParser
         try {
             $payload = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
-            throw new RuntimeException('JRE POINTの書き出しJSONを読み取れませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_json_unreadable'));
         }
 
         if (! is_array($payload)) {
-            throw new RuntimeException('JRE POINTの書き出しJSONとして認識できませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_json_unrecognized'));
         }
 
         if (($payload['format'] ?? null) !== 'nkkakeist-jre-point-history' || ($payload['version'] ?? null) !== 1) {
-            throw new RuntimeException('対応していないJRE POINT書き出し形式です。');
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_version_unsupported'));
         }
 
         $capturedAt = $this->capturedAt($payload['captured_at'] ?? null);
@@ -35,7 +35,7 @@ class JrePointJsonParser
         $sourceRows = $payload['rows'] ?? null;
 
         if (! is_array($sourceRows)) {
-            throw new RuntimeException('JRE POINTの履歴行が見つかりませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_rows_missing'));
         }
 
         $rows = [];
@@ -43,12 +43,26 @@ class JrePointJsonParser
 
         foreach ($sourceRows as $index => $sourceRow) {
             if (! is_array($sourceRow)) {
-                throw new RuntimeException(sprintf('JRE POINT履歴の%d行目を解釈できませんでした。', $index + 1));
+                throw new RuntimeException(trans('imports.parse_errors.jre_point_row_invalid', [
+                    'row' => $index + 1,
+                ]));
             }
 
-            $reflectionDate = $this->date($sourceRow['reflection_date'] ?? null, 'ポイント反映日', $index);
-            $place = $this->requiredString($sourceRow['place'] ?? null, '利用場所', $index);
-            $content = $this->requiredString($sourceRow['description'] ?? null, '内容', $index);
+            $reflectionDate = $this->date(
+                $sourceRow['reflection_date'] ?? null,
+                trans('imports.parse_fields.jre_reflection_date'),
+                $index,
+            );
+            $place = $this->requiredString(
+                $sourceRow['place'] ?? null,
+                trans('imports.parse_fields.jre_place'),
+                $index,
+            );
+            $content = $this->requiredString(
+                $sourceRow['description'] ?? null,
+                trans('imports.parse_fields.jre_description'),
+                $index,
+            );
             $points = $this->points($sourceRow['points'] ?? null, $index);
 
             if ($points === 0) {
@@ -108,13 +122,13 @@ class JrePointJsonParser
     private function capturedAt(mixed $value): string
     {
         if (! is_string($value) || trim($value) === '') {
-            throw new RuntimeException('JRE POINT履歴の取得日時がありません。');
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_captured_at_missing'));
         }
 
         try {
             return (new DateTimeImmutable($value))->format(DATE_ATOM);
         } catch (\Throwable) {
-            throw new RuntimeException('JRE POINT履歴の取得日時を解釈できませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_captured_at_invalid'));
         }
     }
 
@@ -122,20 +136,20 @@ class JrePointJsonParser
     private function balance(mixed $value): array
     {
         if (! is_array($value) || ! is_numeric($value['total'] ?? null)) {
-            throw new RuntimeException('JRE POINTの総保有ポイントを読み取れませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_total_unreadable'));
         }
 
         $total = (int) $value['total'];
         $limited = is_numeric($value['limited'] ?? null) ? (int) $value['limited'] : 0;
 
         if ($total < 0 || $limited < 0 || $limited > $total) {
-            throw new RuntimeException('JRE POINTの残高が不正です。');
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_balance_invalid'));
         }
 
         $nearestExpiry = $this->nullableString($value['nearest_expiry'] ?? null);
 
         if ($nearestExpiry !== null && ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $nearestExpiry)) {
-            throw new RuntimeException('JRE POINTの有効期限を解釈できませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_expiry_invalid'));
         }
 
         return [
@@ -149,14 +163,20 @@ class JrePointJsonParser
     private function date(mixed $value, string $label, int $index): string
     {
         if (! is_string($value) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
-            throw new RuntimeException(sprintf('JRE POINT履歴の%d行目の%sを解釈できませんでした。', $index + 1, $label));
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_field_invalid', [
+                'row' => $index + 1,
+                'field' => $label,
+            ]));
         }
 
         $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
         $errors = DateTimeImmutable::getLastErrors();
 
         if (! $date instanceof DateTimeImmutable || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
-            throw new RuntimeException(sprintf('JRE POINT履歴の%d行目の%sを解釈できませんでした。', $index + 1, $label));
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_field_invalid', [
+                'row' => $index + 1,
+                'field' => $label,
+            ]));
         }
 
         return $date->format('Y-m-d');
@@ -167,7 +187,10 @@ class JrePointJsonParser
         $normalized = $this->nullableString($value);
 
         if ($normalized === null) {
-            throw new RuntimeException(sprintf('JRE POINT履歴の%d行目の%sがありません。', $index + 1, $label));
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_field_missing', [
+                'row' => $index + 1,
+                'field' => $label,
+            ]));
         }
 
         return $normalized;
@@ -187,7 +210,9 @@ class JrePointJsonParser
     private function points(mixed $value, int $index): int
     {
         if (! is_int($value) && ! (is_string($value) && preg_match('/^[+-]?\d+$/', trim($value)))) {
-            throw new RuntimeException(sprintf('JRE POINT履歴の%d行目のポイント数を解釈できませんでした。', $index + 1));
+            throw new RuntimeException(trans('imports.parse_errors.jre_point_points_invalid', [
+                'row' => $index + 1,
+            ]));
         }
 
         return (int) $value;
@@ -205,7 +230,11 @@ class JrePointJsonParser
     private function chargeDate(mixed $actualDate, string $reflectionDate, string $content): string
     {
         if (is_string($actualDate) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $actualDate)) {
-            return $this->date($actualDate, '利用日', 0);
+            return $this->date(
+                $actualDate,
+                trans('imports.parse_fields.jre_actual_date'),
+                0,
+            );
         }
 
         $normalizedContent = mb_convert_kana($content, 'as', 'UTF-8');

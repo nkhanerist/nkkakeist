@@ -58,7 +58,7 @@ class AccountBalanceReconciliationService
     {
         if ($account->balance_method !== 'ledger' || $account->balance_role === 'clearing') {
             throw ValidationException::withMessages([
-                'actual_balance' => 'この口座は期首残高の照合対象ではありません。',
+                'actual_balance' => trans('accounts.messages.reconciliation_not_allowed'),
             ]);
         }
 

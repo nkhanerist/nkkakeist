@@ -1,0 +1,61 @@
+{
+    "index": {
+        "title": "カテゴリ",
+        "description": "カテゴリと小分類を管理できます。",
+        "scope": "ログインユーザーに紐づくカテゴリだけを表示しています。",
+        "empty": "まだカテゴリがありません。最初のカテゴリを追加してください。",
+        "confirmDelete": "「{{name}}」を削除しますか？"
+    },
+    "create": {
+        "title": "カテゴリを追加",
+        "description": "新しいカテゴリを作成します。",
+        "reviewDescription": "カテゴリを追加したあと、カテゴリ確認へ戻ります。",
+        "submit": "作成する"
+    },
+    "edit": {
+        "title": "カテゴリを編集",
+        "description": "カテゴリ情報と小分類を更新します。",
+        "submit": "更新する"
+    },
+    "actions": {
+        "add": "カテゴリを追加",
+        "edit": "編集",
+        "delete": "削除",
+        "cancel": "キャンセル",
+        "save": "保存",
+        "addSubcategory": "追加する"
+    },
+    "table": {
+        "name": "カテゴリ名",
+        "type": "種別",
+        "status": "状態",
+        "displayOrder": "表示順",
+        "subcategories": "小分類",
+        "actions": "操作",
+        "icon": "icon: {{icon}}",
+        "unregistered": "未登録"
+    },
+    "status": {
+        "active": "有効",
+        "inactive": "無効"
+    },
+    "form": {
+        "name": "カテゴリ名",
+        "type": "種別",
+        "color": "色",
+        "icon": "アイコン名",
+        "displayOrder": "表示順",
+        "active": "有効にする",
+        "activeHint": "無効なカテゴリも一覧で状態を確認できます。"
+    },
+    "subcategories": {
+        "title": "小分類",
+        "description": "このカテゴリに紐づく小分類を管理します。",
+        "name": "小分類名",
+        "displayOrder": "表示順",
+        "active": "有効にする",
+        "empty": "まだ小分類がありません。",
+        "confirmDelete": "「{{name}}」を削除しますか？",
+        "summary": "表示順: {{order}} / {{status}}"
+    }
+}

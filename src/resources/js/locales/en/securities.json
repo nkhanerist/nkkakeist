@@ -1,0 +1,149 @@
+{
+    "index": {
+        "title": "Securities",
+        "description": "Review total account valuations and daily valuation trends by position.",
+        "period": {
+            "title": "Period",
+            "description": "Displays imported valuation snapshots."
+        },
+        "emptyAccounts": "No securities accounts found. Add one from Accounts.",
+        "addAccount": "Add Account",
+        "latestAccounts": {
+            "title": "Latest Valuation by Account",
+            "description": "The latest valuation acquired within the selected {{period}} period.",
+            "noValuation": "No valuation in this period",
+            "details": "View Details →",
+            "manage": "Manage Valuations"
+        },
+        "accountTrend": {
+            "title": "Account Valuation Trends",
+            "description": "Compares daily valuations saved as account totals.",
+            "empty": "No account valuations in this period."
+        },
+        "positionTrend": {
+            "title": "Position Valuation Trends",
+            "description": "Expand an account to review how its position mix changed in a stacked area chart.",
+            "count": "{{count}} positions",
+            "expand": "Expand to Review",
+            "emptyBreakdown": "No position breakdown in this period.",
+            "emptyValuation": "No position valuations in this period.",
+            "details": "Details →",
+            "dateAndDays": "{{date}} · {{count}} days",
+            "noDate": "No date"
+        },
+        "table": {
+            "instrument": "Position",
+            "latestValuation": "Latest Valuation",
+            "periodChange": "Period Change",
+            "trend": "Trend"
+        }
+    },
+    "show": {
+        "description": "Review account valuation history and position details.",
+        "back": "← Back to Securities",
+        "manage": "Manage Valuations",
+        "transactions": "View Related Transactions",
+        "period": {
+            "title": "Period",
+            "description": "Compare valuations within the selected period."
+        },
+        "valuation": {
+            "title": "Account Valuation",
+            "description": "Calculates the period change from the first and last valuations in {{period}}.",
+            "latest": "Latest Valuation",
+            "noData": "No data in this period",
+            "change": "Period Change",
+            "needTwoDays": "At least two days are required for comparison",
+            "daysCompared": "Compared {{count}} days",
+            "snapshotDays": "Balance Dates",
+            "days": "{{count}} days",
+            "selectedPeriod": "Within selected period",
+            "latestSource": "Latest Source",
+            "positionsAsOf": "Position details {{date}}",
+            "noPositions": "No position details",
+            "chartEmpty": "No account valuations in this period."
+        },
+        "positionDetail": {
+            "eyebrow": "Position Detail",
+            "noMetadata": "No instrument code or asset class",
+            "clear": "Clear Position Selection",
+            "valuation": "Valuation",
+            "unrealizedGain": "Unrealized Gain/Loss",
+            "acquisitionCost": "Acquisition Cost",
+            "quantity": "Quantity",
+            "unitPrice": "Current Price",
+            "averageAcquisitionPrice": "Average Acquisition Price",
+            "chartEmpty": "No valuation or acquisition cost data in this period.",
+            "acquisitionMissing": "Acquisition cost is unavailable for this period. Import the latest Money Forward balance JSON to compare it.",
+            "date": "Date",
+            "change": "Change",
+            "source": "Source"
+        },
+        "positions": {
+            "title": "Latest Position Breakdown",
+            "description": "Breakdown acquired on {{date}}. Select a position to view its daily history.",
+            "noData": "No position breakdown in this period.",
+            "importPrompt": "Import valuation data that includes position details.",
+            "instrument": "Position",
+            "assetClass": "Asset Class",
+            "share": "Share",
+            "acquisitionCost": "Acquisition Cost",
+            "valuation": "Valuation",
+            "unrealizedGain": "Unrealized Gain/Loss",
+            "periodChange": "Period Change",
+            "history": "View History →",
+            "codeAndDays": "{{code}} · {{count}} days",
+            "noCode": "No code"
+        },
+        "snapshots": {
+            "title": "Valuation History",
+            "description": "Account-level acquisition history. Open the original import when a valuation came from imported data.",
+            "empty": "No valuation history in this period.",
+            "date": "Date",
+            "valuation": "Valuation",
+            "change": "Change",
+            "positions": "Positions",
+            "source": "Source",
+            "import": "Import",
+            "positionCount": "{{count}}",
+            "manual": "Manual",
+            "viewImport": "View #{{id}}"
+        }
+    },
+    "assetClasses": {
+        "security": "Security",
+        "investmentFund": "Investment Fund",
+        "definedContributionPension": "Defined Contribution Pension"
+    },
+    "charts": {
+        "line": {
+            "empty": "No trend data available.",
+            "aria": "Valuation trend for {{series}}",
+            "details": "Details →"
+        },
+        "sparkline": {
+            "empty": "No data",
+            "aria": "Small valuation trend chart"
+        },
+        "stacked": {
+            "empty": "No position valuations available.",
+            "selectorAria": "Positions to display",
+            "showAll": "Show All",
+            "clearAll": "Clear All",
+            "selectPrompt": "Select positions above to display the stacked chart.",
+            "aria": "Stacked area chart for {{series}}",
+            "description": "The total band height is the combined valuation of displayed positions. Select a position name to toggle it."
+        },
+        "comparison": {
+            "empty": "No comparison data available.",
+            "selectorAria": "Chart series",
+            "showAll": "Show All",
+            "clearAll": "Clear All",
+            "selectPrompt": "Select items above to display the chart.",
+            "aria": "Area chart for {{series}}",
+            "gainBand": "Unrealized gain band",
+            "lossBand": "Unrealized loss band"
+        },
+        "seriesSeparator": ", "
+    }
+}

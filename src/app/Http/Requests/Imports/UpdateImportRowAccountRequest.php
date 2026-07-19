@@ -48,7 +48,7 @@ class UpdateImportRowAccountRequest extends FormRequest
                 $errorKey = $importRow instanceof ImportRow
                     ? self::errorKey($importRow)
                     : 'resolved_account_id';
-                $validator->errors()->add($errorKey, '対応を記憶する場合は取込先口座を選択してください。');
+                $validator->errors()->add($errorKey, trans('imports.messages.account_mapping_required'));
 
                 return;
             }
@@ -63,7 +63,7 @@ class UpdateImportRowAccountRequest extends FormRequest
                 : 'resolved_account_id';
 
             if (! is_numeric($value) || (string) (int) $value !== (string) $value) {
-                $validator->errors()->add($errorKey, '取込先口座の指定が不正です。');
+                $validator->errors()->add($errorKey, trans('imports.messages.account_mapping_invalid'));
 
                 return;
             }
@@ -75,7 +75,7 @@ class UpdateImportRowAccountRequest extends FormRequest
                 ->exists();
 
             if (! $exists) {
-                $validator->errors()->add($errorKey, '選択した取込先口座が見つかりません。');
+                $validator->errors()->add($errorKey, trans('imports.messages.account_mapping_not_found'));
             }
         });
     }

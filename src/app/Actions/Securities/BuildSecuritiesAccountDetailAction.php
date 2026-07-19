@@ -140,6 +140,7 @@ class BuildSecuritiesAccountDetailAction
                 'quantity',
                 'average_acquisition_price',
                 'unit_price',
+                'acquisition_cost',
                 'valuation',
                 'unrealized_gain',
                 'currency',
@@ -196,6 +197,7 @@ class BuildSecuritiesAccountDetailAction
             'instrument_code' => $position->instrument_code,
             'asset_class' => $position->asset_class,
             'valuation' => (string) $position->valuation,
+            'acquisition_cost' => $this->acquisitionCost($position),
             'unrealized_gain' => $position->unrealized_gain === null ? null : (string) $position->unrealized_gain,
             'quantity' => $position->quantity === null ? null : (string) $position->quantity,
             'unit_price' => $position->unit_price === null ? null : (string) $position->unit_price,
@@ -240,9 +242,7 @@ class BuildSecuritiesAccountDetailAction
                     ? null
                     : (string) $latest->average_acquisition_price,
                 'unit_price' => $latest->unit_price === null ? null : (string) $latest->unit_price,
-                'acquisition_cost' => isset($latest->metadata['acquisition_cost'])
-                    ? (string) $latest->metadata['acquisition_cost']
-                    : null,
+                'acquisition_cost' => $this->acquisitionCost($latest),
                 'valuation' => (string) $latest->valuation,
                 'unrealized_gain' => $latest->unrealized_gain === null ? null : (string) $latest->unrealized_gain,
                 'source_name' => $latest->source_name,
@@ -255,6 +255,38 @@ class BuildSecuritiesAccountDetailAction
                     'date' => $position->captured_at->toDateString(),
                     'value' => (string) $position->valuation,
                 ])->values()->all(),
+            ],
+            'comparison_series' => [
+                [
+                    'key' => "{$latest->position_key}:valuation",
+                    'label' => __('securities.series.valuation'),
+                    'currency' => $latest->currency,
+                    'color' => '#4f46e5',
+                    'points' => $history->map(fn (InvestmentPositionSnapshot $position): array => [
+                        'date' => $position->captured_at->toDateString(),
+                        'value' => (string) $position->valuation,
+                    ])->values()->all(),
+                ],
+                [
+                    'key' => "{$latest->position_key}:acquisition-cost",
+                    'label' => __('securities.series.acquisition_cost'),
+                    'currency' => $latest->currency,
+                    'color' => '#d97706',
+                    'points' => $history
+                        ->map(function (InvestmentPositionSnapshot $position): ?array {
+                            $acquisitionCost = $this->acquisitionCost($position);
+
+                            return $acquisitionCost === null
+                                ? null
+                                : [
+                                    'date' => $position->captured_at->toDateString(),
+                                    'value' => $acquisitionCost,
+                                ];
+                        })
+                        ->filter()
+                        ->values()
+                        ->all(),
+                ],
             ],
             'history' => $history->map(function (InvestmentPositionSnapshot $position, int $index) use (
                 $history,
@@ -273,6 +305,7 @@ class BuildSecuritiesAccountDetailAction
                         ),
                     'quantity' => $position->quantity === null ? null : (string) $position->quantity,
                     'unit_price' => $position->unit_price === null ? null : (string) $position->unit_price,
+                    'acquisition_cost' => $this->acquisitionCost($position),
                     'unrealized_gain' => $position->unrealized_gain === null
                         ? null
                         : (string) $position->unrealized_gain,
@@ -280,6 +313,17 @@ class BuildSecuritiesAccountDetailAction
                 ];
             })->reverse()->values()->all(),
         ];
+    }
+
+    private function acquisitionCost(InvestmentPositionSnapshot $position): ?string
+    {
+        if ($position->acquisition_cost !== null) {
+            return (string) $position->acquisition_cost;
+        }
+
+        return isset($position->metadata['acquisition_cost'])
+            ? (string) $position->metadata['acquisition_cost']
+            : null;
     }
 
     private function toMinorUnits(string $amount): int

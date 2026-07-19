@@ -34,13 +34,13 @@ class CommitImportAction
 
         if ($import->status === 'imported') {
             throw ValidationException::withMessages([
-                'import' => 'すでに取込済みです。',
+                'import' => trans('imports.action_errors.already_imported'),
             ]);
         }
 
         if ($import->status !== 'validated') {
             throw ValidationException::withMessages([
-                'import' => '取込を確定できるのはプレビュー完了済みの import のみです。',
+                'import' => trans('imports.action_errors.preview_required'),
             ]);
         }
 
@@ -52,7 +52,7 @@ class CommitImportAction
             && $import->importRows->contains(fn (ImportRow $importRow): bool => $importRow->status === 'error')
         ) {
             throw ValidationException::withMessages([
-                'import' => 'JRE POINT取込に未解決の行があります。すべて解決してから確定してください。',
+                'import' => trans('imports.action_errors.jre_point_unresolved'),
             ]);
         }
 
@@ -113,13 +113,13 @@ class CommitImportAction
 
         if ($account === null || $transferAccount === null) {
             throw ValidationException::withMessages([
-                'import' => '振替行の相手口座を確定できないため取込できません。',
+                'import' => trans('imports.action_errors.transfer_account_unresolved'),
             ]);
         }
 
         if ($account->currency !== $transferAccount->currency) {
             throw ValidationException::withMessages([
-                'import' => '振替元口座と振替先口座は同じ通貨である必要があります。',
+                'import' => trans('imports.action_errors.transfer_currency_mismatch'),
             ]);
         }
 

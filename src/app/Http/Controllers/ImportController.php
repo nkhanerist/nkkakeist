@@ -19,6 +19,7 @@ use App\Http\Requests\Imports\UpdateImportRowTransferAccountRequest;
 use App\Models\Import;
 use App\Models\ImportRow;
 use App\Services\Imports\BalanceSnapshotConflictService;
+use App\Services\Imports\ImportMessageLocalizer;
 use App\Services\Imports\ImportOptionsService;
 use App\Services\Imports\JrePointReconciliationService;
 use App\Services\Imports\ResolveTransferImportRowService;
@@ -40,6 +41,7 @@ class ImportController extends Controller
         private readonly UpdateImportRowReplacementAction $updateImportRowReplacementAction,
         private readonly DeleteImportAction $deleteImportAction,
         private readonly ImportOptionsService $importOptionsService,
+        private readonly ImportMessageLocalizer $importMessageLocalizer,
         private readonly ResolveTransferImportRowService $resolveTransferImportRowService,
         private readonly JrePointReconciliationService $jrePointReconciliationService,
         private readonly BalanceSnapshotConflictService $balanceSnapshotConflictService,
@@ -72,6 +74,7 @@ class ImportController extends Controller
             'sourceOptions' => $sourceOptions,
             'accountOptions' => $this->importOptionsService->accountOptions(request()->user()),
             'selectedSource' => $selectedSource,
+            'suggestedAccountIds' => $this->importOptionsService->suggestedAccountIds(request()->user()),
         ]);
     }
 
@@ -123,6 +126,9 @@ class ImportController extends Controller
                     'currency' => $importRow->resolvedAccount->currency,
                 ],
                 'manual_resolved_account_id' => $importRow->manual_resolved_account_id,
+                'remember_mapping_recommended' => $import->source_name === 'balance_snapshot'
+                    && $importRow->account_name === 'Money Forward 年金'
+                    && $importRow->resolved_account_id === null,
                 'replace_account_snapshot_id' => $importRow->replace_account_snapshot_id,
                 'same_day_snapshot' => $this->sameDaySnapshotItem($import, $importRow),
                 'resolved_transfer_account' => $importRow->resolvedTransferAccount === null ? null : [
@@ -159,9 +165,13 @@ class ImportController extends Controller
                 'status' => $importRow->status,
                 'is_duplicate_candidate' => $importRow->is_duplicate_candidate,
                 'duplicate_hash' => $importRow->duplicate_hash,
-                'validation_errors' => $importRow->validation_errors ?? [],
+                'validation_errors' => $this->importMessageLocalizer->messages(
+                    $importRow->validation_errors ?? [],
+                ),
                 'raw_payload' => $importRow->raw_payload,
-                'transfer_resolution' => $this->resolveTransferImportRowService->explain($importRow, $accounts),
+                'transfer_resolution' => $this->importMessageLocalizer->transferResolution(
+                    $this->resolveTransferImportRowService->explain($importRow, $accounts),
+                ),
             ])->all(),
         ]);
     }
@@ -176,7 +186,7 @@ class ImportController extends Controller
         } catch (ValidationException $exception) {
             return to_route('imports.show', $import)->with(
                 'error',
-                $exception->errors()['import'][0] ?? 'import を再解析できませんでした。',
+                $exception->errors()['import'][0] ?? trans('imports.messages.reparse_failed'),
             );
         }
 
@@ -190,7 +200,7 @@ class ImportController extends Controller
         } catch (ValidationException $exception) {
             return to_route('imports.show', $import)->with(
                 'error',
-                $exception->errors()['import'][0] ?? 'import を確定できませんでした。',
+                $exception->errors()['import'][0] ?? trans('imports.messages.commit_failed'),
             );
         }
 
@@ -253,7 +263,7 @@ class ImportController extends Controller
         } catch (ValidationException $exception) {
             return to_route('imports.show', $import)->with(
                 'error',
-                $exception->errors()['import'][0] ?? 'import を削除できませんでした。',
+                $exception->errors()['import'][0] ?? trans('imports.messages.delete_failed'),
             );
         }
 

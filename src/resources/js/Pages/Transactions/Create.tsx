@@ -6,6 +6,7 @@ import {
     TransactionTypeOption,
 } from '@/types/transaction';
 import TransactionForm from './Partials/TransactionForm';
+import { useTranslation } from 'react-i18next';
 
 type CreateProps = {
     typeOptions: TransactionTypeOption[];
@@ -20,13 +21,15 @@ export default function Create({
     categoryOptions,
     subcategoryOptions,
 }: CreateProps) {
+    const { t } = useTranslation('transactions');
+
     return (
         <AppPage
-            title="Create Transaction"
-            description="新しい取引を登録します。"
+            title={t('create.title')}
+            description={t('create.description')}
         >
             <TransactionForm
-                submitLabel="登録する"
+                submitLabel={t('create.submit')}
                 submitRoute={route('transactions.store')}
                 method="post"
                 typeOptions={typeOptions}

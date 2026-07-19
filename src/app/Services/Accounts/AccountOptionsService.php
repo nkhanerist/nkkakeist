@@ -9,15 +9,7 @@ class AccountOptionsService
      */
     public function typeOptions(): array
     {
-        return [
-            ['value' => 'cash', 'label' => '現金'],
-            ['value' => 'bank', 'label' => '銀行口座'],
-            ['value' => 'credit_card', 'label' => 'クレジットカード'],
-            ['value' => 'e_money', 'label' => '電子マネー'],
-            ['value' => 'securities', 'label' => '証券'],
-            ['value' => 'point', 'label' => 'ポイント'],
-            ['value' => 'other', 'label' => 'その他'],
-        ];
+        return $this->translatedOptions('types', ['cash', 'bank', 'credit_card', 'e_money', 'securities', 'point', 'other']);
     }
 
     /**
@@ -33,11 +25,7 @@ class AccountOptionsService
      */
     public function balanceRoleOptions(): array
     {
-        return [
-            ['value' => 'asset', 'label' => '資産'],
-            ['value' => 'liability', 'label' => '負債'],
-            ['value' => 'clearing', 'label' => '中継口座'],
-        ];
+        return $this->translatedOptions('balance_roles', ['asset', 'liability', 'clearing']);
     }
 
     /**
@@ -53,10 +41,7 @@ class AccountOptionsService
      */
     public function balanceMethodOptions(): array
     {
-        return [
-            ['value' => 'ledger', 'label' => '取引台帳から計算'],
-            ['value' => 'snapshot', 'label' => '評価額スナップショット'],
-        ];
+        return $this->translatedOptions('balance_methods', ['ledger', 'snapshot']);
     }
 
     /**
@@ -80,5 +65,20 @@ class AccountOptionsService
         }
 
         return $labels;
+    }
+
+    /**
+     * @param  array<int, string>  $values
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function translatedOptions(string $group, array $values): array
+    {
+        return array_map(
+            fn (string $value): array => [
+                'value' => $value,
+                'label' => trans("accounts.{$group}.{$value}"),
+            ],
+            $values,
+        );
     }
 }

@@ -1,5 +1,6 @@
 import AppPage from '@/Components/AppPage';
 import { AccountTypeOption } from '@/types/account';
+import { useTranslation } from 'react-i18next';
 import AccountForm from './Partials/AccountForm';
 
 type CreateProps = {
@@ -13,13 +14,15 @@ export default function Create({
     balanceRoleOptions,
     balanceMethodOptions,
 }: CreateProps) {
+    const { t } = useTranslation('accounts');
+
     return (
         <AppPage
-            title="Create Account"
-            description="新しい口座を作成します。"
+            title={t('create.title')}
+            description={t('create.description')}
         >
             <AccountForm
-                submitLabel="作成する"
+                submitLabel={t('create.submit')}
                 typeOptions={typeOptions}
                 balanceRoleOptions={balanceRoleOptions}
                 balanceMethodOptions={balanceMethodOptions}

@@ -49,7 +49,7 @@ class StoreClassificationRuleRequest extends FormRequest
                     $categoryId = $this->input('category_id');
 
                     if ($categoryId === null || $categoryId === '') {
-                        $fail('小分類を選択する場合はカテゴリを選択してください。');
+                        $fail(trans('classification_rules.messages.category_required_for_subcategory'));
 
                         return;
                     }
@@ -61,7 +61,7 @@ class StoreClassificationRuleRequest extends FormRequest
                         ->exists();
 
                     if (! $exists) {
-                        $fail('選択した小分類はカテゴリに属していません。');
+                        $fail(trans('classification_rules.messages.subcategory_mismatch'));
                     }
                 },
             ],
@@ -69,6 +69,17 @@ class StoreClassificationRuleRequest extends FormRequest
             'priority' => ['required', 'integer', 'min:0', 'max:999999'],
             'is_active' => ['required', 'boolean'],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        /** @var array<string, string> $attributes */
+        $attributes = trans('classification_rules.fields');
+
+        return $attributes;
     }
 
     protected function prepareForValidation(): void
@@ -96,7 +107,7 @@ class StoreClassificationRuleRequest extends FormRequest
             ) {
                 $validator->errors()->add(
                     'category_id',
-                    'カテゴリ・小分類・集計対象フラグのいずれか1つ以上を設定してください。',
+                    trans('classification_rules.messages.completion_required'),
                 );
             }
 
@@ -121,7 +132,7 @@ class StoreClassificationRuleRequest extends FormRequest
                 if ($category->type !== 'both') {
                     $validator->errors()->add(
                         'category_id',
-                        '取引種別が「すべて」のルールには、種別が both のカテゴリだけを指定できます。',
+                        trans('classification_rules.messages.any_requires_both_category'),
                     );
                 }
 
@@ -134,7 +145,7 @@ class StoreClassificationRuleRequest extends FormRequest
             ) {
                 $validator->errors()->add(
                     'category_id',
-                    '選択したカテゴリの種別がルールの取引種別と一致していません。',
+                    trans('classification_rules.messages.category_type_mismatch'),
                 );
             }
         });

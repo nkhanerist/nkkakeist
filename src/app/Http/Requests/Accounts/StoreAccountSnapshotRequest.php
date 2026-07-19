@@ -30,6 +30,15 @@ class StoreAccountSnapshotRequest extends FormRequest
         ];
     }
 
+    /** @return array<string, string> */
+    public function attributes(): array
+    {
+        /** @var array<string, string> $attributes */
+        $attributes = trans('accounts.fields');
+
+        return $attributes;
+    }
+
     public function after(): array
     {
         return [
@@ -39,7 +48,7 @@ class StoreAccountSnapshotRequest extends FormRequest
                 if ($account instanceof Account && $account->balance_method !== 'snapshot') {
                     $validator->errors()->add(
                         'balance',
-                        '評価額は、残高計算方式が「評価額スナップショット」の口座だけに記録できます。',
+                        trans('accounts.messages.valuation_account_required'),
                     );
                 }
             },
@@ -51,7 +60,7 @@ class StoreAccountSnapshotRequest extends FormRequest
         $this->merge([
             'source_name' => $this->filled('source_name')
                 ? trim((string) $this->input('source_name'))
-                : '手動入力',
+                : trans('accounts.defaults.manual_entry'),
             'note' => $this->filled('note')
                 ? trim((string) $this->input('note'))
                 : null,

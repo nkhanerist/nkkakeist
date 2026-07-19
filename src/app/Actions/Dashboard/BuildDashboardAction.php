@@ -55,7 +55,7 @@ class BuildDashboardAction
      *     yearly_trends: array<int, array{month: string, label: string, summaries: array<int, array{currency: string, income_total: string, expense_total: string, balance_total: string}>}>,
      *     net_worth_trends: array<int, array{currency: string, points: array<int, array{date: string, assets: string, liabilities: string, net_worth: string}>}>,
      *     asset_history_trends: array<int, array{currency: string, source_name: string, points: array<int, array{date: string, total_assets: string, breakdown: array<string, string>}>>},
-     *     daily_snapshot_status: array{date: string, state: 'complete'|'partial'|'missing', account_count: int, position_count: int, asset_history_recorded: bool, last_imported_at: string|null},
+     *     daily_snapshot_status: array<string, mixed>,
      *     weekly_import_status: array{week_start: string, week_end: string, sources: array{jre_point: array{state: 'updated'|'stale'|'missing', last_updated_at: string|null, latest_history_date: string|null}, mobile_suica: array{state: 'updated'|'stale'|'missing', last_updated_at: string|null, latest_history_date: string|null}}}
      * }
      */
@@ -96,6 +96,10 @@ class BuildDashboardAction
             $period['month_start'],
             $period['month_start']->endOfMonth(),
         );
+        $categoryExpenses = $this->categoryExpenseSummaryService->handle(
+            $user,
+            $period['month_start'],
+        );
 
         return [
             'selected_view' => $period['selected_view'],
@@ -110,9 +114,10 @@ class BuildDashboardAction
                 $user,
                 $period['month_start'],
                 $netWorthTrends,
+                $categoryExpenses,
             ),
             'account_summaries' => $this->accountBalanceSummaryService->handle($user, $period['month_start']),
-            'category_expenses' => $this->categoryExpenseSummaryService->handle($user, $period['month_start']),
+            'category_expenses' => $categoryExpenses,
             'monthly_trends' => $this->monthlyTrendService->handle($user, $period['month_start']),
             'yearly_summaries' => [],
             'yearly_category_expenses' => [],

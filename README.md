@@ -17,6 +17,7 @@ This project was created for **OpenAI Build Week** in the **Apps for Your Life**
 - Compare calculated ledger balances with official bank and card balances.
 - Store daily account valuations and per-instrument investment positions.
 - Explore monthly reports, net-worth history, account trends, and security-level valuation history.
+- Use the complete interface in Japanese or English, with the selected language kept across navigation.
 - Keep every user-owned resource isolated to its authenticated user.
 
 The core safety rule is simple: **if an imported financial record cannot be explained, it is not silently committed.**
@@ -50,6 +51,12 @@ The monthly dashboard includes:
 - net-worth change between actually stored snapshot dates.
 
 No missing valuation dates are interpolated.
+
+Past months can move through open, reviewed, and closed states. Account-level confirmations make delayed card, bank, and investment updates explicit before closing, while later data changes are detected and surfaced for review.
+
+### Product interface
+
+The application provides a bilingual Japanese/English interface across authentication, accounts, transactions, imports, dashboards, categories, and securities. The welcome and login experience uses the NKKakeist visual identity, including browser and home-screen icons.
 
 ### Assets and securities
 

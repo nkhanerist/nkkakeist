@@ -49,15 +49,55 @@ export type DashboardMonthlyReportNetWorthChange = {
     change_amount: string | null;
 };
 
+export type DashboardMonthlyReportCategoryExpenseGroup = {
+    currency: string;
+    previous_month_label: string;
+    current_total: string;
+    previous_total: string;
+    change_amount: string;
+    items: {
+        category_id: number | null;
+        category_name: string;
+        current_amount: string;
+        previous_amount: string;
+        change_amount: string;
+        current_share_percent: string | null;
+    }[];
+};
+
+export type DashboardMonthlyClosing = {
+    status: 'open' | 'reviewed' | 'closed';
+    status_label: string;
+    note: string;
+    reviewed_at: string | null;
+    closed_at: string | null;
+    last_reopened_at: string | null;
+    last_reopen_reason: string | null;
+    has_changes_since_review: boolean;
+    month_ended: boolean;
+    can_close: boolean;
+    blockers: string[];
+    accounts: {
+        id: number;
+        name: string;
+        type: string;
+        currency: string;
+        state: 'unconfirmed' | 'confirmed' | 'changed';
+        confirmed_at: string | null;
+    }[];
+};
+
 export type DashboardMonthlyReport = {
     comparison_groups: DashboardMonthlyReportComparisonGroup[];
     activity_groups: DashboardMonthlyReportActivityGroup[];
     top_merchants: DashboardMonthlyReportMerchant[];
+    category_expense_groups: DashboardMonthlyReportCategoryExpenseGroup[];
     quality: {
         uncategorized_count: number;
         unconfirmed_count: number;
         pending_import_count: number;
     };
+    closing: DashboardMonthlyClosing;
     net_worth_changes: DashboardMonthlyReportNetWorthChange[];
 };
 
@@ -127,6 +167,31 @@ export type DashboardDailySnapshotStatus = {
     position_count: number;
     asset_history_recorded: boolean;
     last_imported_at: string | null;
+    required_account_count: number;
+    updated_account_count: number;
+    coverage_started_on: string | null;
+    accounts: {
+        id: number;
+        name: string;
+        type: 'bank' | 'credit_card' | 'securities';
+        state: 'updated' | 'stale';
+        latest_snapshot_date: string;
+    }[];
+    coverage_days: {
+        date: string;
+        state: 'complete' | 'partial' | 'missing' | 'not_required';
+        updated_account_count: number;
+        required_account_count: number;
+        position_count: number;
+        asset_history_recorded: boolean;
+    }[];
+    recent_failures: {
+        id: number;
+        source_name: string;
+        original_filename: string;
+        failed_at: string;
+        error_message: string | null;
+    }[];
 };
 
 export type DashboardWeeklyImportSourceStatus = {

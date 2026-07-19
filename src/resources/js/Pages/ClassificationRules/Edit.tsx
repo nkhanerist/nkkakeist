@@ -6,6 +6,7 @@ import {
     ClassificationRuleSubcategoryOption,
 } from '@/types/classification-rule';
 import ClassificationRuleForm from './Partials/ClassificationRuleForm';
+import { useTranslation } from 'react-i18next';
 
 type EditProps = {
     classificationRule: ClassificationRuleListItem;
@@ -16,20 +17,19 @@ type EditProps = {
     subcategoryOptions: ClassificationRuleSubcategoryOption[];
 };
 
-export default function Edit({
-    classificationRule,
-    ...props
-}: EditProps) {
+export default function Edit({ classificationRule, ...props }: EditProps) {
+    const { t } = useTranslation('classificationRules');
+
     return (
-        <AppPage
-            title="分類ルール編集"
-            description="自動分類ルールを更新します。"
-        >
+        <AppPage title={t('edit.title')} description={t('edit.description')}>
             <ClassificationRuleForm
                 classificationRule={classificationRule}
                 method="put"
-                submitLabel="更新する"
-                submitRoute={route('classification-rules.update', classificationRule.id)}
+                submitLabel={t('edit.submit')}
+                submitRoute={route(
+                    'classification-rules.update',
+                    classificationRule.id,
+                )}
                 {...props}
             />
         </AppPage>

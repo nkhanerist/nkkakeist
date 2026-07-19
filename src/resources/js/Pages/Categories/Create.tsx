@@ -1,9 +1,7 @@
 import AppPage from '@/Components/AppPage';
-import {
-    CategoryReturnContext,
-    CategoryTypeOption,
-} from '@/types/category';
+import { CategoryReturnContext, CategoryTypeOption } from '@/types/category';
 import CategoryForm from './Partials/CategoryForm';
+import { useTranslation } from 'react-i18next';
 
 type CreateProps = {
     typeOptions: CategoryTypeOption[];
@@ -16,6 +14,7 @@ export default function Create({
     initialType,
     returnContext,
 }: CreateProps) {
+    const { t } = useTranslation('categories');
     const cancelRoute = returnContext
         ? route('transactions.category-review.index', {
               status: returnContext.review_status,
@@ -25,16 +24,16 @@ export default function Create({
 
     return (
         <AppPage
-            title="Create Category"
+            title={t('create.title')}
             description={
                 returnContext
-                    ? 'カテゴリを追加したあと、カテゴリ確認へ戻ります。'
-                    : '新しいカテゴリを作成します。'
+                    ? t('create.reviewDescription')
+                    : t('create.description')
             }
         >
             <CategoryForm
                 method="post"
-                submitLabel="作成する"
+                submitLabel={t('create.submit')}
                 submitRoute={route('categories.store')}
                 typeOptions={typeOptions}
                 initialType={initialType}

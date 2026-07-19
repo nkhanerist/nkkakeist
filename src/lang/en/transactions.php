@@ -1,0 +1,50 @@
+<?php
+
+return [
+    'types' => [
+        'income' => 'Income',
+        'expense' => 'Expense',
+        'transfer' => 'Transfer',
+    ],
+    'fields' => [
+        'transaction_date' => 'transaction date',
+        'type' => 'type',
+        'account_id' => 'account',
+        'transfer_account_id' => 'destination account',
+        'amount' => 'amount',
+        'currency' => 'currency',
+        'merchant_name' => 'merchant',
+        'description' => 'description',
+        'category_id' => 'category',
+        'subcategory_id' => 'subcategory',
+        'payment_method_label' => 'payment method label',
+        'is_confirmed' => 'confirmation status',
+        'is_calculation_target' => 'reporting status',
+        'affects_account_balance' => 'account balance setting',
+        'memo' => 'memo',
+        'create_rule' => 'classification rule creation',
+        'rule_match_field' => 'matching field',
+        'rule_match_operator' => 'matching method',
+        'rule_match_value' => 'matching value',
+    ],
+    'messages' => [
+        'category_required_for_subcategory' => 'Select a category before selecting a subcategory.',
+        'subcategory_mismatch' => 'The selected subcategory does not belong to the selected category.',
+        'account_currency_mismatch' => 'The transaction currency must match the selected account currency.',
+        'transfer_currency_mismatch' => 'The source and destination accounts must use the same currency.',
+        'category_transfer_not_allowed' => 'Categories cannot be assigned to transfers.',
+        'category_already_assigned' => 'This transaction already has a category.',
+        'rule_condition_mismatch' => 'This condition does not match the current transaction. Check the matching field and value.',
+        'rule_duplicate' => 'A classification rule with the same condition already exists. Edit the existing rule or turn off rule creation for this transaction.',
+    ],
+    'category_review' => [
+        'assigned' => 'Category assigned.',
+        'assigned_with_rule' => 'Category assigned and a classification rule was created for future imports.',
+        'reasons' => [
+            'none' => 'No category suggestion. Review existing classifications or add a classification rule.',
+            'rule_match' => 'Matched classification rule #:id',
+            'same_merchant_account' => 'Suggested from categorized history with the same merchant and account',
+            'same_merchant' => 'Suggested from categorized history with the same merchant',
+        ],
+    ],
+];

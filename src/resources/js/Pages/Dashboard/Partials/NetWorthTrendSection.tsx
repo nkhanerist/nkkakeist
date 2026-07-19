@@ -2,6 +2,7 @@ import LineTrendChart from '@/Components/Charts/LineTrendChart';
 import SummaryCard from '@/Components/SummaryCard';
 import { DashboardNetWorthTrend } from '@/types/dashboard';
 import { formatMoney } from '@/utils/currency';
+import { useTranslation } from 'react-i18next';
 
 type NetWorthTrendSectionProps = {
     groups: DashboardNetWorthTrend[];
@@ -12,20 +13,22 @@ export default function NetWorthTrendSection({
     groups,
     periodLabel,
 }: NetWorthTrendSectionProps) {
+    const { t } = useTranslation('dashboard');
+
     return (
         <section className="space-y-4">
             <div>
                 <h2 className="text-lg font-semibold text-slate-900">
-                    総資産・負債・純資産の日次推移
+                    {t('netWorth.title')}
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-slate-500">
-                    {periodLabel}の残高取得日ごとに純資産対象口座を集計しています。負債は未払額を正数で表示し、純資産は総資産から総負債を差し引いています。
+                    {t('netWorth.description', { period: periodLabel })}
                 </p>
             </div>
 
             {groups.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
-                    純資産推移を表示できる口座がありません。
+                    {t('netWorth.emptyAccounts')}
                 </div>
             ) : (
                 <div className="space-y-6">
@@ -34,7 +37,7 @@ export default function NetWorthTrendSection({
                         const series = [
                             {
                                 key: 'assets',
-                                label: '総資産',
+                                label: t('netWorth.assets'),
                                 currency: group.currency,
                                 color: '#059669',
                                 points: group.points.map((point) => ({
@@ -44,7 +47,7 @@ export default function NetWorthTrendSection({
                             },
                             {
                                 key: 'liabilities',
-                                label: '総負債',
+                                label: t('netWorth.liabilities'),
                                 currency: group.currency,
                                 color: '#e11d48',
                                 points: group.points.map((point) => ({
@@ -54,7 +57,7 @@ export default function NetWorthTrendSection({
                             },
                             {
                                 key: 'net-worth',
-                                label: '純資産',
+                                label: t('netWorth.netWorth'),
                                 currency: group.currency,
                                 color: '#4f46e5',
                                 points: group.points.map((point) => ({
@@ -75,7 +78,9 @@ export default function NetWorthTrendSection({
                                     </h3>
                                     {latest ? (
                                         <p className="text-xs text-slate-500">
-                                            最新: {latest.date}
+                                            {t('netWorth.latest', {
+                                                date: latest.date,
+                                            })}
                                         </p>
                                     ) : null}
                                 </div>
@@ -83,19 +88,23 @@ export default function NetWorthTrendSection({
                                 {latest ? (
                                     <div className="grid gap-3 md:grid-cols-3">
                                         <SummaryCard
-                                            label="総資産"
+                                            label={t('netWorth.assets')}
                                             value={`${formatMoney(latest.assets, group.currency)} ${group.currency}`}
                                             tone="positive"
                                         />
                                         <SummaryCard
-                                            label="総負債"
+                                            label={t('netWorth.liabilities')}
                                             value={`${formatMoney(latest.liabilities, group.currency)} ${group.currency}`}
                                             tone="negative"
                                         />
                                         <SummaryCard
-                                            label="純資産"
+                                            label={t('netWorth.netWorth')}
                                             value={`${formatMoney(latest.net_worth, group.currency)} ${group.currency}`}
-                                            tone={Number(latest.net_worth) >= 0 ? 'default' : 'negative'}
+                                            tone={
+                                                Number(latest.net_worth) >= 0
+                                                    ? 'default'
+                                                    : 'negative'
+                                            }
                                         />
                                     </div>
                                 ) : null}
@@ -103,7 +112,7 @@ export default function NetWorthTrendSection({
                                 <LineTrendChart
                                     series={series}
                                     currency={group.currency}
-                                    emptyMessage="この期間の純資産推移データがありません。"
+                                    emptyMessage={t('netWorth.emptyPeriod')}
                                 />
                             </div>
                         );

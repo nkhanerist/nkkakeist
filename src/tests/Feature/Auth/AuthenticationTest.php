@@ -18,6 +18,15 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_application_icon_metadata_is_exposed(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<link rel="icon" href="/favicon.svg" type="image/svg+xml">', false)
+            ->assertSee('<link rel="apple-touch-icon" href="/apple-touch-icon.png">', false)
+            ->assertSee('<link rel="manifest" href="/site.webmanifest">', false);
+    }
+
     public function test_development_login_is_shown_and_authenticates_the_only_local_user(): void
     {
         config()->set('auth.development_login.enabled', true);

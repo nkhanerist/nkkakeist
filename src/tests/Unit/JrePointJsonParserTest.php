@@ -4,11 +4,18 @@ namespace Tests\Unit;
 
 use App\Services\Imports\JrePointJsonParser;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Tests\TestCase;
 
 class JrePointJsonParserTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        app()->setLocale('ja');
+    }
+
     #[Test]
     public function it_parses_point_acquisition_and_mobile_suica_charge(): void
     {

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'balance_role',
     'balance_method',
     'include_in_net_worth',
+    'monthly_close_required',
     'currency',
     'initial_balance',
     'opening_balance_date',
@@ -90,6 +91,11 @@ class Account extends Model
         return $this->hasMany(InvestmentPositionSnapshot::class);
     }
 
+    public function monthlyCloseConfirmations(): HasMany
+    {
+        return $this->hasMany(MonthlyCloseAccountConfirmation::class);
+    }
+
     protected function casts(): array
     {
         return [
@@ -98,6 +104,7 @@ class Account extends Model
             'display_order' => 'integer',
             'is_active' => 'boolean',
             'include_in_net_worth' => 'boolean',
+            'monthly_close_required' => 'boolean',
             'import_aliases' => 'array',
         ];
     }

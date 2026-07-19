@@ -1,3 +1,5 @@
+import i18n from '@/i18n';
+
 const currencyFractionDigits: Record<string, number> = {
     BHD: 3,
     IQD: 3,
@@ -31,7 +33,7 @@ export function getCurrencyFractionDigits(currency: string): number {
 export function formatMoney(
     amount: number | string,
     currency: string,
-    locale = 'ja-JP',
+    locale = i18n.resolvedLanguage === 'en' ? 'en-US' : 'ja-JP',
 ): string {
     const fractionDigits = getCurrencyFractionDigits(currency);
 

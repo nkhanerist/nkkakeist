@@ -1,6 +1,7 @@
 import AppPage from '@/Components/AppPage';
 import LineTrendChart from '@/Components/Charts/LineTrendChart';
 import Sparkline from '@/Components/Charts/Sparkline';
+import StackedAreaTrendChart from '@/Components/Charts/StackedAreaTrendChart';
 import { TrendSeries } from '@/types/chart';
 import {
     SecuritiesAccount,
@@ -9,6 +10,7 @@ import {
 } from '@/types/securities';
 import { formatMoney } from '@/utils/currency';
 import { Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 type IndexProps = {
     selected_period: string;
@@ -24,8 +26,10 @@ function changeAmount(series: TrendSeries): number | null {
         return null;
     }
 
-    return Number(series.points[series.points.length - 1].value)
-        - Number(series.points[0].value);
+    return (
+        Number(series.points[series.points.length - 1].value) -
+        Number(series.points[0].value)
+    );
 }
 
 export default function Index({
@@ -36,7 +40,10 @@ export default function Index({
     account_series,
     position_groups,
 }: IndexProps) {
-    const currencies = Array.from(new Set(account_series.map((series) => series.currency)));
+    const { t } = useTranslation('securities');
+    const currencies = Array.from(
+        new Set(account_series.map((series) => series.currency)),
+    );
     const accountSeriesWithLinks = account_series.map((series) => ({
         ...series,
         href: route('securities.show', {
@@ -53,16 +60,15 @@ export default function Index({
     };
 
     return (
-        <AppPage
-            title="証券"
-            description="証券口座の合計評価額と、銘柄ごとの日次評価額推移を確認します。"
-        >
+        <AppPage title={t('index.title')} description={t('index.description')}>
             <div className="space-y-8">
                 <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div>
-                        <h2 className="font-semibold text-slate-900">表示期間</h2>
+                        <h2 className="font-semibold text-slate-900">
+                            {t('index.period.title')}
+                        </h2>
                         <p className="mt-1 text-sm text-slate-500">
-                            取込み済みの評価額スナップショットを表示します。
+                            {t('index.period.description')}
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -86,13 +92,13 @@ export default function Index({
                 {accounts.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
                         <p className="text-sm text-slate-600">
-                            証券口座がありません。口座一覧から証券口座を追加してください。
+                            {t('index.emptyAccounts')}
                         </p>
                         <Link
                             href={route('accounts.create')}
                             className="mt-4 inline-flex text-sm font-medium text-indigo-700 hover:text-indigo-900"
                         >
-                            口座を追加する
+                            {t('index.addAccount')}
                         </Link>
                     </div>
                 ) : (
@@ -100,10 +106,12 @@ export default function Index({
                         <section className="space-y-4">
                             <div>
                                 <h2 className="text-lg font-semibold text-slate-900">
-                                    口座別の最新評価額
+                                    {t('index.latestAccounts.title')}
                                 </h2>
                                 <p className="mt-1 text-sm text-slate-500">
-                                    選択した{period_label}の範囲で最後に取得した評価額です。
+                                    {t('index.latestAccounts.description', {
+                                        period: period_label,
+                                    })}
                                 </p>
                             </div>
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -115,34 +123,52 @@ export default function Index({
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
                                                 <Link
-                                                    href={route('securities.show', {
-                                                        account: account.id,
-                                                        period: selected_period,
-                                                    })}
+                                                    href={route(
+                                                        'securities.show',
+                                                        {
+                                                            account: account.id,
+                                                            period: selected_period,
+                                                        },
+                                                    )}
                                                     className="font-semibold text-indigo-700 hover:text-indigo-900"
                                                 >
                                                     {account.name}
                                                 </Link>
                                                 <p className="mt-1 text-xs text-slate-500">
-                                                    {account.latest_date ?? '期間内の評価額なし'}
-                                                    {account.latest_source ? `・${account.latest_source}` : ''}
+                                                    {account.latest_date ??
+                                                        t(
+                                                            'index.latestAccounts.noValuation',
+                                                        )}
+                                                    {account.latest_source
+                                                        ? ` · ${account.latest_source}`
+                                                        : ''}
                                                 </p>
                                             </div>
                                             <div className="flex flex-col items-end gap-2 text-xs font-medium">
                                                 <Link
-                                                    href={route('securities.show', {
-                                                        account: account.id,
-                                                        period: selected_period,
-                                                    })}
+                                                    href={route(
+                                                        'securities.show',
+                                                        {
+                                                            account: account.id,
+                                                            period: selected_period,
+                                                        },
+                                                    )}
                                                     className="text-indigo-700 hover:text-indigo-900"
                                                 >
-                                                    詳細を見る →
+                                                    {t(
+                                                        'index.latestAccounts.details',
+                                                    )}
                                                 </Link>
                                                 <Link
-                                                    href={route('accounts.snapshots.index', account.id)}
+                                                    href={route(
+                                                        'accounts.snapshots.index',
+                                                        account.id,
+                                                    )}
                                                     className="text-slate-500 hover:text-slate-700"
                                                 >
-                                                    評価額管理
+                                                    {t(
+                                                        'index.latestAccounts.manage',
+                                                    )}
                                                 </Link>
                                             </div>
                                         </div>
@@ -159,10 +185,10 @@ export default function Index({
                         <section className="space-y-4">
                             <div>
                                 <h2 className="text-lg font-semibold text-slate-900">
-                                    口座別評価額推移
+                                    {t('index.accountTrend.title')}
                                 </h2>
                                 <p className="mt-1 text-sm text-slate-500">
-                                    口座合計として保存した日次評価額を比較します。
+                                    {t('index.accountTrend.description')}
                                 </p>
                             </div>
                             {currencies.map((currency) => (
@@ -174,9 +200,14 @@ export default function Index({
                                         {currency}
                                     </h3>
                                     <LineTrendChart
-                                        series={accountSeriesWithLinks.filter((series) => series.currency === currency)}
+                                        series={accountSeriesWithLinks.filter(
+                                            (series) =>
+                                                series.currency === currency,
+                                        )}
                                         currency={currency}
-                                        emptyMessage="この期間の口座評価額はありません。"
+                                        emptyMessage={t(
+                                            'index.accountTrend.empty',
+                                        )}
                                     />
                                 </div>
                             ))}
@@ -185,10 +216,10 @@ export default function Index({
                         <section className="space-y-4">
                             <div>
                                 <h2 className="text-lg font-semibold text-slate-900">
-                                    銘柄別評価額推移
+                                    {t('index.positionTrend.title')}
                                 </h2>
                                 <p className="mt-1 text-sm text-slate-500">
-                                    口座を展開すると、各銘柄の最新評価額・期間内増減・日次推移を確認できます。
+                                    {t('index.positionTrend.description')}
                                 </p>
                             </div>
 
@@ -204,81 +235,171 @@ export default function Index({
                                                     {group.account_name}
                                                 </h3>
                                                 <p className="mt-1 text-sm text-slate-500">
-                                                    銘柄別内訳 {group.series.length}件
+                                                    {t(
+                                                        'index.positionTrend.count',
+                                                        {
+                                                            count: group.series
+                                                                .length,
+                                                        },
+                                                    )}
                                                 </p>
                                             </div>
                                             <span className="text-sm font-medium text-indigo-700">
-                                                展開して確認
+                                                {t(
+                                                    'index.positionTrend.expand',
+                                                )}
                                             </span>
                                         </summary>
 
                                         {group.series.length === 0 ? (
                                             <p className="px-5 py-8 text-center text-sm text-slate-500">
-                                                この期間の銘柄別内訳はありません。
+                                                {t(
+                                                    'index.positionTrend.emptyBreakdown',
+                                                )}
                                             </p>
                                         ) : (
-                                            <div className="overflow-x-auto">
-                                                <table className="min-w-full divide-y divide-slate-200 text-sm">
-                                                    <thead className="bg-white">
-                                                        <tr>
-                                                            <th className="px-5 py-3 text-left font-semibold text-slate-600">銘柄</th>
-                                                            <th className="px-5 py-3 text-right font-semibold text-slate-600">最新評価額</th>
-                                                            <th className="px-5 py-3 text-right font-semibold text-slate-600">期間内増減</th>
-                                                            <th className="px-5 py-3 text-left font-semibold text-slate-600">推移</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-200">
-                                                        {group.series.map((series) => {
-                                                            const latest = series.points[series.points.length - 1];
-                                                            const change = changeAmount(series);
+                                            <div>
+                                                <div className="border-t border-slate-200 bg-slate-50/50 p-4 sm:p-5">
+                                                    <StackedAreaTrendChart
+                                                        series={group.series}
+                                                        currency={
+                                                            group.currency
+                                                        }
+                                                        emptyMessage={t(
+                                                            'index.positionTrend.emptyValuation',
+                                                        )}
+                                                    />
+                                                </div>
+                                                <div className="overflow-x-auto border-t border-slate-200">
+                                                    <table className="min-w-full divide-y divide-slate-200 text-sm">
+                                                        <thead className="bg-white">
+                                                            <tr>
+                                                                <th className="px-5 py-3 text-left font-semibold text-slate-600">
+                                                                    {t(
+                                                                        'index.table.instrument',
+                                                                    )}
+                                                                </th>
+                                                                <th className="px-5 py-3 text-right font-semibold text-slate-600">
+                                                                    {t(
+                                                                        'index.table.latestValuation',
+                                                                    )}
+                                                                </th>
+                                                                <th className="px-5 py-3 text-right font-semibold text-slate-600">
+                                                                    {t(
+                                                                        'index.table.periodChange',
+                                                                    )}
+                                                                </th>
+                                                                <th className="px-5 py-3 text-left font-semibold text-slate-600">
+                                                                    {t(
+                                                                        'index.table.trend',
+                                                                    )}
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-slate-200">
+                                                            {group.series.map(
+                                                                (series) => {
+                                                                    const latest =
+                                                                        series
+                                                                            .points[
+                                                                            series
+                                                                                .points
+                                                                                .length -
+                                                                                1
+                                                                        ];
+                                                                    const change =
+                                                                        changeAmount(
+                                                                            series,
+                                                                        );
 
-                                                            return (
-                                                                <tr key={series.key}>
-                                                                    <td className="px-5 py-4">
-                                                                        <Link
-                                                                            href={`${route('securities.show', {
-                                                                                account: group.account_id,
-                                                                                period: selected_period,
-                                                                                position: series.key,
-                                                                            })}#position-detail`}
-                                                                            className="font-medium text-indigo-700 hover:text-indigo-900"
+                                                                    return (
+                                                                        <tr
+                                                                            key={
+                                                                                series.key
+                                                                            }
                                                                         >
-                                                                            {series.label}
-                                                                            <span className="ml-2 text-xs font-normal text-indigo-500">
-                                                                                詳細 →
-                                                                            </span>
-                                                                        </Link>
-                                                                        <p className="mt-1 text-xs text-slate-500">
-                                                                            {latest?.date ?? '日付なし'}・{series.points.length}日分
-                                                                        </p>
-                                                                    </td>
-                                                                    <td className="px-5 py-4 text-right font-medium text-slate-900">
-                                                                        {latest
-                                                                            ? `${formatMoney(latest.value, series.currency)} ${series.currency}`
-                                                                            : '—'}
-                                                                    </td>
-                                                                    <td className={`px-5 py-4 text-right font-medium ${
-                                                                        change === null
-                                                                            ? 'text-slate-400'
-                                                                            : change >= 0
-                                                                              ? 'text-emerald-700'
-                                                                              : 'text-rose-700'
-                                                                    }`}>
-                                                                        {change === null
-                                                                            ? '—'
-                                                                            : `${change >= 0 ? '+' : ''}${formatMoney(change, series.currency)} ${series.currency}`}
-                                                                    </td>
-                                                                    <td className="px-5 py-2">
-                                                                        <Sparkline
-                                                                            points={series.points}
-                                                                            tone={change !== null && change < 0 ? 'rose' : 'emerald'}
-                                                                        />
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                    </tbody>
-                                                </table>
+                                                                            <td className="px-5 py-4">
+                                                                                <Link
+                                                                                    href={`${route(
+                                                                                        'securities.show',
+                                                                                        {
+                                                                                            account:
+                                                                                                group.account_id,
+                                                                                            period: selected_period,
+                                                                                            position:
+                                                                                                series.key,
+                                                                                        },
+                                                                                    )}#position-detail`}
+                                                                                    className="font-medium text-indigo-700 hover:text-indigo-900"
+                                                                                >
+                                                                                    {
+                                                                                        series.label
+                                                                                    }
+                                                                                    <span className="ml-2 text-xs font-normal text-indigo-500">
+                                                                                        {t(
+                                                                                            'index.positionTrend.details',
+                                                                                        )}
+                                                                                    </span>
+                                                                                </Link>
+                                                                                <p className="mt-1 text-xs text-slate-500">
+                                                                                    {t(
+                                                                                        'index.positionTrend.dateAndDays',
+                                                                                        {
+                                                                                            date:
+                                                                                                latest?.date ??
+                                                                                                t(
+                                                                                                    'index.positionTrend.noDate',
+                                                                                                ),
+                                                                                            count: series
+                                                                                                .points
+                                                                                                .length,
+                                                                                        },
+                                                                                    )}
+                                                                                </p>
+                                                                            </td>
+                                                                            <td className="px-5 py-4 text-right font-medium text-slate-900">
+                                                                                {latest
+                                                                                    ? `${formatMoney(latest.value, series.currency)} ${series.currency}`
+                                                                                    : '—'}
+                                                                            </td>
+                                                                            <td
+                                                                                className={`px-5 py-4 text-right font-medium ${
+                                                                                    change ===
+                                                                                    null
+                                                                                        ? 'text-slate-400'
+                                                                                        : change >=
+                                                                                            0
+                                                                                          ? 'text-emerald-700'
+                                                                                          : 'text-rose-700'
+                                                                                }`}
+                                                                            >
+                                                                                {change ===
+                                                                                null
+                                                                                    ? '—'
+                                                                                    : `${change >= 0 ? '+' : ''}${formatMoney(change, series.currency)} ${series.currency}`}
+                                                                            </td>
+                                                                            <td className="px-5 py-2">
+                                                                                <Sparkline
+                                                                                    points={
+                                                                                        series.points
+                                                                                    }
+                                                                                    tone={
+                                                                                        change !==
+                                                                                            null &&
+                                                                                        change <
+                                                                                            0
+                                                                                            ? 'rose'
+                                                                                            : 'emerald'
+                                                                                    }
+                                                                                />
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                },
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         )}
                                     </details>

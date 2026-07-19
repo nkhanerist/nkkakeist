@@ -9,6 +9,7 @@ import { PageProps } from '@/types';
 import { formatMoney } from '@/utils/currency';
 import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type SnapshotAccount = {
     id: number;
@@ -41,6 +42,7 @@ type SnapshotFormValues = {
 };
 
 export default function Index({ account, today, snapshots }: IndexProps) {
+    const { t } = useTranslation('accounts');
     const flashSuccess = usePage<PageProps>().props.flash.success;
     const [editingSnapshot, setEditingSnapshot] =
         useState<ValuationSnapshot | null>(null);
@@ -49,7 +51,7 @@ export default function Index({ account, today, snapshots }: IndexProps) {
         useForm<SnapshotFormValues>({
             balance_date: today,
             balance: '',
-            source_name: '手動入力',
+            source_name: t('defaults.manualEntry'),
             note: '',
         });
 
@@ -66,7 +68,7 @@ export default function Index({ account, today, snapshots }: IndexProps) {
         setData({
             balance_date: snapshot.balance_date,
             balance: snapshot.balance,
-            source_name: snapshot.source_name ?? '手動入力',
+            source_name: snapshot.source_name ?? t('defaults.manualEntry'),
             note: snapshot.note ?? '',
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -98,7 +100,9 @@ export default function Index({ account, today, snapshots }: IndexProps) {
     const handleDelete = (snapshot: ValuationSnapshot) => {
         if (
             !window.confirm(
-                `${snapshot.balance_date} の評価額を削除しますか？`,
+                t('snapshots.confirmDelete', {
+                    date: snapshot.balance_date,
+                }),
             )
         ) {
             return;
@@ -112,8 +116,8 @@ export default function Index({ account, today, snapshots }: IndexProps) {
 
     return (
         <AppPage
-            title={`${account.name}の評価額`}
-            description="証券口座の時価評価額を日ごとに記録します。"
+            title={t('snapshots.title', { name: account.name })}
+            description={t('snapshots.description')}
         >
             <div className="space-y-8">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -122,21 +126,21 @@ export default function Index({ account, today, snapshots }: IndexProps) {
                             href={route('accounts.index')}
                             className="text-sm font-medium text-indigo-700 hover:text-indigo-900"
                         >
-                            ← 口座一覧
+                            {t('actions.backToAccounts')}
                         </Link>
                         <span className="text-slate-300">/</span>
                         <Link
                             href={route('accounts.edit', account.id)}
                             className="text-sm font-medium text-indigo-700 hover:text-indigo-900"
                         >
-                            口座設定
+                            {t('actions.accountSettings')}
                         </Link>
                     </div>
                     <div className="text-right">
                         <p className="text-xs text-slate-500">
                             {account.has_valuation_snapshot
-                                ? '最新評価額＋評価日後の入出金'
-                                : '評価額未登録・台帳残高'}
+                                ? t('snapshots.currentWithSnapshot')
+                                : t('snapshots.currentWithoutSnapshot')}
                         </p>
                         <p className="text-lg font-semibold text-slate-900">
                             {formatMoney(account.current_balance, account.currency)}{' '}
@@ -153,30 +157,35 @@ export default function Index({ account, today, snapshots }: IndexProps) {
 
                 {account.balance_method !== 'snapshot' ? (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-                        口座設定の残高計算方式を「評価額スナップショット」に変更すると記録できます。
+                        {t('snapshots.methodWarning')}
                     </div>
                 ) : null}
 
                 {!account.has_valuation_snapshot ? (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-                        現在は入出金の累計を表示しており、実際の時価評価額ではありません。最初の評価額を記録すると、その値が残高計算の基準になります。
+                        {t('snapshots.missingWarning')}
                     </div>
                 ) : null}
 
                 <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                     <div className="mb-5">
                         <h2 className="font-semibold text-slate-900">
-                            {editingSnapshot ? '評価額を編集' : '今日の評価額を記録'}
+                            {editingSnapshot
+                                ? t('snapshots.editTitle')
+                                : t('snapshots.recordTitle')}
                         </h2>
                         <p className="mt-1 text-sm leading-6 text-slate-500">
-                            同じ日の評価額を再度登録すると、その日の値を更新します。評価額は当日の取引後の残高として扱います。
+                            {t('snapshots.formDescription')}
                         </p>
                     </div>
 
                     <form onSubmit={submit} className="space-y-5">
                         <div className="grid gap-5 md:grid-cols-3">
                             <div>
-                                <InputLabel htmlFor="balance_date" value="評価日" />
+                                <InputLabel
+                                    htmlFor="balance_date"
+                                    value={t('snapshots.date')}
+                                />
                                 <TextInput
                                     id="balance_date"
                                     type="date"
@@ -194,7 +203,10 @@ export default function Index({ account, today, snapshots }: IndexProps) {
                             </div>
 
                             <div>
-                                <InputLabel htmlFor="balance" value="時価評価額" />
+                                <InputLabel
+                                    htmlFor="balance"
+                                    value={t('snapshots.value')}
+                                />
                                 <TextInput
                                     id="balance"
                                     type="number"
@@ -214,7 +226,10 @@ export default function Index({ account, today, snapshots }: IndexProps) {
                             </div>
 
                             <div>
-                                <InputLabel htmlFor="source_name" value="取得元" />
+                                <InputLabel
+                                    htmlFor="source_name"
+                                    value={t('snapshots.source')}
+                                />
                                 <TextInput
                                     id="source_name"
                                     className="mt-1 block w-full"
@@ -222,7 +237,7 @@ export default function Index({ account, today, snapshots }: IndexProps) {
                                     onChange={(event) =>
                                         setData('source_name', event.target.value)
                                     }
-                                    placeholder="THEOマイページ"
+                                    placeholder={t('snapshots.sourcePlaceholder')}
                                 />
                                 <InputError
                                     className="mt-2"
@@ -232,7 +247,10 @@ export default function Index({ account, today, snapshots }: IndexProps) {
                         </div>
 
                         <div>
-                            <InputLabel htmlFor="note" value="メモ" />
+                            <InputLabel
+                                htmlFor="note"
+                                value={t('snapshots.note')}
+                            />
                             <textarea
                                 id="note"
                                 rows={3}
@@ -248,7 +266,7 @@ export default function Index({ account, today, snapshots }: IndexProps) {
                         <div className="flex justify-end gap-3">
                             {editingSnapshot ? (
                                 <SecondaryButton onClick={stopEditing}>
-                                    編集をやめる
+                                    {t('actions.stopEditing')}
                                 </SecondaryButton>
                             ) : null}
                             <PrimaryButton
@@ -257,7 +275,9 @@ export default function Index({ account, today, snapshots }: IndexProps) {
                                     account.balance_method !== 'snapshot'
                                 }
                             >
-                                {editingSnapshot ? '更新する' : '記録する'}
+                                {editingSnapshot
+                                    ? t('actions.update')
+                                    : t('actions.record')}
                             </PrimaryButton>
                         </div>
                     </form>
@@ -265,28 +285,37 @@ export default function Index({ account, today, snapshots }: IndexProps) {
 
                 <section className="space-y-4">
                     <div>
-                        <h2 className="font-semibold text-slate-900">評価額履歴</h2>
+                        <h2 className="font-semibold text-slate-900">
+                            {t('snapshots.historyTitle')}
+                        </h2>
                         <p className="mt-1 text-sm text-slate-500">
                             {latestSnapshot
-                                ? `最新は ${latestSnapshot.balance_date} の ${formatMoney(latestSnapshot.balance, account.currency)} ${account.currency} です。`
-                                : '評価額はまだ記録されていません。'}
+                                ? t('snapshots.latest', {
+                                      date: latestSnapshot.balance_date,
+                                      balance: formatMoney(
+                                          latestSnapshot.balance,
+                                          account.currency,
+                                      ),
+                                      currency: account.currency,
+                                  })
+                                : t('snapshots.historyEmpty')}
                         </p>
                     </div>
 
                     {snapshots.length === 0 ? (
                         <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-500">
-                            最初の評価額を記録してください。
+                            {t('snapshots.recordFirst')}
                         </div>
                     ) : (
                         <div className="overflow-x-auto rounded-xl border border-slate-200">
                             <table className="min-w-full divide-y divide-slate-200 text-sm">
                                 <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                                     <tr>
-                                        <th className="px-4 py-3">評価日</th>
-                                        <th className="px-4 py-3">評価額</th>
-                                        <th className="px-4 py-3">取得元</th>
-                                        <th className="px-4 py-3">メモ</th>
-                                        <th className="px-4 py-3">操作</th>
+                                        <th className="px-4 py-3">{t('snapshots.table.date')}</th>
+                                        <th className="px-4 py-3">{t('snapshots.table.value')}</th>
+                                        <th className="px-4 py-3">{t('snapshots.table.source')}</th>
+                                        <th className="px-4 py-3">{t('snapshots.table.note')}</th>
+                                        <th className="px-4 py-3">{t('snapshots.table.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 bg-white">
@@ -315,7 +344,7 @@ export default function Index({ account, today, snapshots }: IndexProps) {
                                                             startEditing(snapshot)
                                                         }
                                                     >
-                                                        編集
+                                                        {t('actions.edit')}
                                                     </SecondaryButton>
                                                     <DangerButton
                                                         type="button"
@@ -323,7 +352,7 @@ export default function Index({ account, today, snapshots }: IndexProps) {
                                                             handleDelete(snapshot)
                                                         }
                                                     >
-                                                        削除
+                                                        {t('actions.delete')}
                                                     </DangerButton>
                                                 </div>
                                             </td>

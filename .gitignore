@@ -33,5 +33,6 @@ Thumbs.db
 
 # Local development and submission artifacts
 artifacts/
+.cloudflare-preview/
 .codex/
 /firststep

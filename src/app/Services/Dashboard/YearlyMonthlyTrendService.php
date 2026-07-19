@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\DB;
 
 class YearlyMonthlyTrendService
 {
+    public function __construct(
+        private readonly DashboardPeriodService $dashboardPeriodService,
+    ) {}
+
     /**
      * @return array<int, array{
      *     month: string,
@@ -24,7 +28,7 @@ class YearlyMonthlyTrendService
             $targetMonth = $year->setMonth($month)->startOfMonth();
             $items[] = [
                 'month' => $targetMonth->format('Y-m'),
-                'label' => $targetMonth->isoFormat('YYYY年M月'),
+                'label' => $this->dashboardPeriodService->formatMonthLabel($targetMonth),
                 'summaries' => $this->buildMonthlySummaries($user, $targetMonth, $currencies),
             ];
         }

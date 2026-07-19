@@ -1,0 +1,166 @@
+{
+    "index": {
+        "title": "Accounts",
+        "description": "View, create, edit, and delete your accounts.",
+        "scope": "Only accounts belonging to the signed-in user are shown.",
+        "empty": "No accounts yet. Add your first account to get started.",
+        "confirmDelete": "Delete “{{name}}”?"
+    },
+    "create": {
+        "title": "Add Account",
+        "description": "Create a new account.",
+        "submit": "Create"
+    },
+    "edit": {
+        "title": "Edit Account",
+        "description": "Update an existing account.",
+        "submit": "Update"
+    },
+    "actions": {
+        "reconcile": "Reconcile Balances",
+        "add": "Add Account",
+        "valuation": "Valuations",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "stopEditing": "Cancel Editing",
+        "record": "Record",
+        "update": "Update",
+        "backToAccounts": "← Back to Accounts",
+        "accountSettings": "Account Settings"
+    },
+    "table": {
+        "name": "Account",
+        "type": "Type",
+        "balanceRole": "Balance Role",
+        "currency": "Currency",
+        "initialBalance": "Opening Balance",
+        "status": "Status",
+        "actions": "Actions"
+    },
+    "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "includedInNetWorth": "Included in net worth",
+        "excludedFromNetWorth": "Excluded from net worth",
+        "monthlyCloseRequired": "Monthly close review required",
+        "beforeTransactions": "Before transactions on {{date}}",
+        "balanceOrigin": "Starting point for {{label}}"
+    },
+    "types": {
+        "cash": "Cash",
+        "bank": "Bank Account",
+        "credit_card": "Credit Card",
+        "e_money": "E-money",
+        "securities": "Securities",
+        "point": "Points",
+        "other": "Other"
+    },
+    "typeDescriptions": {
+        "credit_card": "Card purchases are expenses, while card payments are transfers, so this balance approximates the outstanding amount.",
+        "e_money": "Payment purchases are expenses, while billing reallocations and top-ups are transfers, so this balance represents available funds or pending settlement.",
+        "other": "When used for payment or billing management, this balance represents available funds or pending settlement.",
+        "securities": "Contributions and fund movements into securities accounts are transfers and are not counted twice in income or expenses."
+    },
+    "balanceLabels": {
+        "default": "Current balance equivalent",
+        "credit_card": "Outstanding balance equivalent",
+        "e_money": "Available / pending settlement balance",
+        "other": "Available / pending settlement balance"
+    },
+    "form": {
+        "fields": {
+            "name": "Account Name",
+            "type": "Type",
+            "currency": "Currency",
+            "initialBalance": "Opening Balance",
+            "openingBalanceDate": "Opening Balance Date",
+            "displayOrder": "Display Order",
+            "active": "Active",
+            "balanceRole": "Balance Role",
+            "balanceMethod": "Balance Calculation Method",
+            "includeInNetWorth": "Include in Net Worth",
+            "monthlyCloseRequired": "Review During Monthly Close",
+            "note": "Note",
+            "importAliases": "Import Aliases"
+        },
+        "openingBalanceHint": "The opening balance is treated as the balance before transactions on this date. If left blank, it is the starting point for the entire history.",
+        "activeHint": "Inactive accounts remain visible with their status clearly marked.",
+        "balanceSectionTitle": "Assets, Liabilities, and Balance Calculation",
+        "balanceSectionDescription": "Set the account’s role in net worth and how its balance is calculated separately from its account type.",
+        "clearingHint": "Clearing accounts track billing and funding routes and are excluded from net worth.",
+        "snapshotHint": "Securities use their valuation as the baseline, adjusted only by cash flows after the valuation date.",
+        "netWorthHint": "Turn this off for development accounts or accounts you want to exclude from totals.",
+        "monthlyCloseHint": "Include accounts with delayed updates—such as card bills, bank balances, e-money, points, and fund valuations—in the month-end checklist.",
+        "importAliasesHint": "Add one alias per line for names that appear in Money Forward transfer descriptions or merchant names. Example: MasterCard(8658)"
+    },
+    "reconciliation": {
+        "title": "Balance Reconciliation",
+        "description": "Compare official balances with ledger balances and adjust opening balances by the difference.",
+        "confirmAdjustment": "Apply the {{difference}} {{currency}} difference to the opening balance of {{name}}?",
+        "excluded": "Excluded from net worth",
+        "ledgerBalance": "Ledger Balance",
+        "actualLiability": "Actual Outstanding Balance (enter as negative)",
+        "actualBalance": "Actual Balance",
+        "source": "Verification Source",
+        "sourcePlaceholder": "Financial institution app",
+        "officialBalance": "Imported Official Balance",
+        "differenceFromLedger": "Difference from ledger: {{difference}}",
+        "nextPayment": "Next payment:",
+        "amountUnavailable": "Amount unavailable",
+        "currentOpeningBalance": "Current Opening Balance",
+        "difference": "Difference",
+        "enterActualBalance": "Enter the actual balance",
+        "adjustedOpeningBalance": "Adjusted Opening Balance",
+        "previousReconciliation": "Previous reconciliation: {{date}} · {{balance}} {{currency}}",
+        "optionalNote": "Note (optional)",
+        "notePlaceholder": "Confirmed that imports are up to date",
+        "applyDifference": "Apply Difference to Opening Balance",
+        "warningTitle": "Before Adjusting",
+        "warningDescription": "Import all transactions through the target date before entering the financial institution balance. If transactions are missing, their amounts will be included in the opening balance adjustment.",
+        "date": "Reconciliation Date",
+        "recalculate": "Recalculate Balances",
+        "importOfficial": "Import Official Balances",
+        "ledgerAccounts": "Ledger Accounts",
+        "ledgerAccountsDescription": "Enter assets as positive actual balances and liabilities such as credit cards as negative outstanding balances.",
+        "valuationAccounts": "Valuation Accounts",
+        "valuationAccountsDescription": "Record same-day market values for securities accounts instead of adjusting their opening balances.",
+        "latestValuation": "Latest valuation: {{date}}",
+        "valuationMissing": "No valuation recorded",
+        "recordValuation": "Record Valuation",
+        "clearingAccounts": "Clearing Accounts",
+        "clearingAccountsDescription": "Clearing accounts do not have actual balances and are not adjusted. Investigate billing or funding routes when their balances become large."
+    },
+    "snapshots": {
+        "title": "{{name}} Valuations",
+        "description": "Record the daily market value of a securities account.",
+        "currentWithSnapshot": "Latest valuation plus subsequent cash flows",
+        "currentWithoutSnapshot": "No valuation recorded; showing ledger balance",
+        "methodWarning": "Change the account’s balance calculation method to “Valuation Snapshot” before recording valuations.",
+        "missingWarning": "The current value is the cumulative cash flow, not the actual market value. Recording the first valuation makes it the new balance baseline.",
+        "editTitle": "Edit Valuation",
+        "recordTitle": "Record Today’s Valuation",
+        "formDescription": "Recording another valuation for the same date updates that day’s value. Valuations are treated as balances after that day’s transactions.",
+        "date": "Valuation Date",
+        "value": "Market Value",
+        "source": "Source",
+        "sourcePlaceholder": "THEO account page",
+        "note": "Note",
+        "historyTitle": "Valuation History",
+        "latest": "Latest: {{balance}} {{currency}} on {{date}}.",
+        "historyEmpty": "No valuations have been recorded.",
+        "recordFirst": "Record the first valuation.",
+        "confirmDelete": "Delete the valuation for {{date}}?",
+        "table": {
+            "date": "Valuation Date",
+            "value": "Valuation",
+            "source": "Source",
+            "note": "Note",
+            "actions": "Actions"
+        }
+    },
+    "defaults": {
+        "manualEntry": "Manual entry",
+        "manualReconciliation": "Manual reconciliation"
+    }
+}

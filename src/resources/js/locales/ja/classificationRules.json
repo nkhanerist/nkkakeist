@@ -1,0 +1,79 @@
+{
+    "index": {
+        "title": "分類ルール",
+        "description": "インポートプレビューの自動分類ルールを管理できます。",
+        "confirmDelete": "「{{name}}」を削除しますか？",
+        "usageTitle": "このルールが使われる場所",
+        "usage": {
+            "previewOnly": "CSV インポートのプレビュー時にだけ使われます。",
+            "csvFirst": "まず Money Forward CSV の大項目 / 中項目でカテゴリ解決を試みます。",
+            "fillMissing": "その結果、未解決だったカテゴリ / 小分類 / 集計対象フラグだけをルールで補完します。",
+            "firstMatch": "有効なルールを優先度の小さい順に評価し、最初に一致した1件だけを採用します。",
+            "noManual": "取引の手動入力画面には、まだ自動適用されません。"
+        },
+        "addHint": "ルールの追加は「カテゴリ確認」でカテゴリを確定するときに行います。ここでは編集・削除ができます。",
+        "empty": "まだルールがありません。カテゴリ確認で取引を確定するときに作成できます。"
+    },
+    "create": {
+        "title": "分類ルール作成",
+        "description": "インポートプレビューの自動分類ルールを追加します。",
+        "submit": "作成する"
+    },
+    "edit": {
+        "title": "分類ルール編集",
+        "description": "自動分類ルールを更新します。",
+        "submit": "更新する"
+    },
+    "actions": {
+        "categoryReview": "カテゴリ確認へ",
+        "edit": "編集",
+        "delete": "削除"
+    },
+    "table": {
+        "name": "ルール名",
+        "transactionType": "取引種別",
+        "field": "対象",
+        "condition": "条件",
+        "category": "カテゴリ",
+        "subcategory": "小分類",
+        "calculation": "集計",
+        "priority": "優先度",
+        "status": "状態",
+        "actions": "操作"
+    },
+    "status": {
+        "included": "対象",
+        "excluded": "除外",
+        "active": "有効",
+        "inactive": "無効"
+    },
+    "form": {
+        "usageTitle": "適用ルール",
+        "usage": {
+            "csvFirst": "まず CSV の大項目 / 中項目からカテゴリと小分類の解決を試みます。",
+            "fillMissing": "それで未解決だった項目だけ、このルールでカテゴリ / 小分類 / 集計対象フラグを補完します。",
+            "firstMatch": "有効なルールを優先度の小さい順に評価し、最初に一致した1件だけを採用します。",
+            "noManual": "取引の手動入力画面には、まだ自動適用されません。"
+        },
+        "name": "ルール名",
+        "priority": "優先度",
+        "conditionTitle": "一致条件",
+        "conditionDescription": "どの import row にこのルールを当てるかを設定します。",
+        "transactionType": "取引種別",
+        "transactionTypeHint": "指定した取引種別の import row だけを評価します。",
+        "matchField": "対象フィールド",
+        "matchFieldHint": "import row のどの値を使って一致判定するかを選びます。",
+        "matchOperator": "一致条件",
+        "matchValue": "一致値",
+        "matchValueHint": "ここに入力した文字列で一致判定します。",
+        "completionTitle": "補完内容",
+        "completionDescription": "条件に一致した import row に対して、未解決の項目だけを補完します。",
+        "category": "補完するカテゴリ",
+        "subcategory": "補完する小分類",
+        "calculationTarget": "補完する集計対象フラグ",
+        "doNotFill": "補完しない",
+        "include": "対象にする",
+        "exclude": "対象外にする",
+        "active": "有効にする"
+    }
+}

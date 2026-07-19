@@ -7,6 +7,7 @@ import { PageProps } from '@/types';
 import { formatMoney } from '@/utils/currency';
 import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type ReconciliationAccount = {
     id: number;
@@ -54,10 +55,13 @@ function ReconciliationCard({
     account: ReconciliationAccount;
     balanceDate: string;
 }) {
+    const { t } = useTranslation('accounts');
     const { data, setData, post, processing, errors, reset } = useForm({
         balance_date: balanceDate,
         actual_balance: account.latest_official_balance ?? '',
-        source_name: account.latest_official_balance_source ?? '手動照合',
+        source_name:
+            account.latest_official_balance_source ??
+            t('defaults.manualReconciliation'),
         note: '',
         confirmed: true,
     });
@@ -87,7 +91,11 @@ function ReconciliationCard({
 
         if (
             ! window.confirm(
-                `${account.name}の期首残高へ差額 ${difference} ${account.currency} を反映しますか？`,
+                t('reconciliation.confirmAdjustment', {
+                    name: account.name,
+                    difference,
+                    currency: account.currency,
+                }),
             )
         ) {
             return;
@@ -121,7 +129,7 @@ function ReconciliationCard({
                         </span>
                         {! account.include_in_net_worth ? (
                             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
-                                純資産対象外
+                                {t('reconciliation.excluded')}
                             </span>
                         ) : null}
                     </div>
@@ -130,7 +138,9 @@ function ReconciliationCard({
                     </p>
                 </div>
                 <div className="text-right">
-                    <p className="text-xs text-slate-500">台帳残高</p>
+                    <p className="text-xs text-slate-500">
+                        {t('reconciliation.ledgerBalance')}
+                    </p>
                     <p className="text-lg font-semibold text-slate-900">
                         {formatMoney(account.current_balance, account.currency)}{' '}
                         <span className="text-xs font-normal text-slate-500">
@@ -146,8 +156,8 @@ function ReconciliationCard({
                         htmlFor={`actual-balance-${account.id}`}
                         value={
                             account.balance_role === 'liability'
-                                ? '実際の未払残高（マイナス入力）'
-                                : '実際の残高'
+                                ? t('reconciliation.actualLiability')
+                                : t('reconciliation.actualBalance')
                         }
                     />
                     <TextInput
@@ -174,7 +184,7 @@ function ReconciliationCard({
                 <div>
                     <InputLabel
                         htmlFor={`source-name-${account.id}`}
-                        value="確認元"
+                        value={t('reconciliation.source')}
                     />
                     <TextInput
                         id={`source-name-${account.id}`}
@@ -183,7 +193,7 @@ function ReconciliationCard({
                             setData('source_name', event.target.value)
                         }
                         className="mt-1 block w-full"
-                        placeholder="金融機関アプリ"
+                        placeholder={t('reconciliation.sourcePlaceholder')}
                     />
                     <InputError
                         message={errors.source_name}
@@ -196,7 +206,9 @@ function ReconciliationCard({
                 <div className="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                            <p className="font-semibold">取得済みの公式残高</p>
+                            <p className="font-semibold">
+                                {t('reconciliation.officialBalance')}
+                            </p>
                             <p className="mt-1 text-xs text-sky-800">
                                 {account.latest_official_balance_date}
                                 {account.latest_official_balance_source
@@ -213,20 +225,21 @@ function ReconciliationCard({
                                 {account.currency}
                             </p>
                             <p className="mt-1 text-xs text-sky-800">
-                                台帳との差額{' '}
-                                {formatMoney(
-                                    (officialDifferenceMinor ?? 0) / 100,
-                                    account.currency,
-                                )}
+                                {t('reconciliation.differenceFromLedger', {
+                                    difference: formatMoney(
+                                        (officialDifferenceMinor ?? 0) / 100,
+                                        account.currency,
+                                    ),
+                                })}
                             </p>
                         </div>
                     </div>
                     {account.next_payment_amount || account.next_payment_date ? (
                         <p className="mt-3 border-t border-sky-200 pt-3 text-xs text-sky-800">
-                            次回引落し:{' '}
+                            {t('reconciliation.nextPayment')}{' '}
                             {account.next_payment_amount
                                 ? `${formatMoney(account.next_payment_amount, account.currency)} ${account.currency}`
-                                : '金額未取得'}
+                                : t('reconciliation.amountUnavailable')}
                             {account.next_payment_date
                                 ? ` / ${account.next_payment_date}`
                                 : ''}
@@ -237,13 +250,17 @@ function ReconciliationCard({
 
             <div className="mt-4 grid gap-3 rounded-lg bg-slate-50 p-4 text-sm md:grid-cols-3">
                 <div>
-                    <p className="text-xs text-slate-500">現在の期首残高</p>
+                    <p className="text-xs text-slate-500">
+                        {t('reconciliation.currentOpeningBalance')}
+                    </p>
                     <p className="mt-1 font-medium text-slate-800">
                         {formatMoney(account.initial_balance, account.currency)}
                     </p>
                 </div>
                 <div>
-                    <p className="text-xs text-slate-500">差額</p>
+                    <p className="text-xs text-slate-500">
+                        {t('reconciliation.difference')}
+                    </p>
                     <p
                         className={`mt-1 font-medium ${
                             differenceMinor === 0
@@ -252,7 +269,7 @@ function ReconciliationCard({
                         }`}
                     >
                         {differenceMinor === null
-                            ? '実残高を入力してください'
+                            ? t('reconciliation.enterActualBalance')
                             : formatMoney(
                                   differenceMinor / 100,
                                   account.currency,
@@ -260,7 +277,9 @@ function ReconciliationCard({
                     </p>
                 </div>
                 <div>
-                    <p className="text-xs text-slate-500">補正後の期首残高</p>
+                    <p className="text-xs text-slate-500">
+                        {t('reconciliation.adjustedOpeningBalance')}
+                    </p>
                     <p className="mt-1 font-medium text-slate-800">
                         {suggestedInitialMinor === null
                             ? '—'
@@ -274,12 +293,14 @@ function ReconciliationCard({
 
             {account.latest_snapshot_date ? (
                 <p className="mt-3 text-xs text-slate-500">
-                    前回照合: {account.latest_snapshot_date}・
-                    {formatMoney(
-                        account.latest_snapshot_balance ?? '0',
-                        account.currency,
-                    )}{' '}
-                    {account.currency}
+                    {t('reconciliation.previousReconciliation', {
+                        date: account.latest_snapshot_date,
+                        balance: formatMoney(
+                            account.latest_snapshot_balance ?? '0',
+                            account.currency,
+                        ),
+                        currency: account.currency,
+                    })}
                 </p>
             ) : null}
 
@@ -287,21 +308,21 @@ function ReconciliationCard({
                 <div className="min-w-[240px] flex-1">
                     <InputLabel
                         htmlFor={`note-${account.id}`}
-                        value="メモ（任意）"
+                        value={t('reconciliation.optionalNote')}
                     />
                     <TextInput
                         id={`note-${account.id}`}
                         value={data.note}
                         onChange={(event) => setData('note', event.target.value)}
                         className="mt-1 block w-full"
-                        placeholder="取込みが最新であることを確認"
+                        placeholder={t('reconciliation.notePlaceholder')}
                     />
                 </div>
                 <PrimaryButton
                     type="submit"
                     disabled={processing || differenceMinor === null}
                 >
-                    差額を期首残高へ反映
+                    {t('reconciliation.applyDifference')}
                 </PrimaryButton>
             </div>
         </form>
@@ -314,6 +335,7 @@ export default function Index({
     snapshotAccounts,
     clearingAccounts,
 }: IndexProps) {
+    const { t } = useTranslation('accounts');
     const flashSuccess = usePage<PageProps>().props.flash.success;
     const [selectedDate, setSelectedDate] = useState(balanceDate);
 
@@ -328,8 +350,8 @@ export default function Index({
 
     return (
         <AppPage
-            title="残高照合"
-            description="金融機関の実残高と台帳残高を比較し、期首残高の差額を補正します。"
+            title={t('reconciliation.title')}
+            description={t('reconciliation.description')}
         >
             <div className="space-y-8">
                 {flashSuccess ? (
@@ -339,16 +361,21 @@ export default function Index({
                 ) : null}
 
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                    <p className="font-semibold">補正前の確認</p>
+                    <p className="font-semibold">
+                        {t('reconciliation.warningTitle')}
+                    </p>
                     <p className="mt-1 leading-6">
-                        対象日までの取引をすべて取り込んだ後、金融機関側の残高を入力してください。未取込の取引がある状態で補正すると、その金額も期首残高へ含まれます。
+                        {t('reconciliation.warningDescription')}
                     </p>
                 </div>
 
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <form onSubmit={updateDate} className="flex items-end gap-3">
                         <div>
-                            <InputLabel htmlFor="balance-date" value="照合日" />
+                            <InputLabel
+                                htmlFor="balance-date"
+                                value={t('reconciliation.date')}
+                            />
                             <TextInput
                                 id="balance-date"
                                 type="date"
@@ -361,7 +388,9 @@ export default function Index({
                                 required
                             />
                         </div>
-                        <PrimaryButton type="submit">残高を再計算</PrimaryButton>
+                        <PrimaryButton type="submit">
+                            {t('reconciliation.recalculate')}
+                        </PrimaryButton>
                     </form>
                     <div className="flex flex-wrap items-center gap-4">
                         <Link
@@ -370,13 +399,13 @@ export default function Index({
                             })}
                             className="rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-800 hover:bg-indigo-100"
                         >
-                            公式残高を取り込む
+                            {t('reconciliation.importOfficial')}
                         </Link>
                         <Link
                             href={route('accounts.index')}
                             className="text-sm font-medium text-indigo-700 hover:text-indigo-900"
                         >
-                            ← 口座一覧へ
+                            {t('actions.backToAccounts')}
                         </Link>
                     </div>
                 </div>
@@ -384,10 +413,10 @@ export default function Index({
                 <section>
                     <div className="mb-4">
                         <h2 className="text-lg font-semibold text-slate-900">
-                            台帳口座
+                            {t('reconciliation.ledgerAccounts')}
                         </h2>
                         <p className="mt-1 text-sm text-slate-500">
-                            資産は実残高を正数、クレジットカード等の負債は未払額を負数で入力します。
+                            {t('reconciliation.ledgerAccountsDescription')}
                         </p>
                     </div>
                     <div className="space-y-4">
@@ -404,10 +433,10 @@ export default function Index({
                 {snapshotAccounts.length > 0 ? (
                     <section>
                         <h2 className="text-lg font-semibold text-slate-900">
-                            評価額口座
+                            {t('reconciliation.valuationAccounts')}
                         </h2>
                         <p className="mt-1 text-sm text-slate-500">
-                            証券口座は期首残高ではなく、同日の時価評価額を記録します。
+                            {t('reconciliation.valuationAccountsDescription')}
                         </p>
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
                             {snapshotAccounts.map((account) => (
@@ -422,8 +451,10 @@ export default function Index({
                                             </h3>
                                             <p className="mt-1 text-xs text-slate-600">
                                                 {account.latest_snapshot_date
-                                                    ? `最新評価額: ${account.latest_snapshot_date}`
-                                                    : '評価額未登録'}
+                                                    ? t('reconciliation.latestValuation', {
+                                                          date: account.latest_snapshot_date,
+                                                      })
+                                                    : t('reconciliation.valuationMissing')}
                                             </p>
                                         </div>
                                         <Link
@@ -433,7 +464,7 @@ export default function Index({
                                             )}
                                             className="rounded-md border border-emerald-300 bg-white px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
                                         >
-                                            評価額を記録
+                                            {t('reconciliation.recordValuation')}
                                         </Link>
                                     </div>
                                 </div>
@@ -444,9 +475,11 @@ export default function Index({
 
                 {clearingAccounts.length > 0 ? (
                     <section className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                        <h2 className="font-semibold text-slate-900">中継口座</h2>
+                        <h2 className="font-semibold text-slate-900">
+                            {t('reconciliation.clearingAccounts')}
+                        </h2>
                         <p className="mt-1 text-sm text-slate-500">
-                            中継口座は実残高を持たないため補正しません。残高が大きい場合は、請求・チャージ経路を確認します。
+                            {t('reconciliation.clearingAccountsDescription')}
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
                             {clearingAccounts.map((account) => (

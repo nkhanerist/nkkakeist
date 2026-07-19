@@ -54,8 +54,8 @@ class TransactionCategoryReviewController extends Controller
         $this->assignTransactionCategoryAction->handle($transaction, $request->validated());
 
         $message = $request->boolean('create_rule')
-            ? 'カテゴリを設定し、今後のインポートに使う分類ルールを作成しました。'
-            : 'カテゴリを設定しました。';
+            ? trans('transactions.category_review.assigned_with_rule')
+            : trans('transactions.category_review.assigned');
 
         return back()->with('success', $message);
     }

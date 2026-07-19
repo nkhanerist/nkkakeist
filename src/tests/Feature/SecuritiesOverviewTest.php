@@ -122,8 +122,8 @@ class SecuritiesOverviewTest extends TestCase
                 'quantity' => '10.00000000',
                 'average_acquisition_price' => '350.000000',
                 'unit_price' => '400.000000',
+                'acquisition_cost' => '3500.00',
                 'unrealized_gain' => '500.00',
-                'metadata' => ['acquisition_cost' => '3500.00'],
             ],
         );
         $this->createPosition(
@@ -140,8 +140,8 @@ class SecuritiesOverviewTest extends TestCase
                 'quantity' => '10.00000000',
                 'average_acquisition_price' => '350.000000',
                 'unit_price' => '520.000000',
+                'acquisition_cost' => '3500.00',
                 'unrealized_gain' => '1700.00',
-                'metadata' => ['acquisition_cost' => '3500.00'],
             ],
         );
 
@@ -168,6 +168,7 @@ class SecuritiesOverviewTest extends TestCase
                 ->has('latest_positions', 1)
                 ->where('latest_positions.0.instrument_name', 'グロース株式')
                 ->where('latest_positions.0.valuation', '5200.00')
+                ->where('latest_positions.0.acquisition_cost', '3500.00')
                 ->where('latest_positions.0.change_amount', '1200.00')
                 ->where('latest_positions.0.share_percent', '100.0')
                 ->where('selected_position_key', 'growth')
@@ -175,8 +176,68 @@ class SecuritiesOverviewTest extends TestCase
                 ->where('selected_position.latest.acquisition_cost', '3500.00')
                 ->where('selected_position.latest.unrealized_gain', '1700.00')
                 ->has('selected_position.series.points', 2)
+                ->has('selected_position.comparison_series', 2)
+                ->where('selected_position.comparison_series.0.label', '評価額')
+                ->where('selected_position.comparison_series.0.points.1.value', '5200.00')
+                ->where('selected_position.comparison_series.1.label', '取得価額')
+                ->where('selected_position.comparison_series.1.points.1.value', '3500.00')
                 ->has('selected_position.history', 2)
+                ->where('selected_position.history.0.acquisition_cost', '3500.00')
                 ->where('selected_position.history.0.change_amount', '1200.00'));
+    }
+
+    public function test_securities_labels_follow_the_selected_locale(): void
+    {
+        $user = User::factory()->create();
+        $account = Account::factory()->for($user)->create([
+            'name' => 'Test Securities',
+            'type' => 'securities',
+            'balance_method' => 'snapshot',
+            'currency' => 'JPY',
+        ]);
+        $import = $this->createImport($user, 'localized.json');
+        $snapshot = $this->createSnapshot(
+            $user,
+            $account,
+            $import,
+            '2026-07-18',
+            '12000.00',
+        );
+        $this->createPosition(
+            $user,
+            $account,
+            $snapshot,
+            $import,
+            'fund',
+            'User Fund Name',
+            '12000.00',
+            ['acquisition_cost' => '10000.00'],
+        );
+
+        $this->actingAs($user)
+            ->withSession(['locale' => 'en'])
+            ->get(route('securities.index', ['period' => '30d']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('period_label', '30 Days')
+                ->where('period_options.0.label', '30 Days')
+                ->where('period_options.2.label', '1 Year')
+                ->where('period_options.3.label', 'All Time')
+                ->where('position_groups.0.series.0.label', 'User Fund Name'));
+
+        $this->actingAs($user)
+            ->withSession(['locale' => 'en'])
+            ->get(route('securities.show', [
+                'account' => $account,
+                'period' => '30d',
+                'position' => 'fund',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('period_label', '30 Days')
+                ->where('selected_position.instrument_name', 'User Fund Name')
+                ->where('selected_position.comparison_series.0.label', 'Valuation')
+                ->where('selected_position.comparison_series.1.label', 'Acquisition Cost'));
     }
 
     public function test_user_cannot_view_other_users_securities_detail(): void

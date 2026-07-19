@@ -15,7 +15,7 @@ class MoneyForwardAssetHistoryCsvParser
         $rows = $this->readRows($this->convertToUtf8($contents));
 
         if ($rows === [] || count($rows[0]) === 0) {
-            throw new RuntimeException('資産推移CSVのヘッダ行を読み取れませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.asset_history_header_unreadable'));
         }
 
         $headers = array_map(fn (string $header): string => $this->normalizeHeader($header), $rows[0]);
@@ -23,7 +23,7 @@ class MoneyForwardAssetHistoryCsvParser
         $totalIndex = array_search('合計', $headers, true);
 
         if ($dateIndex === false || $totalIndex === false) {
-            throw new RuntimeException('Money Forward資産推移CSVの必須ヘッダが不足しています。');
+            throw new RuntimeException(trans('imports.parse_errors.asset_history_required_headers'));
         }
 
         $parsedRows = [];
@@ -37,7 +37,9 @@ class MoneyForwardAssetHistoryCsvParser
             $totalAssets = $this->amount($row[$totalIndex] ?? '');
 
             if ($date === null || $totalAssets === null) {
-                throw new RuntimeException(sprintf('資産推移CSVの%d行目の日付または合計金額が不正です。', $index + 2));
+                throw new RuntimeException(trans('imports.parse_errors.asset_history_row_invalid', [
+                    'row' => $index + 2,
+                ]));
             }
 
             $breakdown = [];
@@ -80,7 +82,7 @@ class MoneyForwardAssetHistoryCsvParser
         }
 
         if ($parsedRows === []) {
-            throw new RuntimeException('資産推移CSVに取り込めるデータがありません。');
+            throw new RuntimeException(trans('imports.parse_errors.asset_history_no_rows'));
         }
 
         return [

@@ -63,4 +63,15 @@ class StoreSubcategoryRequest extends FormRequest
             'is_active' => $this->boolean('is_active'),
         ]);
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        /** @var array<string, string> $attributes */
+        $attributes = trans('categories.subcategory_fields');
+
+        return $attributes;
+    }
 }

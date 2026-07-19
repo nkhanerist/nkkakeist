@@ -19,7 +19,7 @@ class ParseImportAction
     {
         if ($import->status === 'imported') {
             throw ValidationException::withMessages([
-                'import' => '取込済みの import は再解析できません。',
+                'import' => trans('imports.action_errors.reparse_imported'),
             ]);
         }
 
@@ -53,6 +53,14 @@ class ParseImportAction
                 ]);
             });
         } catch (Throwable $throwable) {
+            $errorMessage = $throwable instanceof \RuntimeException
+                ? $throwable->getMessage()
+                : trans('imports.parse_errors.unexpected');
+
+            if (! $throwable instanceof \RuntimeException) {
+                report($throwable);
+            }
+
             $import->importRows()->delete();
             $import->update([
                 'status' => 'failed',
@@ -61,7 +69,7 @@ class ParseImportAction
                 'imported_rows' => 0,
                 'skipped_rows' => 0,
                 'duplicate_rows' => 0,
-                'error_message' => $throwable->getMessage(),
+                'error_message' => $errorMessage,
                 'imported_at' => null,
             ]);
         }

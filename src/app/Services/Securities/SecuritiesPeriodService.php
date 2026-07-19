@@ -7,10 +7,10 @@ use Carbon\CarbonImmutable;
 class SecuritiesPeriodService
 {
     private const PERIODS = [
-        '30d' => ['label' => '30日', 'days' => 30],
-        '90d' => ['label' => '90日', 'days' => 90],
-        '1y' => ['label' => '1年', 'days' => 365],
-        'all' => ['label' => '全期間', 'days' => null],
+        '30d' => ['days' => 30],
+        '90d' => ['days' => 90],
+        '1y' => ['days' => 365],
+        'all' => ['days' => null],
     ];
 
     /**
@@ -32,11 +32,11 @@ class SecuritiesPeriodService
 
         return [
             'selected_period' => $selectedPeriod,
-            'period_label' => self::PERIODS[$selectedPeriod]['label'],
+            'period_label' => __("securities.periods.{$selectedPeriod}"),
             'period_options' => collect(self::PERIODS)
                 ->map(fn (array $period, string $value): array => [
                     'value' => $value,
-                    'label' => $period['label'],
+                    'label' => __("securities.periods.{$value}"),
                 ])
                 ->values()
                 ->all(),

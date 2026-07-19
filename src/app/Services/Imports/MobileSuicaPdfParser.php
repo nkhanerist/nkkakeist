@@ -64,11 +64,10 @@ class MobileSuicaPdfParser
                 $previousBalance !== null
                 && $previousBalance + $history['signed_amount'] !== $history['balance']
             ) {
-                throw new RuntimeException(sprintf(
-                    'PDF の残高が連続していません（%s、PDF行%d）。',
-                    $history['transaction_date'],
-                    $lineIndex + 1,
-                ));
+                throw new RuntimeException(trans('imports.parse_errors.mobile_suica_balance_discontinuous', [
+                    'date' => $history['transaction_date'],
+                    'row' => $lineIndex + 1,
+                ]));
             }
 
             $previousBalance = $history['balance'];
@@ -121,11 +120,11 @@ class MobileSuicaPdfParser
         }
 
         if ($recognizedHistoryRows === 0) {
-            throw new RuntimeException('モバイルSuicaの利用履歴をPDFから読み取れませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.mobile_suica_history_unreadable'));
         }
 
         if ($parsedRows === []) {
-            throw new RuntimeException('取込対象となるモバイルSuicaの支出履歴がありません。');
+            throw new RuntimeException(trans('imports.parse_errors.mobile_suica_no_expenses'));
         }
 
         return $parsedRows;
@@ -134,7 +133,7 @@ class MobileSuicaPdfParser
     private function suicaIdSuffix(string $text): string
     {
         if (! preg_match('/JE\*{3}\s+\*{4}\s+\*{4}\s+(\d{4})/u', $text, $matches)) {
-            throw new RuntimeException('モバイルSuicaのPDFとして認識できませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.mobile_suica_unrecognized'));
         }
 
         return $matches[1];
@@ -143,7 +142,7 @@ class MobileSuicaPdfParser
     private function issuedAt(string $text): DateTimeImmutable
     {
         if (! preg_match('/(?<!\d)(20\d{2})\/(\d{1,2})\/(\d{1,2})(?!\d)/u', $text, $matches)) {
-            throw new RuntimeException('PDFの発行日を読み取れませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.mobile_suica_issued_at_missing'));
         }
 
         $date = DateTimeImmutable::createFromFormat('!Y-n-j', implode('-', [
@@ -157,7 +156,7 @@ class MobileSuicaPdfParser
             ! $date instanceof DateTimeImmutable
             || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
         ) {
-            throw new RuntimeException('PDFの発行日を解釈できませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.mobile_suica_issued_at_invalid'));
         }
 
         return $date;
@@ -221,7 +220,7 @@ class MobileSuicaPdfParser
             ! $date instanceof DateTimeImmutable
             || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))
         ) {
-            throw new RuntimeException('PDF内の取引日を解釈できませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.mobile_suica_transaction_date_invalid'));
         }
 
         if ($date > $issuedAt) {

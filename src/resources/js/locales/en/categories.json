@@ -1,0 +1,61 @@
+{
+    "index": {
+        "title": "Categories",
+        "description": "Manage categories and subcategories.",
+        "scope": "Only categories belonging to the signed-in user are shown.",
+        "empty": "No categories yet. Add your first category to get started.",
+        "confirmDelete": "Delete “{{name}}”?"
+    },
+    "create": {
+        "title": "Add Category",
+        "description": "Create a new category.",
+        "reviewDescription": "After adding the category, you will return to Category Review.",
+        "submit": "Create"
+    },
+    "edit": {
+        "title": "Edit Category",
+        "description": "Update the category and its subcategories.",
+        "submit": "Update"
+    },
+    "actions": {
+        "add": "Add Category",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "save": "Save",
+        "addSubcategory": "Add"
+    },
+    "table": {
+        "name": "Category Name",
+        "type": "Type",
+        "status": "Status",
+        "displayOrder": "Display Order",
+        "subcategories": "Subcategories",
+        "actions": "Actions",
+        "icon": "Icon: {{icon}}",
+        "unregistered": "None"
+    },
+    "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+    },
+    "form": {
+        "name": "Category Name",
+        "type": "Type",
+        "color": "Color",
+        "icon": "Icon Name",
+        "displayOrder": "Display Order",
+        "active": "Active",
+        "activeHint": "Inactive categories remain visible with their status clearly marked."
+    },
+    "subcategories": {
+        "title": "Subcategories",
+        "description": "Manage subcategories belonging to this category.",
+        "name": "Subcategory Name",
+        "displayOrder": "Display Order",
+        "active": "Active",
+        "empty": "No subcategories yet.",
+        "confirmDelete": "Delete “{{name}}”?",
+        "summary": "Display order: {{order}} / {{status}}"
+    }
+}

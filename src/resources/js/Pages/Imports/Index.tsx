@@ -1,35 +1,33 @@
 import AppPage from '@/Components/AppPage';
 import { PaginatedImports } from '@/types/import';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 type IndexProps = {
     imports: PaginatedImports;
 };
 
 export default function Index({ imports }: IndexProps) {
+    const { t } = useTranslation('imports');
+
     return (
-        <AppPage
-            title="インポート"
-            description="CSV・PDFの取込履歴を確認できます。"
-        >
+        <AppPage title={t('index.title')} description={t('index.description')}>
             <div className="space-y-6">
                 <div className="flex items-center justify-between gap-4">
-                    <p className="text-sm text-slate-500">
-                        自分の取込履歴のみ表示しています。
-                    </p>
+                    <p className="text-sm text-slate-500">{t('index.scope')}</p>
 
                     <Link
                         href={route('imports.create')}
                         className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
-                        ファイルを取り込む
+                        {t('actions.start')}
                     </Link>
                 </div>
 
                 {imports.data.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p className="text-sm text-slate-600">
-                            まだ取込履歴がありません。取引ファイルをアップロードしてください。
+                            {t('index.empty')}
                         </p>
                     </div>
                 ) : (
@@ -39,15 +37,33 @@ export default function Index({ imports }: IndexProps) {
                                 <table className="min-w-full divide-y divide-slate-200">
                                     <thead className="bg-slate-50">
                                         <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                            <th className="px-4 py-3">ファイル名</th>
-                                            <th className="px-4 py-3">取込元</th>
-                                            <th className="px-4 py-3">状態</th>
-                                            <th className="px-4 py-3">総行数</th>
-                                            <th className="px-4 py-3">取込済み</th>
-                                            <th className="px-4 py-3">重複候補</th>
-                                            <th className="px-4 py-3">作成日時</th>
-                                            <th className="px-4 py-3">取込日時</th>
-                                            <th className="px-4 py-3">操作</th>
+                                            <th className="px-4 py-3">
+                                                {t('table.filename')}
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                {t('table.source')}
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                {t('table.status')}
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                {t('table.totalRows')}
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                {t('table.importedRows')}
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                {t('table.duplicates')}
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                {t('table.createdAt')}
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                {t('table.importedAt')}
+                                            </th>
+                                            <th className="px-4 py-3">
+                                                {t('table.actions')}
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-200 bg-white text-sm text-slate-700">
@@ -56,11 +72,24 @@ export default function Index({ imports }: IndexProps) {
                                                 <td className="px-4 py-4">
                                                     <div>
                                                         <p className="font-medium text-slate-900">
-                                                            {item.original_filename}
+                                                            {
+                                                                item.original_filename
+                                                            }
                                                         </p>
                                                         {item.account ? (
                                                             <p className="mt-1 text-xs text-slate-500">
-                                                                口座: {item.account.name} ({item.account.currency})
+                                                                {t(
+                                                                    'table.account',
+                                                                    {
+                                                                        name: item
+                                                                            .account
+                                                                            .name,
+                                                                        currency:
+                                                                            item
+                                                                                .account
+                                                                                .currency,
+                                                                    },
+                                                                )}
                                                             </p>
                                                         ) : null}
                                                     </div>
@@ -73,17 +102,30 @@ export default function Index({ imports }: IndexProps) {
                                                         {item.status_label}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-4">{item.total_rows}</td>
-                                                <td className="px-4 py-4">{item.imported_rows}</td>
-                                                <td className="px-4 py-4">{item.duplicate_rows}</td>
-                                                <td className="px-4 py-4">{item.created_at ?? '-'}</td>
-                                                <td className="px-4 py-4">{item.imported_at ?? '-'}</td>
+                                                <td className="px-4 py-4">
+                                                    {item.total_rows}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {item.imported_rows}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {item.duplicate_rows}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {item.created_at ?? '-'}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {item.imported_at ?? '-'}
+                                                </td>
                                                 <td className="px-4 py-4">
                                                     <Link
-                                                        href={route('imports.show', item.id)}
+                                                        href={route(
+                                                            'imports.show',
+                                                            item.id,
+                                                        )}
                                                         className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                                     >
-                                                        詳細
+                                                        {t('actions.details')}
                                                     </Link>
                                                 </td>
                                             </tr>
@@ -96,7 +138,11 @@ export default function Index({ imports }: IndexProps) {
                         {imports.last_page > 1 && (
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <p className="text-sm text-slate-500">
-                                    {imports.from ?? 0} - {imports.to ?? 0} / {imports.total} 件
+                                    {t('pagination.summary', {
+                                        from: imports.from ?? 0,
+                                        to: imports.to ?? 0,
+                                        total: imports.total,
+                                    })}
                                 </p>
                                 <div className="flex flex-wrap gap-2">
                                     {imports.links.map((link, index) => (

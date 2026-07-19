@@ -1,0 +1,149 @@
+{
+    "index": {
+        "title": "証券",
+        "description": "証券口座の合計評価額と、銘柄ごとの日次評価額推移を確認します。",
+        "period": {
+            "title": "表示期間",
+            "description": "取り込み済みの評価額スナップショットを表示します。"
+        },
+        "emptyAccounts": "証券口座がありません。口座一覧から証券口座を追加してください。",
+        "addAccount": "口座を追加する",
+        "latestAccounts": {
+            "title": "口座別の最新評価額",
+            "description": "選択した{{period}}の範囲で最後に取得した評価額です。",
+            "noValuation": "期間内の評価額なし",
+            "details": "詳細を見る →",
+            "manage": "評価額管理"
+        },
+        "accountTrend": {
+            "title": "口座別評価額推移",
+            "description": "口座合計として保存した日次評価額を比較します。",
+            "empty": "この期間の口座評価額はありません。"
+        },
+        "positionTrend": {
+            "title": "銘柄別評価額推移",
+            "description": "口座を展開すると、銘柄構成の推移を積み上げ帯グラフで確認できます。",
+            "count": "銘柄別内訳 {{count}}件",
+            "expand": "展開して確認",
+            "emptyBreakdown": "この期間の銘柄別内訳はありません。",
+            "emptyValuation": "この期間の銘柄別評価額はありません。",
+            "details": "詳細 →",
+            "dateAndDays": "{{date}}・{{count}}日分",
+            "noDate": "日付なし"
+        },
+        "table": {
+            "instrument": "銘柄",
+            "latestValuation": "最新評価額",
+            "periodChange": "期間内増減",
+            "trend": "推移"
+        }
+    },
+    "show": {
+        "description": "証券口座の評価額履歴と銘柄別内訳を確認します。",
+        "back": "← 証券一覧へ戻る",
+        "manage": "評価額管理",
+        "transactions": "関連取引を見る",
+        "period": {
+            "title": "表示期間",
+            "description": "選択した期間内の評価額を比較します。"
+        },
+        "valuation": {
+            "title": "口座評価額",
+            "description": "{{period}}の最初と最後の評価額から期間内増減を計算します。",
+            "latest": "最新評価額",
+            "noData": "期間内データなし",
+            "change": "期間内増減",
+            "needTwoDays": "比較には2日分以上必要です",
+            "daysCompared": "{{count}}日分を比較",
+            "snapshotDays": "残高取得日数",
+            "days": "{{count}}日分",
+            "selectedPeriod": "選択期間内",
+            "latestSource": "最新取得元",
+            "positionsAsOf": "銘柄内訳 {{date}}",
+            "noPositions": "銘柄内訳なし",
+            "chartEmpty": "この期間の口座評価額はありません。"
+        },
+        "positionDetail": {
+            "eyebrow": "Position Detail",
+            "noMetadata": "銘柄コード・資産区分なし",
+            "clear": "銘柄選択を解除",
+            "valuation": "評価額",
+            "unrealizedGain": "評価損益",
+            "acquisitionCost": "取得価額",
+            "quantity": "保有数量",
+            "unitPrice": "現在値",
+            "averageAcquisitionPrice": "平均取得単価",
+            "chartEmpty": "この期間の評価額・取得価額はありません。",
+            "acquisitionMissing": "この期間の取得価額は未取得です。最新版のMoney Forward残高JSONを取り込むと比較できます。",
+            "date": "取得日",
+            "change": "前回比",
+            "source": "取得元"
+        },
+        "positions": {
+            "title": "最新の銘柄内訳",
+            "description": "{{date}}に取得した内訳です。銘柄を選ぶと日次履歴を表示します。",
+            "noData": "この期間の銘柄内訳はありません。",
+            "importPrompt": "銘柄別内訳を含む評価額データを取り込んでください。",
+            "instrument": "銘柄",
+            "assetClass": "資産区分",
+            "share": "構成比",
+            "acquisitionCost": "取得価額",
+            "valuation": "評価額",
+            "unrealizedGain": "評価損益",
+            "periodChange": "期間内増減",
+            "history": "履歴を見る →",
+            "codeAndDays": "{{code}}・{{count}}日分",
+            "noCode": "コードなし"
+        },
+        "snapshots": {
+            "title": "評価額履歴",
+            "description": "口座合計の取得履歴です。取込データがある場合は元の取込結果を確認できます。",
+            "empty": "この期間の評価額履歴はありません。",
+            "date": "取得日",
+            "valuation": "評価額",
+            "change": "前回比",
+            "positions": "銘柄数",
+            "source": "取得元",
+            "import": "取込",
+            "positionCount": "{{count}}件",
+            "manual": "手動",
+            "viewImport": "#{{id}}を確認"
+        }
+    },
+    "assetClasses": {
+        "security": "証券",
+        "investmentFund": "投資信託",
+        "definedContributionPension": "確定拠出年金"
+    },
+    "charts": {
+        "line": {
+            "empty": "表示できる推移データがありません。",
+            "aria": "{{series}}の評価額推移",
+            "details": "詳細 →"
+        },
+        "sparkline": {
+            "empty": "データなし",
+            "aria": "評価額の小型推移グラフ"
+        },
+        "stacked": {
+            "empty": "表示できる銘柄別評価額がありません。",
+            "selectorAria": "表示する銘柄",
+            "showAll": "すべて表示",
+            "clearAll": "すべて解除",
+            "selectPrompt": "上の銘柄を選ぶと積み上げグラフを表示します。",
+            "aria": "{{series}}の積み上げ面グラフ",
+            "description": "帯の合計が、表示中の銘柄の評価額合計です。銘柄名を押すと表示を切り替えます。"
+        },
+        "comparison": {
+            "empty": "表示できる比較データがありません。",
+            "selectorAria": "グラフ表示項目",
+            "showAll": "すべて表示",
+            "clearAll": "すべて解除",
+            "selectPrompt": "上の項目を選ぶとグラフを表示します。",
+            "aria": "{{series}}の面グラフ",
+            "gainBand": "含み益の帯",
+            "lossBand": "含み損の帯"
+        },
+        "seriesSeparator": "、"
+    }
+}

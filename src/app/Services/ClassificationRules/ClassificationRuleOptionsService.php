@@ -12,11 +12,7 @@ class ClassificationRuleOptionsService
      */
     public function transactionTypeOptions(): array
     {
-        return [
-            ['value' => 'any', 'label' => 'すべて'],
-            ['value' => 'income', 'label' => '収入'],
-            ['value' => 'expense', 'label' => '支出'],
-        ];
+        return $this->translatedOptions('transaction_types', ['any', 'income', 'expense']);
     }
 
     /**
@@ -24,12 +20,7 @@ class ClassificationRuleOptionsService
      */
     public function transactionTypeLabels(): array
     {
-        return [
-            'any' => 'すべて',
-            'income' => '収入',
-            'expense' => '支出',
-            'transfer' => '振替',
-        ];
+        return $this->translatedLabels('transaction_types', ['any', 'income', 'expense', 'transfer']);
     }
 
     /**
@@ -37,11 +28,7 @@ class ClassificationRuleOptionsService
      */
     public function matchFieldOptions(): array
     {
-        return [
-            ['value' => 'merchant_name', 'label' => '摘要 / 店舗名'],
-            ['value' => 'description', 'label' => '説明'],
-            ['value' => 'account_name', 'label' => '口座名'],
-        ];
+        return $this->translatedOptions('match_fields', ['merchant_name', 'description', 'account_name']);
     }
 
     /**
@@ -49,11 +36,7 @@ class ClassificationRuleOptionsService
      */
     public function matchFieldLabels(): array
     {
-        return [
-            'merchant_name' => '摘要 / 店舗名',
-            'description' => '説明',
-            'account_name' => '口座名',
-        ];
+        return $this->translatedLabels('match_fields', ['merchant_name', 'description', 'account_name']);
     }
 
     /**
@@ -61,11 +44,7 @@ class ClassificationRuleOptionsService
      */
     public function matchOperatorOptions(): array
     {
-        return [
-            ['value' => 'contains', 'label' => '含む'],
-            ['value' => 'equals', 'label' => '完全一致'],
-            ['value' => 'starts_with', 'label' => '前方一致'],
-        ];
+        return $this->translatedOptions('match_operators', ['contains', 'equals', 'starts_with']);
     }
 
     /**
@@ -73,11 +52,7 @@ class ClassificationRuleOptionsService
      */
     public function matchOperatorLabels(): array
     {
-        return [
-            'contains' => '含む',
-            'equals' => '完全一致',
-            'starts_with' => '前方一致',
-        ];
+        return $this->translatedLabels('match_operators', ['contains', 'equals', 'starts_with']);
     }
 
     /**
@@ -149,5 +124,31 @@ class ClassificationRuleOptionsService
             'priority' => $classificationRule->priority,
             'is_active' => $classificationRule->is_active,
         ];
+    }
+
+    /**
+     * @param  array<int, string>  $values
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function translatedOptions(string $group, array $values): array
+    {
+        return array_map(
+            fn (string $value): array => [
+                'value' => $value,
+                'label' => trans("classification_rules.{$group}.{$value}"),
+            ],
+            $values,
+        );
+    }
+
+    /**
+     * @param  array<int, string>  $values
+     * @return array<string, string>
+     */
+    private function translatedLabels(string $group, array $values): array
+    {
+        return collect($this->translatedOptions($group, $values))
+            ->mapWithKeys(fn (array $option): array => [$option['value'] => $option['label']])
+            ->all();
     }
 }

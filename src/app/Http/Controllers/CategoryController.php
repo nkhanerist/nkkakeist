@@ -89,7 +89,9 @@ class CategoryController extends Controller
             return to_route('transactions.category-review.index', [
                 'status' => $request->validated('review_status', 'high'),
                 'type' => $request->validated('review_type', 'all'),
-            ])->with('success', "カテゴリ「{$category->name}」を追加しました。対象の取引で選択してください。");
+            ])->with('success', trans('categories.messages.created_for_review', [
+                'name' => $category->name,
+            ]));
         }
 
         return to_route('categories.index');

@@ -13,6 +13,10 @@ export type ImportSourceOption = {
     label: string;
 };
 
+export type ImportSuggestedAccountIds = Partial<
+    Record<'mobile_suica' | 'jre_point', number>
+>;
+
 export type ImportListItem = {
     id: number;
     source_name: string | null;
@@ -54,6 +58,7 @@ export type ImportPreviewRow = {
     affects_account_balance: boolean | null;
     resolved_account: { id: number; name: string; currency: string } | null;
     manual_resolved_account_id: number | null;
+    remember_mapping_recommended: boolean;
     replace_account_snapshot_id: number | null;
     same_day_snapshot: {
         id: number;
@@ -62,11 +67,19 @@ export type ImportPreviewRow = {
         source_name: string | null;
         import_id: number | null;
     } | null;
-    resolved_transfer_account: { id: number; name: string; currency: string } | null;
+    resolved_transfer_account: {
+        id: number;
+        name: string;
+        currency: string;
+    } | null;
     manual_resolved_transfer_account_id: number | null;
     resolved_category: { id: number; name: string } | null;
     resolved_subcategory: { id: number; name: string } | null;
-    matched_classification_rule: { id: number; name: string; priority: number } | null;
+    matched_classification_rule: {
+        id: number;
+        name: string;
+        priority: number;
+    } | null;
     rule_applied_fields: string[];
     category_resolution_source: 'csv' | 'rule' | null;
     subcategory_resolution_source: 'csv' | 'rule' | null;

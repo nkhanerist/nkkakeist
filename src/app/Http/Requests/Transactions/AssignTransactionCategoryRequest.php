@@ -87,6 +87,17 @@ class AssignTransactionCategoryRequest extends FormRequest
         ]);
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        /** @var array<string, string> $attributes */
+        $attributes = trans('transactions.fields');
+
+        return $attributes;
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
@@ -97,11 +108,11 @@ class AssignTransactionCategoryRequest extends FormRequest
             }
 
             if (! in_array($transaction->type, ['income', 'expense'], true)) {
-                $validator->errors()->add('category_id', '振替取引にはカテゴリを設定できません。');
+                $validator->errors()->add('category_id', trans('transactions.messages.category_transfer_not_allowed'));
             }
 
             if ($transaction->category_id !== null) {
-                $validator->errors()->add('category_id', 'この取引のカテゴリはすでに設定されています。');
+                $validator->errors()->add('category_id', trans('transactions.messages.category_already_assigned'));
             }
 
             if (! $this->boolean('create_rule')) {
@@ -121,7 +132,7 @@ class AssignTransactionCategoryRequest extends FormRequest
             if (! $this->matches((string) ($fieldValue ?? ''), $matchOperator, $matchValue)) {
                 $validator->errors()->add(
                     'rule_match_value',
-                    'この条件は現在の取引に一致しません。対象項目と一致値を確認してください。',
+                    trans('transactions.messages.rule_condition_mismatch'),
                 );
 
                 return;
@@ -139,7 +150,7 @@ class AssignTransactionCategoryRequest extends FormRequest
             if ($duplicate) {
                 $validator->errors()->add(
                     'create_rule',
-                    '同じ条件の分類ルールがすでにあります。既存ルールを編集するか、今回はチェックを外してください。',
+                    trans('transactions.messages.rule_duplicate'),
                 );
             }
         });

@@ -11,18 +11,18 @@ class PdfTextExtractorService
     public function extract(string $contents): string
     {
         if (! str_starts_with($contents, '%PDF-')) {
-            throw new RuntimeException('PDF ファイルとして認識できませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.pdf_invalid'));
         }
 
         $temporaryPath = tempnam(sys_get_temp_dir(), 'mobile-suica-');
 
         if ($temporaryPath === false) {
-            throw new RuntimeException('PDF 解析用の一時ファイルを作成できませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.pdf_temp_create_failed'));
         }
 
         try {
             if (file_put_contents($temporaryPath, $contents) === false) {
-                throw new RuntimeException('PDF 解析用の一時ファイルを保存できませんでした。');
+                throw new RuntimeException(trans('imports.parse_errors.pdf_temp_save_failed'));
             }
 
             $process = new Process([
@@ -37,13 +37,13 @@ class PdfTextExtractorService
             $process->run();
 
             if (! $process->isSuccessful()) {
-                throw new RuntimeException('PDF から文字を抽出できませんでした。');
+                throw new RuntimeException(trans('imports.parse_errors.pdf_text_extract_failed'));
             }
 
             $text = trim($process->getOutput());
 
             if ($text === '') {
-                throw new RuntimeException('PDF に解析可能な文字情報がありません。');
+                throw new RuntimeException(trans('imports.parse_errors.pdf_text_missing'));
             }
 
             return $text;
@@ -51,7 +51,7 @@ class PdfTextExtractorService
             throw $exception;
         } catch (Throwable $throwable) {
             throw new RuntimeException(
-                'PDF 解析を実行できませんでした。開発環境を再ビルドしてください。',
+                trans('imports.parse_errors.pdf_tool_unavailable'),
                 previous: $throwable,
             );
         } finally {

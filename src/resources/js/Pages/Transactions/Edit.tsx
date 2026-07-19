@@ -7,6 +7,7 @@ import {
     TransactionTypeOption,
 } from '@/types/transaction';
 import TransactionForm from './Partials/TransactionForm';
+import { useTranslation } from 'react-i18next';
 
 type EditProps = {
     transaction: EditableTransaction;
@@ -23,14 +24,13 @@ export default function Edit({
     categoryOptions,
     subcategoryOptions,
 }: EditProps) {
+    const { t } = useTranslation('transactions');
+
     return (
-        <AppPage
-            title="Edit Transaction"
-            description="取引内容を更新します。"
-        >
+        <AppPage title={t('edit.title')} description={t('edit.description')}>
             <TransactionForm
                 transaction={transaction}
-                submitLabel="更新する"
+                submitLabel={t('edit.submit')}
                 submitRoute={route('transactions.update', transaction.id)}
                 method="put"
                 typeOptions={typeOptions}

@@ -8,6 +8,7 @@ import {
     TransactionSubcategoryOption,
 } from '@/types/transaction';
 import { Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 type CategoryReviewProps = {
     review: TransactionCategoryReview;
@@ -16,22 +17,22 @@ type CategoryReviewProps = {
     subcategoryOptions: TransactionSubcategoryOption[];
 };
 
-const statusOptions: Array<{
-    value: TransactionCategoryReviewFilters['status'];
-    label: string;
-}> = [
-    { value: 'high', label: '90%以上' },
-    { value: 'manual', label: 'その他' },
-    { value: 'all', label: 'すべて' },
-];
-
 export default function CategoryReview({
     review,
     filters,
     categoryOptions,
     subcategoryOptions,
 }: CategoryReviewProps) {
+    const { t } = useTranslation('transactions');
     const flashSuccess = usePage<PageProps>().props.flash.success;
+    const statusOptions: Array<{
+        value: TransactionCategoryReviewFilters['status'];
+        label: string;
+    }> = [
+        { value: 'high', label: t('categoryReview.filters.high') },
+        { value: 'manual', label: t('categoryReview.filters.manual') },
+        { value: 'all', label: t('categoryReview.filters.all') },
+    ];
 
     const changeFilters = (
         status: TransactionCategoryReviewFilters['status'],
@@ -50,8 +51,8 @@ export default function CategoryReview({
 
     return (
         <AppPage
-            title="カテゴリ確認"
-            description="カテゴリ未設定の取引を、提案の根拠を見ながら1件ずつ確定します。"
+            title={t('categoryReview.title')}
+            description={t('categoryReview.description')}
         >
             <div className="space-y-6">
                 {flashSuccess && (
@@ -63,40 +64,49 @@ export default function CategoryReview({
                 <div className="flex flex-col gap-4 rounded-2xl border border-indigo-100 bg-indigo-50 p-5 lg:flex-row lg:items-center lg:justify-between">
                     <div>
                         <p className="font-semibold text-indigo-950">
-                            提案は自動適用されません
+                            {t('categoryReview.noticeTitle')}
                         </p>
                         <p className="mt-1 text-sm leading-6 text-indigo-800/80">
-                            90%以上を優先し、取引内容と根拠を確認してから確定してください。
+                            {t('categoryReview.noticeDescription')}
                         </p>
                     </div>
                     <Link
                         href={route('transactions.index')}
                         className="inline-flex shrink-0 items-center justify-center rounded-md border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100"
                     >
-                        取引一覧へ
+                        {t('categoryReview.backToTransactions')}
                     </Link>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-3">
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <p className="text-sm text-slate-500">カテゴリ未設定</p>
+                        <p className="text-sm text-slate-500">
+                            {t('categoryReview.summary.uncategorized')}
+                        </p>
                         <p className="mt-1 text-2xl font-semibold text-slate-900">
-                            {review.summary.total}
-                            <span className="ml-1 text-sm font-medium text-slate-500">件</span>
+                            {t('categoryReview.summary.count', {
+                                count: review.summary.total,
+                            })}
                         </p>
                     </div>
                     <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                        <p className="text-sm text-emerald-700">信頼度90%以上</p>
+                        <p className="text-sm text-emerald-700">
+                            {t('categoryReview.summary.highConfidence')}
+                        </p>
                         <p className="mt-1 text-2xl font-semibold text-emerald-900">
-                            {review.summary.high_confidence}
-                            <span className="ml-1 text-sm font-medium text-emerald-700">件</span>
+                            {t('categoryReview.summary.count', {
+                                count: review.summary.high_confidence,
+                            })}
                         </p>
                     </div>
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                        <p className="text-sm text-amber-700">その他・提案なし</p>
+                        <p className="text-sm text-amber-700">
+                            {t('categoryReview.summary.manual')}
+                        </p>
                         <p className="mt-1 text-2xl font-semibold text-amber-900">
-                            {review.summary.manual_review}
-                            <span className="ml-1 text-sm font-medium text-amber-700">件</span>
+                            {t('categoryReview.summary.count', {
+                                count: review.summary.manual_review,
+                            })}
                         </p>
                     </div>
                 </div>
@@ -104,7 +114,7 @@ export default function CategoryReview({
                 <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            表示対象
+                            {t('categoryReview.filters.target')}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
                             {statusOptions.map((option) => (
@@ -112,7 +122,10 @@ export default function CategoryReview({
                                     key={option.value}
                                     type="button"
                                     onClick={() =>
-                                        changeFilters(option.value, filters.type)
+                                        changeFilters(
+                                            option.value,
+                                            filters.type,
+                                        )
                                     }
                                     className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                                         filters.status === option.value
@@ -131,7 +144,7 @@ export default function CategoryReview({
                             htmlFor="review-type"
                             className="text-xs font-semibold uppercase tracking-wide text-slate-500"
                         >
-                            取引種別
+                            {t('categoryReview.filters.type')}
                         </label>
                         <select
                             id="review-type"
@@ -139,25 +152,34 @@ export default function CategoryReview({
                             onChange={(event) =>
                                 changeFilters(
                                     filters.status,
-                                    event.target.value as TransactionCategoryReviewFilters['type'],
+                                    event.target
+                                        .value as TransactionCategoryReviewFilters['type'],
                                 )
                             }
                             className="mt-2 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
-                            <option value="all">収入・支出</option>
-                            <option value="expense">支出のみ</option>
-                            <option value="income">収入のみ</option>
+                            <option value="all">
+                                {t('categoryReview.filters.allTypes')}
+                            </option>
+                            <option value="expense">
+                                {t('categoryReview.filters.expense')}
+                            </option>
+                            <option value="income">
+                                {t('categoryReview.filters.income')}
+                            </option>
                         </select>
                     </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-3">
                     <p className="text-sm text-slate-500">
-                        {review.summary.displayed}件を表示
+                        {t('categoryReview.displayed', {
+                            count: review.summary.displayed,
+                        })}
                     </p>
                     {review.has_more && (
                         <p className="text-xs text-slate-500">
-                            先頭50件まで表示しています
+                            {t('categoryReview.limited')}
                         </p>
                     )}
                 </div>
@@ -165,10 +187,10 @@ export default function CategoryReview({
                 {review.items.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center">
                         <p className="font-medium text-slate-700">
-                            この条件で確認する取引はありません。
+                            {t('categoryReview.emptyTitle')}
                         </p>
                         <p className="mt-2 text-sm text-slate-500">
-                            別の表示対象または取引種別を選んでください。
+                            {t('categoryReview.emptyDescription')}
                         </p>
                     </div>
                 ) : (

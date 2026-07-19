@@ -1,4 +1,5 @@
 import { DashboardPeriodOption } from '@/types/dashboard';
+import { useTranslation } from 'react-i18next';
 
 type DashboardPeriodSelectorProps = {
     selectedView: 'month' | 'year';
@@ -25,11 +26,15 @@ export default function DashboardPeriodSelector({
     onChangeMonth,
     onSubmit,
 }: DashboardPeriodSelectorProps) {
+    const { t } = useTranslation('dashboard');
+
     return (
         <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-4">
                 <div>
-                    <p className="text-sm font-medium text-slate-700">表示単位</p>
+                    <p className="text-sm font-medium text-slate-700">
+                        {t('period.unit')}
+                    </p>
                     <div className="mt-2 inline-flex rounded-lg border border-slate-300 bg-white p-1">
                         {(['month', 'year'] as const).map((view) => (
                             <button
@@ -42,7 +47,9 @@ export default function DashboardPeriodSelector({
                                         : 'text-slate-700 hover:bg-slate-100'
                                 }`}
                             >
-                                {view === 'month' ? '月次' : '年次'}
+                                {view === 'month'
+                                    ? t('period.monthView')
+                                    : t('period.yearView')}
                             </button>
                         ))}
                     </div>
@@ -54,12 +61,14 @@ export default function DashboardPeriodSelector({
                             htmlFor="dashboard-year"
                             className="text-sm font-medium text-slate-700"
                         >
-                            年
+                            {t('period.year')}
                         </label>
                         <select
                             id="dashboard-year"
                             value={selectedYear}
-                            onChange={(event) => onChangeYear(event.target.value)}
+                            onChange={(event) =>
+                                onChangeYear(event.target.value)
+                            }
                             className="mt-1 block w-32 rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             {yearOptions.map((option) => (
@@ -76,16 +85,21 @@ export default function DashboardPeriodSelector({
                                 htmlFor="dashboard-month"
                                 className="text-sm font-medium text-slate-700"
                             >
-                                月
+                                {t('period.month')}
                             </label>
                             <select
                                 id="dashboard-month"
                                 value={selectedMonth}
-                                onChange={(event) => onChangeMonth(event.target.value)}
+                                onChange={(event) =>
+                                    onChangeMonth(event.target.value)
+                                }
                                 className="mt-1 block w-28 rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             >
                                 {monthOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
@@ -101,7 +115,7 @@ export default function DashboardPeriodSelector({
                 onClick={onSubmit}
                 className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
-                表示を更新
+                {t('period.update')}
             </button>
         </div>
     );

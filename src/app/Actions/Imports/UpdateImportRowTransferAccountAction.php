@@ -5,6 +5,7 @@ namespace App\Actions\Imports;
 use App\Http\Requests\Imports\UpdateImportRowTransferAccountRequest;
 use App\Models\Import;
 use App\Models\ImportRow;
+use App\Services\Imports\ImportMessageLocalizer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -12,6 +13,7 @@ class UpdateImportRowTransferAccountAction
 {
     public function __construct(
         private readonly BuildImportPreviewAction $buildImportPreviewAction,
+        private readonly ImportMessageLocalizer $importMessageLocalizer,
     ) {}
 
     public function handle(Import $import, ImportRow $importRow, ?int $resolvedTransferAccountId): Import
@@ -20,13 +22,13 @@ class UpdateImportRowTransferAccountAction
 
         if ($import->status === 'imported') {
             throw ValidationException::withMessages([
-                $errorKey => '取込済みの import は再編集できません。',
+                $errorKey => trans('imports.messages.imported_not_editable'),
             ]);
         }
 
         if ($importRow->import_id !== $import->id || $importRow->detected_type !== 'transfer') {
             throw ValidationException::withMessages([
-                $errorKey => '振替行のみ相手口座を更新できます。',
+                $errorKey => trans('imports.action_errors.transfer_row_only'),
             ]);
         }
 
@@ -45,7 +47,11 @@ class UpdateImportRowTransferAccountAction
                 && $this->hasTransferResolutionErrors($updatedRow)
             ) {
                 throw ValidationException::withMessages([
-                    $errorKey => $updatedRow->validation_errors ?? ['相手口座を更新できません。'],
+                    $errorKey => $this->importMessageLocalizer->messages(
+                        $updatedRow->validation_errors ?? [
+                            trans('imports.action_errors.transfer_account_update_failed'),
+                        ],
+                    ),
                 ]);
             }
 

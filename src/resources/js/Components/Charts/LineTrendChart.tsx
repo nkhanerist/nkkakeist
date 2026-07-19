@@ -1,5 +1,6 @@
 import { TrendSeries } from '@/types/chart';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 type LineTrendChartProps = {
     series: TrendSeries[];
@@ -19,12 +20,18 @@ const colors = [
     '#c2410c',
 ];
 
-function compactAmount(value: number, currency: string): string {
-    return new Intl.NumberFormat('ja-JP', {
-        notation: 'compact',
-        maximumFractionDigits: 1,
-        style: 'decimal',
-    }).format(value) + ` ${currency}`;
+function compactAmount(
+    value: number,
+    currency: string,
+    locale: string,
+): string {
+    return (
+        new Intl.NumberFormat(locale, {
+            notation: 'compact',
+            maximumFractionDigits: 1,
+            style: 'decimal',
+        }).format(value) + ` ${currency}`
+    );
 }
 
 function dateLabel(date: string): string {
@@ -36,18 +43,24 @@ function dateLabel(date: string): string {
 export default function LineTrendChart({
     series,
     currency,
-    emptyMessage = '表示できる推移データがありません。',
+    emptyMessage,
     height = 280,
 }: LineTrendChartProps) {
+    const { t, i18n } = useTranslation('securities');
+    const numberLocale = i18n.language.startsWith('en') ? 'en-US' : 'ja-JP';
     const visibleSeries = series.filter((item) => item.points.length > 0);
     const dates = Array.from(
-        new Set(visibleSeries.flatMap((item) => item.points.map((point) => point.date))),
+        new Set(
+            visibleSeries.flatMap((item) =>
+                item.points.map((point) => point.date),
+            ),
+        ),
     ).sort();
 
     if (visibleSeries.length === 0 || dates.length === 0) {
         return (
             <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
-                {emptyMessage}
+                {emptyMessage ?? t('charts.line.empty')}
             </div>
         );
     }
@@ -68,10 +81,19 @@ export default function LineTrendChart({
     const x = (date: string) => {
         const index = dateIndexes.get(date) ?? 0;
 
-        return padding.left + (dates.length === 1 ? chartWidth / 2 : (index / (dates.length - 1)) * chartWidth);
+        return (
+            padding.left +
+            (dates.length === 1
+                ? chartWidth / 2
+                : (index / (dates.length - 1)) * chartWidth)
+        );
     };
-    const y = (value: number) => padding.top + ((max - value) / (max - min)) * chartHeight;
-    const gridValues = Array.from({ length: 5 }, (_, index) => max - ((max - min) * index) / 4);
+    const y = (value: number) =>
+        padding.top + ((max - value) / (max - min)) * chartHeight;
+    const gridValues = Array.from(
+        { length: 5 },
+        (_, index) => max - ((max - min) * index) / 4,
+    );
 
     return (
         <div className="space-y-4">
@@ -80,7 +102,11 @@ export default function LineTrendChart({
                     viewBox={`0 0 ${width} ${height}`}
                     className="min-w-[640px]"
                     role="img"
-                    aria-label={`${visibleSeries.map((item) => item.label).join('、')}の評価額推移`}
+                    aria-label={t('charts.line.aria', {
+                        series: visibleSeries
+                            .map((item) => item.label)
+                            .join(t('charts.seriesSeparator')),
+                    })}
                 >
                     {gridValues.map((gridValue) => {
                         const gridY = y(gridValue);
@@ -101,16 +127,24 @@ export default function LineTrendChart({
                                     textAnchor="end"
                                     className="fill-slate-500 text-[11px]"
                                 >
-                                    {compactAmount(gridValue, currency)}
+                                    {compactAmount(
+                                        gridValue,
+                                        currency,
+                                        numberLocale,
+                                    )}
                                 </text>
                             </g>
                         );
                     })}
 
                     {visibleSeries.map((item, seriesIndex) => {
-                        const color = item.color ?? colors[seriesIndex % colors.length];
+                        const color =
+                            item.color ?? colors[seriesIndex % colors.length];
                         const points = item.points
-                            .map((point) => `${x(point.date)},${y(Number(point.value))}`)
+                            .map(
+                                (point) =>
+                                    `${x(point.date)},${y(Number(point.value))}`,
+                            )
                             .join(' ');
 
                         return (
@@ -125,18 +159,18 @@ export default function LineTrendChart({
                                 />
                                 {item.points.length <= 31
                                     ? item.points.map((point) => (
-                                        <circle
-                                            key={`${item.key}-${point.date}`}
-                                            cx={x(point.date)}
-                                            cy={y(Number(point.value))}
-                                            r="3.5"
-                                            fill="white"
-                                            stroke={color}
-                                            strokeWidth="2"
-                                        >
-                                            <title>{`${item.label} ${point.date}: ${point.value} ${currency}`}</title>
-                                        </circle>
-                                    ))
+                                          <circle
+                                              key={`${item.key}-${point.date}`}
+                                              cx={x(point.date)}
+                                              cy={y(Number(point.value))}
+                                              r="3.5"
+                                              fill="white"
+                                              stroke={color}
+                                              strokeWidth="2"
+                                          >
+                                              <title>{`${item.label} ${point.date}: ${point.value} ${currency}`}</title>
+                                          </circle>
+                                      ))
                                     : null}
                             </g>
                         );
@@ -178,14 +212,20 @@ export default function LineTrendChart({
                 {visibleSeries.map((item, index) => {
                     const content = (
                         <>
-                        <span
-                            className="h-2.5 w-2.5 rounded-full"
-                            style={{ backgroundColor: item.color ?? colors[index % colors.length] }}
-                        />
-                        {item.label}
-                        {item.href ? (
-                            <span className="text-xs text-indigo-500">詳細 →</span>
-                        ) : null}
+                            <span
+                                className="h-2.5 w-2.5 rounded-full"
+                                style={{
+                                    backgroundColor:
+                                        item.color ??
+                                        colors[index % colors.length],
+                                }}
+                            />
+                            {item.label}
+                            {item.href ? (
+                                <span className="text-xs text-indigo-500">
+                                    {t('charts.line.details')}
+                                </span>
+                            ) : null}
                         </>
                     );
 

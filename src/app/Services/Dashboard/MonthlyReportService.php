@@ -10,14 +10,22 @@ class MonthlyReportService
 {
     public function __construct(
         private readonly MonthlySummaryService $monthlySummaryService,
+        private readonly CategoryExpenseSummaryService $categoryExpenseSummaryService,
+        private readonly MonthlyClosingService $monthlyClosingService,
+        private readonly DashboardPeriodService $dashboardPeriodService,
     ) {}
 
     /**
      * @param  array<int, array{currency: string, points: array<int, array{date: string, assets: string, liabilities: string, net_worth: string}>}>  $netWorthTrends
+     * @param  array<int, array{id: int|null, name: string, currency: string, total_amount: string}>  $currentCategoryExpenses
      * @return array<string, mixed>
      */
-    public function handle(User $user, CarbonImmutable $month, array $netWorthTrends): array
-    {
+    public function handle(
+        User $user,
+        CarbonImmutable $month,
+        array $netWorthTrends,
+        array $currentCategoryExpenses,
+    ): array {
         $monthStart = $month->startOfMonth();
         $monthEnd = $month->endOfMonth();
         $transactions = $user->transactions()
@@ -36,27 +44,136 @@ class MonthlyReportService
                 'category_id',
             ]);
 
+        $quality = [
+            'uncategorized_count' => $transactions
+                ->whereNull('category_id')
+                ->count(),
+            'unconfirmed_count' => $user->transactions()
+                ->whereBetween('transaction_date', [
+                    $monthStart->toDateString(),
+                    $monthEnd->toDateString(),
+                ])
+                ->where('is_confirmed', false)
+                ->count(),
+            'pending_import_count' => $user->imports()
+                ->whereIn('status', ['uploaded', 'parsed', 'validated'])
+                ->count(),
+        ];
+
         return [
             'comparison_groups' => $this->buildComparisonGroups($user, $monthStart),
             'activity_groups' => $this->buildActivityGroups($transactions),
             'top_merchants' => $this->buildTopMerchants($transactions),
-            'quality' => [
-                'uncategorized_count' => $transactions
-                    ->whereNull('category_id')
-                    ->count(),
-                'unconfirmed_count' => $user->transactions()
-                    ->whereBetween('transaction_date', [
-                        $monthStart->toDateString(),
-                        $monthEnd->toDateString(),
-                    ])
-                    ->where('is_confirmed', false)
-                    ->count(),
-                'pending_import_count' => $user->imports()
-                    ->whereIn('status', ['uploaded', 'parsed', 'validated'])
-                    ->count(),
-            ],
+            'category_expense_groups' => $this->buildCategoryExpenseGroups(
+                $currentCategoryExpenses,
+                $this->categoryExpenseSummaryService->handle(
+                    $user,
+                    $monthStart->subMonthNoOverflow(),
+                ),
+                $monthStart->subMonthNoOverflow(),
+            ),
+            'quality' => $quality,
+            'closing' => $this->monthlyClosingService->build($user, $monthStart, $quality),
             'net_worth_changes' => $this->buildNetWorthChanges($netWorthTrends),
         ];
+    }
+
+    /**
+     * @param  array<int, array{id: int|null, name: string, currency: string, total_amount: string}>  $current
+     * @param  array<int, array{id: int|null, name: string, currency: string, total_amount: string}>  $previous
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildCategoryExpenseGroups(
+        array $current,
+        array $previous,
+        CarbonImmutable $previousMonth,
+    ): array {
+        $currentByCurrency = collect($current)->groupBy('currency');
+        $previousByCurrency = collect($previous)->groupBy('currency');
+        $currencies = $currentByCurrency->keys()
+            ->merge($previousByCurrency->keys())
+            ->unique()
+            ->sort()
+            ->values();
+
+        return $currencies->map(function (string $currency) use (
+            $currentByCurrency,
+            $previousByCurrency,
+            $previousMonth,
+        ): array {
+            $currentItems = $this->indexCategoryExpenses(
+                $currentByCurrency->get($currency, collect()),
+            );
+            $previousItems = $this->indexCategoryExpenses(
+                $previousByCurrency->get($currency, collect()),
+            );
+            $categoryKeys = collect(array_keys($currentItems))
+                ->merge(array_keys($previousItems))
+                ->unique();
+            $currentTotal = collect($currentItems)
+                ->sum(fn (array $item): int => $this->toMinorUnits($item['total_amount']));
+            $previousTotal = collect($previousItems)
+                ->sum(fn (array $item): int => $this->toMinorUnits($item['total_amount']));
+
+            $items = $categoryKeys->map(function (string $key) use (
+                $currentItems,
+                $previousItems,
+                $currentTotal,
+            ): array {
+                $currentItem = $currentItems[$key] ?? null;
+                $previousItem = $previousItems[$key] ?? null;
+                $currentAmount = $this->toMinorUnits($currentItem['total_amount'] ?? '0.00');
+                $previousAmount = $this->toMinorUnits($previousItem['total_amount'] ?? '0.00');
+
+                return [
+                    'category_id' => $currentItem['id'] ?? $previousItem['id'] ?? null,
+                    'category_name' => $currentItem['name']
+                        ?? $previousItem['name']
+                        ?? __('dashboard.report.uncategorized'),
+                    'current_amount' => $this->formatMinorUnits($currentAmount),
+                    'previous_amount' => $this->formatMinorUnits($previousAmount),
+                    'change_amount' => $this->formatMinorUnits($currentAmount - $previousAmount),
+                    'current_share_percent' => $currentTotal === 0
+                        ? null
+                        : number_format(($currentAmount / $currentTotal) * 100, 1, '.', ''),
+                    '_current_minor_units' => $currentAmount,
+                    '_change_minor_units' => $currentAmount - $previousAmount,
+                ];
+            })->sort(function (array $left, array $right): int {
+                $currentComparison = $right['_current_minor_units'] <=> $left['_current_minor_units'];
+
+                if ($currentComparison !== 0) {
+                    return $currentComparison;
+                }
+
+                return abs($right['_change_minor_units']) <=> abs($left['_change_minor_units']);
+            })->map(function (array $item): array {
+                unset($item['_current_minor_units'], $item['_change_minor_units']);
+
+                return $item;
+            })->values()->all();
+
+            return [
+                'currency' => $currency,
+                'previous_month_label' => $this->dashboardPeriodService
+                    ->formatMonthLabel($previousMonth),
+                'current_total' => $this->formatMinorUnits($currentTotal),
+                'previous_total' => $this->formatMinorUnits($previousTotal),
+                'change_amount' => $this->formatMinorUnits($currentTotal - $previousTotal),
+                'items' => $items,
+            ];
+        })->all();
+    }
+
+    /**
+     * @param  Collection<int, array{id: int|null, name: string, currency: string, total_amount: string}>  $items
+     * @return array<string, array{id: int|null, name: string, currency: string, total_amount: string}>
+     */
+    private function indexCategoryExpenses(Collection $items): array
+    {
+        return $items->mapWithKeys(fn (array $item): array => [
+            $item['id'] === null ? 'uncategorized' : 'category:'.$item['id'] => $item,
+        ])->all();
     }
 
     /**
@@ -147,13 +264,15 @@ class MonthlyReportService
      */
     private function buildTopMerchants(Collection $transactions): array
     {
+        $unnamedMerchant = __('dashboard.report.unnamed_merchant');
+
         return $transactions
             ->where('type', 'expense')
             ->groupBy('currency')
             ->sortKeys()
-            ->flatMap(function (Collection $currencyTransactions, string $currency): Collection {
+            ->flatMap(function (Collection $currencyTransactions, string $currency) use ($unnamedMerchant): Collection {
                 return $currencyTransactions
-                    ->groupBy(function ($transaction): string {
+                    ->groupBy(function ($transaction) use ($unnamedMerchant): string {
                         $merchantName = trim((string) $transaction->merchant_name);
 
                         if ($merchantName !== '') {
@@ -162,16 +281,16 @@ class MonthlyReportService
 
                         $description = trim((string) $transaction->description);
 
-                        return $description !== '' ? $description : '名称なし';
+                        return $description !== '' ? $description : $unnamedMerchant;
                     })
-                    ->map(function (Collection $merchantTransactions, string $name) use ($currency): array {
+                    ->map(function (Collection $merchantTransactions, string $name) use ($currency, $unnamedMerchant): array {
                         $totalMinorUnits = $merchantTransactions
                             ->sum(fn ($transaction): int => $this->toMinorUnits((string) $transaction->amount));
 
                         return [
                             'currency' => $currency,
                             'name' => $name,
-                            'keyword' => $name === '名称なし' ? null : $name,
+                            'keyword' => $name === $unnamedMerchant ? null : $name,
                             'total_amount' => $this->formatMinorUnits($totalMinorUnits),
                             'transaction_count' => $merchantTransactions->count(),
                             '_total_minor_units' => $totalMinorUnits,
@@ -244,7 +363,7 @@ class MonthlyReportService
             - $this->toMinorUnits($comparison['balance_total']);
 
         return [
-            'label' => sprintf('%d年%d月', $period->year, $period->month),
+            'label' => $this->dashboardPeriodService->formatMonthLabel($period),
             'income_total' => $comparison['income_total'],
             'expense_total' => $comparison['expense_total'],
             'balance_total' => $comparison['balance_total'],

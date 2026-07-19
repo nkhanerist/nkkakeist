@@ -52,4 +52,15 @@ class StoreCategoryRequest extends FormRequest
             'is_active' => $this->boolean('is_active'),
         ]);
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        /** @var array<string, string> $attributes */
+        $attributes = trans('categories.fields');
+
+        return $attributes;
+    }
 }

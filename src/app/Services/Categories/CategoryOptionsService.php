@@ -9,11 +9,13 @@ class CategoryOptionsService
      */
     public function typeOptions(): array
     {
-        return [
-            ['value' => 'income', 'label' => '収入'],
-            ['value' => 'expense', 'label' => '支出'],
-            ['value' => 'both', 'label' => '両方'],
-        ];
+        return array_map(
+            fn (string $type): array => [
+                'value' => $type,
+                'label' => trans("categories.types.{$type}"),
+            ],
+            ['income', 'expense', 'both'],
+        );
     }
 
     /**

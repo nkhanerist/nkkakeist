@@ -32,14 +32,16 @@ class YearlyCategoryExpenseSummaryService
             ->selectRaw("
                 transactions.currency as currency,
                 categories.id as category_id,
-                COALESCE(categories.name, '未分類') as category_name,
+                categories.name as category_name,
                 SUM({$minorUnitExpression}) as total_minor_units
             ")
             ->get()
             ->map(fn ($row): array => [
                 'currency' => (string) $row->currency,
                 'category_id' => $row->category_id === null ? null : (int) $row->category_id,
-                'category_name' => (string) $row->category_name,
+                'category_name' => $row->category_id === null
+                    ? __('dashboard.report.uncategorized')
+                    : (string) $row->category_name,
                 'total_amount' => $this->formatMinorUnits((int) $row->total_minor_units),
             ]);
 

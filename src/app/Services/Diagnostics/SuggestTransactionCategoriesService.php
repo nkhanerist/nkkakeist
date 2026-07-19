@@ -188,7 +188,7 @@ class SuggestTransactionCategoriesService
             'suggested_subcategory_id' => null,
             'suggested_subcategory' => null,
             'confidence' => 0,
-            'reason' => 'カテゴリ提案なし。既存分類または Classification Rule の追加を確認してください。',
+            'reason' => trans('transactions.category_review.reasons.none'),
             'reference_count' => 0,
             'reference_transaction_id' => null,
             'matched_classification_rule_id' => null,
@@ -224,7 +224,9 @@ class SuggestTransactionCategoriesService
                 'suggested_subcategory_id' => $classificationRule->subcategory?->id,
                 'suggested_subcategory' => $classificationRule->subcategory?->name,
                 'confidence' => 100,
-                'reason' => 'classification rule #'.$classificationRule->id.' に一致',
+                'reason' => trans('transactions.category_review.reasons.rule_match', [
+                    'id' => $classificationRule->id,
+                ]),
                 'reference_count' => 0,
                 'reference_transaction_id' => null,
                 'matched_classification_rule_id' => $classificationRule->id,
@@ -259,7 +261,7 @@ class SuggestTransactionCategoriesService
         $sameAccountSuggestion = $this->dominantHistorySuggestion(
             $sameAccountTransactions,
             $sameAccountTransactions->count() >= 2 ? 90 : 80,
-            '同じ摘要・同じ口座の分類済み履歴から推定',
+            trans('transactions.category_review.reasons.same_merchant_account'),
         );
 
         if ($sameAccountSuggestion !== null && $sameAccountSuggestion['confidence'] >= $minConfidence) {
@@ -269,7 +271,7 @@ class SuggestTransactionCategoriesService
         return $this->dominantHistorySuggestion(
             $sameMerchantTransactions,
             85,
-            '同じ摘要の分類済み履歴から推定',
+            trans('transactions.category_review.reasons.same_merchant'),
         );
     }
 

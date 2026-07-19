@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "tsc && vite build",
-        "dev": "vite --host 0.0.0.0 --port 5190 --strictPort"
+        "dev": "vite --host 0.0.0.0 --port 5190 --strictPort",
+        "translations:check": "node scripts/check-translations.mjs"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
@@ -25,5 +26,9 @@
         "tailwindcss": "^3.2.1",
         "typescript": "^5.0.2",
         "vite": "^8.0.0"
+    },
+    "dependencies": {
+        "i18next": "^26.3.6",
+        "react-i18next": "^17.0.10"
     }
 }

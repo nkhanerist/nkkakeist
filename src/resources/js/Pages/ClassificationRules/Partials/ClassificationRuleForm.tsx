@@ -10,6 +10,7 @@ import {
 } from '@/types/classification-rule';
 import { useForm } from '@inertiajs/react';
 import { FormEvent, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type ClassificationRuleFormProps = {
     classificationRule?: ClassificationRuleListItem;
@@ -47,6 +48,7 @@ export default function ClassificationRuleForm({
     categoryOptions,
     subcategoryOptions,
 }: ClassificationRuleFormProps) {
+    const { t } = useTranslation('classificationRules');
     const { data, setData, post, put, processing, errors } =
         useForm<ClassificationRuleFormData>({
             name: classificationRule?.name ?? '',
@@ -98,40 +100,41 @@ export default function ClassificationRuleForm({
             className="space-y-6 rounded-xl border border-slate-200 bg-white p-6"
         >
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                <p className="font-semibold text-slate-900">適用ルール</p>
+                <p className="font-semibold text-slate-900">
+                    {t('form.usageTitle')}
+                </p>
                 <ol className="mt-2 space-y-1 list-decimal pl-5">
-                    <li>まず CSV の大項目 / 中項目からカテゴリと小分類の解決を試みます。</li>
-                    <li>
-                        それで未解決だった項目だけ、このルールでカテゴリ / 小分類 /
-                        集計対象フラグを補完します。
-                    </li>
-                    <li>
-                        有効なルールを優先度の小さい順に評価し、最初に一致した1件だけを採用します。
-                    </li>
-                    <li>取引の手動入力画面には、まだ自動適用されません。</li>
+                    <li>{t('form.usage.csvFirst')}</li>
+                    <li>{t('form.usage.fillMissing')}</li>
+                    <li>{t('form.usage.firstMatch')}</li>
+                    <li>{t('form.usage.noManual')}</li>
                 </ol>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                    <InputLabel htmlFor="name" value="ルール名" />
+                    <InputLabel htmlFor="name" value={t('form.name')} />
                     <TextInput
                         id="name"
                         value={data.name}
-                        onChange={(event) => setData('name', event.target.value)}
+                        onChange={(event) =>
+                            setData('name', event.target.value)
+                        }
                         className="mt-1 block w-full"
                     />
                     <InputError message={errors.name} className="mt-2" />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="priority" value="優先度" />
+                    <InputLabel htmlFor="priority" value={t('form.priority')} />
                     <TextInput
                         id="priority"
                         type="number"
                         min="0"
                         value={data.priority}
-                        onChange={(event) => setData('priority', event.target.value)}
+                        onChange={(event) =>
+                            setData('priority', event.target.value)
+                        }
                         className="mt-1 block w-full"
                     />
                     <InputError message={errors.priority} className="mt-2" />
@@ -140,19 +143,26 @@ export default function ClassificationRuleForm({
 
             <div className="rounded-xl border border-slate-200 p-5">
                 <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-slate-900">一致条件</h3>
+                    <h3 className="text-sm font-semibold text-slate-900">
+                        {t('form.conditionTitle')}
+                    </h3>
                     <p className="mt-1 text-sm text-slate-500">
-                        どの import row にこのルールを当てるかを設定します。
+                        {t('form.conditionDescription')}
                     </p>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                        <InputLabel htmlFor="transaction_type" value="取引種別" />
+                        <InputLabel
+                            htmlFor="transaction_type"
+                            value={t('form.transactionType')}
+                        />
                         <select
                             id="transaction_type"
                             value={data.transaction_type}
-                            onChange={(event) => setData('transaction_type', event.target.value)}
+                            onChange={(event) =>
+                                setData('transaction_type', event.target.value)
+                            }
                             className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             {transactionTypeOptions.map((option) => (
@@ -162,17 +172,25 @@ export default function ClassificationRuleForm({
                             ))}
                         </select>
                         <p className="mt-1 text-xs text-slate-500">
-                            指定した取引種別の import row だけを評価します。
+                            {t('form.transactionTypeHint')}
                         </p>
-                        <InputError message={errors.transaction_type} className="mt-2" />
+                        <InputError
+                            message={errors.transaction_type}
+                            className="mt-2"
+                        />
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="match_field" value="対象フィールド" />
+                        <InputLabel
+                            htmlFor="match_field"
+                            value={t('form.matchField')}
+                        />
                         <select
                             id="match_field"
                             value={data.match_field}
-                            onChange={(event) => setData('match_field', event.target.value)}
+                            onChange={(event) =>
+                                setData('match_field', event.target.value)
+                            }
                             className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             {matchFieldOptions.map((option) => (
@@ -182,17 +200,25 @@ export default function ClassificationRuleForm({
                             ))}
                         </select>
                         <p className="mt-1 text-xs text-slate-500">
-                            import row のどの値を使って一致判定するかを選びます。
+                            {t('form.matchFieldHint')}
                         </p>
-                        <InputError message={errors.match_field} className="mt-2" />
+                        <InputError
+                            message={errors.match_field}
+                            className="mt-2"
+                        />
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="match_operator" value="一致条件" />
+                        <InputLabel
+                            htmlFor="match_operator"
+                            value={t('form.matchOperator')}
+                        />
                         <select
                             id="match_operator"
                             value={data.match_operator}
-                            onChange={(event) => setData('match_operator', event.target.value)}
+                            onChange={(event) =>
+                                setData('match_operator', event.target.value)
+                            }
                             className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             {matchOperatorOptions.map((option) => (
@@ -201,53 +227,72 @@ export default function ClassificationRuleForm({
                                 </option>
                             ))}
                         </select>
-                        <InputError message={errors.match_operator} className="mt-2" />
+                        <InputError
+                            message={errors.match_operator}
+                            className="mt-2"
+                        />
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="match_value" value="一致値" />
+                        <InputLabel
+                            htmlFor="match_value"
+                            value={t('form.matchValue')}
+                        />
                         <TextInput
                             id="match_value"
                             value={data.match_value}
-                            onChange={(event) => setData('match_value', event.target.value)}
+                            onChange={(event) =>
+                                setData('match_value', event.target.value)
+                            }
                             className="mt-1 block w-full"
                         />
                         <p className="mt-1 text-xs text-slate-500">
-                            ここに入力した文字列で一致判定します。
+                            {t('form.matchValueHint')}
                         </p>
-                        <InputError message={errors.match_value} className="mt-2" />
+                        <InputError
+                            message={errors.match_value}
+                            className="mt-2"
+                        />
                     </div>
                 </div>
             </div>
 
             <div className="rounded-xl border border-slate-200 p-5">
                 <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-slate-900">補完内容</h3>
+                    <h3 className="text-sm font-semibold text-slate-900">
+                        {t('form.completionTitle')}
+                    </h3>
                     <p className="mt-1 text-sm text-slate-500">
-                        条件に一致した import row に対して、未解決の項目だけを補完します。
+                        {t('form.completionDescription')}
                     </p>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                        <InputLabel htmlFor="category_id" value="補完するカテゴリ" />
+                        <InputLabel
+                            htmlFor="category_id"
+                            value={t('form.category')}
+                        />
                         <select
                             id="category_id"
                             value={data.category_id}
                             onChange={(event) => {
                                 const categoryId = event.target.value;
-                                const nextSubcategories = subcategoryOptions.filter(
-                                    (subcategory) =>
-                                        categoryId !== '' &&
-                                        subcategory.category_id === Number(categoryId),
-                                );
+                                const nextSubcategories =
+                                    subcategoryOptions.filter(
+                                        (subcategory) =>
+                                            categoryId !== '' &&
+                                            subcategory.category_id ===
+                                                Number(categoryId),
+                                    );
                                 setData('category_id', categoryId);
 
                                 if (
                                     categoryId === '' ||
                                     !nextSubcategories.some(
                                         (subcategory) =>
-                                            String(subcategory.id) === data.subcategory_id,
+                                            String(subcategory.id) ===
+                                            data.subcategory_id,
                                     )
                                 ) {
                                     setData('subcategory_id', '');
@@ -255,50 +300,64 @@ export default function ClassificationRuleForm({
                             }}
                             className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
-                            <option value="">補完しない</option>
+                            <option value="">{t('form.doNotFill')}</option>
                             {categoryOptions.map((option) => (
                                 <option key={option.id} value={option.id}>
                                     {option.name}
                                 </option>
                             ))}
                         </select>
-                        <InputError message={errors.category_id} className="mt-2" />
+                        <InputError
+                            message={errors.category_id}
+                            className="mt-2"
+                        />
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="subcategory_id" value="補完する小分類" />
+                        <InputLabel
+                            htmlFor="subcategory_id"
+                            value={t('form.subcategory')}
+                        />
                         <select
                             id="subcategory_id"
                             value={data.subcategory_id}
-                            onChange={(event) => setData('subcategory_id', event.target.value)}
+                            onChange={(event) =>
+                                setData('subcategory_id', event.target.value)
+                            }
                             className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
-                            <option value="">補完しない</option>
+                            <option value="">{t('form.doNotFill')}</option>
                             {filteredSubcategories.map((option) => (
                                 <option key={option.id} value={option.id}>
                                     {option.name}
                                 </option>
                             ))}
                         </select>
-                        <InputError message={errors.subcategory_id} className="mt-2" />
+                        <InputError
+                            message={errors.subcategory_id}
+                            className="mt-2"
+                        />
                     </div>
 
                     <div>
                         <InputLabel
                             htmlFor="is_calculation_target"
-                            value="補完する集計対象フラグ"
+                            value={t('form.calculationTarget')}
                         />
                         <select
                             id="is_calculation_target"
                             value={data.is_calculation_target}
                             onChange={(event) =>
-                                setData('is_calculation_target', event.target.value)
+                                setData(
+                                    'is_calculation_target',
+                                    event.target.value,
+                                )
                             }
                             className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         >
-                            <option value="">補完しない</option>
-                            <option value="1">対象にする</option>
-                            <option value="0">対象外にする</option>
+                            <option value="">{t('form.doNotFill')}</option>
+                            <option value="1">{t('form.include')}</option>
+                            <option value="0">{t('form.exclude')}</option>
                         </select>
                         <InputError
                             message={errors.is_calculation_target}
@@ -311,17 +370,27 @@ export default function ClassificationRuleForm({
                             id="is_active"
                             type="checkbox"
                             checked={data.is_active}
-                            onChange={(event) => setData('is_active', event.target.checked)}
+                            onChange={(event) =>
+                                setData('is_active', event.target.checked)
+                            }
                             className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                         />
-                        <InputLabel htmlFor="is_active" value="有効にする" />
-                        <InputError message={errors.is_active} className="mt-2" />
+                        <InputLabel
+                            htmlFor="is_active"
+                            value={t('form.active')}
+                        />
+                        <InputError
+                            message={errors.is_active}
+                            className="mt-2"
+                        />
                     </div>
                 </div>
             </div>
 
             <div className="flex justify-end">
-                <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
+                <PrimaryButton disabled={processing}>
+                    {submitLabel}
+                </PrimaryButton>
             </div>
         </form>
     );

@@ -11,6 +11,7 @@ import {
 import { Link, useForm, router } from '@inertiajs/react';
 import { FormEvent } from 'react';
 import { formatMoney } from '@/utils/currency';
+import { useTranslation } from 'react-i18next';
 
 type IndexProps = {
     transactions: PaginatedTransactions;
@@ -29,6 +30,7 @@ export default function Index({
     categoryOptions,
     currencyOptions,
 }: IndexProps) {
+    const { t } = useTranslation('transactions');
     const { data, setData, get, processing } = useForm<TransactionFilters>({
         date_from: filters.date_from ?? '',
         date_to: filters.date_to ?? '',
@@ -74,7 +76,7 @@ export default function Index({
     };
 
     const handleDelete = (transactionId: number) => {
-        if (!window.confirm('この取引を削除しますか？')) {
+        if (!window.confirm(t('index.confirmDelete'))) {
             return;
         }
 
@@ -84,23 +86,20 @@ export default function Index({
     };
 
     return (
-        <AppPage
-            title="Transactions"
-            description="入出金や振替の取引を一覧管理します。"
-        >
+        <AppPage title={t('index.title')} description={t('index.description')}>
             <div className="space-y-6">
                 <div className="flex flex-wrap justify-end gap-3">
                     <Link
                         href={route('transactions.category-review.index')}
                         className="inline-flex items-center rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-indigo-700 shadow-sm transition hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
-                        カテゴリ未設定を確認
+                        {t('actions.reviewUncategorized')}
                     </Link>
                     <Link
                         href={route('transactions.create')}
                         className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
-                        取引を追加
+                        {t('actions.add')}
                     </Link>
                 </div>
 
@@ -113,7 +112,7 @@ export default function Index({
                             htmlFor="date_from"
                             className="text-sm font-medium text-slate-700"
                         >
-                            開始日
+                            {t('filters.dateFrom')}
                         </label>
                         <TextInput
                             id="date_from"
@@ -131,7 +130,7 @@ export default function Index({
                             htmlFor="date_to"
                             className="text-sm font-medium text-slate-700"
                         >
-                            終了日
+                            {t('filters.dateTo')}
                         </label>
                         <TextInput
                             id="date_to"
@@ -149,7 +148,7 @@ export default function Index({
                             htmlFor="keyword"
                             className="text-sm font-medium text-slate-700"
                         >
-                            キーワード
+                            {t('filters.keyword')}
                         </label>
                         <TextInput
                             id="keyword"
@@ -158,7 +157,7 @@ export default function Index({
                             onChange={(event) =>
                                 setData('keyword', event.target.value)
                             }
-                            placeholder="店舗名・摘要・メモ"
+                            placeholder={t('filters.keywordPlaceholder')}
                         />
                     </div>
 
@@ -167,7 +166,7 @@ export default function Index({
                             htmlFor="account_id"
                             className="text-sm font-medium text-slate-700"
                         >
-                            関連口座
+                            {t('filters.relatedAccount')}
                         </label>
                         <select
                             id="account_id"
@@ -177,7 +176,7 @@ export default function Index({
                                 setData('account_id', event.target.value)
                             }
                         >
-                            <option value="">すべて</option>
+                            <option value="">{t('options.all')}</option>
                             {accountOptions.map((account) => (
                                 <option key={account.id} value={account.id}>
                                     {account.name}
@@ -185,7 +184,7 @@ export default function Index({
                             ))}
                         </select>
                         <p className="mt-1 text-xs text-slate-500">
-                            振替元・振替先の両方を対象にします。
+                            {t('filters.relatedAccountHint')}
                         </p>
                     </div>
 
@@ -194,7 +193,7 @@ export default function Index({
                             htmlFor="category_id"
                             className="text-sm font-medium text-slate-700"
                         >
-                            カテゴリ
+                            {t('filters.category')}
                         </label>
                         <select
                             id="category_id"
@@ -213,7 +212,7 @@ export default function Index({
                                 });
                             }}
                         >
-                            <option value="">すべて</option>
+                            <option value="">{t('options.all')}</option>
                             {categoryOptions.map((category) => (
                                 <option key={category.id} value={category.id}>
                                     {category.name}
@@ -227,7 +226,7 @@ export default function Index({
                             htmlFor="category_state"
                             className="text-sm font-medium text-slate-700"
                         >
-                            カテゴリ状態
+                            {t('filters.categoryState')}
                         </label>
                         <select
                             id="category_state"
@@ -235,9 +234,7 @@ export default function Index({
                             value={data.category_state}
                             onChange={(event) => {
                                 const categoryState = event.target.value as
-                                    | 'all'
-                                    | 'categorized'
-                                    | 'uncategorized';
+                                    'all' | 'categorized' | 'uncategorized';
 
                                 setData({
                                     ...data,
@@ -249,9 +246,13 @@ export default function Index({
                                 });
                             }}
                         >
-                            <option value="all">すべて</option>
-                            <option value="categorized">カテゴリ設定済み</option>
-                            <option value="uncategorized">カテゴリ未設定</option>
+                            <option value="all">{t('options.all')}</option>
+                            <option value="categorized">
+                                {t('options.categorized')}
+                            </option>
+                            <option value="uncategorized">
+                                {t('options.uncategorized')}
+                            </option>
                         </select>
                     </div>
 
@@ -260,7 +261,7 @@ export default function Index({
                             htmlFor="currency"
                             className="text-sm font-medium text-slate-700"
                         >
-                            通貨
+                            {t('filters.currency')}
                         </label>
                         <select
                             id="currency"
@@ -270,7 +271,7 @@ export default function Index({
                                 setData('currency', event.target.value)
                             }
                         >
-                            <option value="">すべて</option>
+                            <option value="">{t('options.all')}</option>
                             {currencyOptions.map((currency) => (
                                 <option key={currency} value={currency}>
                                     {currency}
@@ -284,15 +285,17 @@ export default function Index({
                             htmlFor="type"
                             className="text-sm font-medium text-slate-700"
                         >
-                            種別
+                            {t('filters.type')}
                         </label>
                         <select
                             id="type"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.type}
-                            onChange={(event) => setData('type', event.target.value)}
+                            onChange={(event) =>
+                                setData('type', event.target.value)
+                            }
                         >
-                            <option value="">すべて</option>
+                            <option value="">{t('options.all')}</option>
                             {typeOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
                                     {option.label}
@@ -306,7 +309,7 @@ export default function Index({
                             htmlFor="is_confirmed"
                             className="text-sm font-medium text-slate-700"
                         >
-                            確認状態
+                            {t('filters.confirmation')}
                         </label>
                         <select
                             id="is_confirmed"
@@ -316,9 +319,11 @@ export default function Index({
                                 setData('is_confirmed', event.target.value)
                             }
                         >
-                            <option value="">すべて</option>
-                            <option value="1">確認済み</option>
-                            <option value="0">未確認</option>
+                            <option value="">{t('options.all')}</option>
+                            <option value="1">{t('options.confirmed')}</option>
+                            <option value="0">
+                                {t('options.unconfirmed')}
+                            </option>
                         </select>
                     </div>
 
@@ -327,7 +332,7 @@ export default function Index({
                             htmlFor="calculation_target"
                             className="text-sm font-medium text-slate-700"
                         >
-                            集計対象
+                            {t('filters.calculationTarget')}
                         </label>
                         <select
                             id="calculation_target"
@@ -337,15 +342,17 @@ export default function Index({
                                 setData(
                                     'calculation_target',
                                     event.target.value as
-                                        | 'all'
-                                        | 'included'
-                                        | 'excluded',
+                                        'all' | 'included' | 'excluded',
                                 )
                             }
                         >
-                            <option value="all">すべて</option>
-                            <option value="included">集計対象</option>
-                            <option value="excluded">集計対象外</option>
+                            <option value="all">{t('options.all')}</option>
+                            <option value="included">
+                                {t('options.included')}
+                            </option>
+                            <option value="excluded">
+                                {t('options.excluded')}
+                            </option>
                         </select>
                     </div>
 
@@ -355,14 +362,14 @@ export default function Index({
                             onClick={resetFilters}
                             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >
-                            リセット
+                            {t('actions.reset')}
                         </button>
                         <button
                             type="submit"
                             disabled={processing}
                             className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >
-                            絞り込む
+                            {t('actions.filter')}
                         </button>
                     </div>
                 </form>
@@ -372,34 +379,34 @@ export default function Index({
                         <thead className="bg-slate-50">
                             <tr>
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    取引日
+                                    {t('table.date')}
                                 </th>
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    種別
+                                    {t('table.type')}
                                 </th>
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    口座
+                                    {t('table.account')}
                                 </th>
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    金額
+                                    {t('table.amount')}
                                 </th>
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    カテゴリ
+                                    {t('table.category')}
                                 </th>
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    小分類
+                                    {t('table.subcategory')}
                                 </th>
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    摘要 / 店舗名
+                                    {t('table.summary')}
                                 </th>
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    確認
+                                    {t('table.confirmation')}
                                 </th>
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    集計
+                                    {t('table.calculation')}
                                 </th>
                                 <th className="px-4 py-3 text-right font-semibold text-slate-600">
-                                    操作
+                                    {t('table.actions')}
                                 </th>
                             </tr>
                         </thead>
@@ -410,7 +417,7 @@ export default function Index({
                                         colSpan={10}
                                         className="px-4 py-8 text-center text-slate-500"
                                     >
-                                        条件に一致する取引がありません。
+                                        {t('index.empty')}
                                     </td>
                                 </tr>
                             ) : (
@@ -418,7 +425,10 @@ export default function Index({
                                     <tr key={transaction.id}>
                                         <td className="px-4 py-3 text-slate-700">
                                             <Link
-                                                href={route('transactions.show', transaction.id)}
+                                                href={route(
+                                                    'transactions.show',
+                                                    transaction.id,
+                                                )}
                                                 className="font-medium text-indigo-600 hover:text-indigo-500"
                                             >
                                                 {transaction.transaction_date}
@@ -431,7 +441,12 @@ export default function Index({
                                             {transaction.account?.name ?? '-'}
                                             {transaction.transfer_account && (
                                                 <span className="block text-xs text-slate-500">
-                                                    → {transaction.transfer_account.name}
+                                                    →{' '}
+                                                    {
+                                                        transaction
+                                                            .transfer_account
+                                                            .name
+                                                    }
                                                 </span>
                                             )}
                                         </td>
@@ -446,7 +461,8 @@ export default function Index({
                                             {transaction.category?.name ?? '-'}
                                         </td>
                                         <td className="px-4 py-3 text-slate-700">
-                                            {transaction.subcategory?.name ?? '-'}
+                                            {transaction.subcategory?.name ??
+                                                '-'}
                                         </td>
                                         <td className="px-4 py-3 text-slate-700">
                                             {transaction.merchant_name ??
@@ -463,8 +479,8 @@ export default function Index({
                                                 }`}
                                             >
                                                 {transaction.is_confirmed
-                                                    ? '確認済み'
-                                                    : '未確認'}
+                                                    ? t('status.confirmed')
+                                                    : t('status.unconfirmed')}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-slate-700">
@@ -476,8 +492,8 @@ export default function Index({
                                                 }`}
                                             >
                                                 {transaction.is_calculation_target
-                                                    ? '対象'
-                                                    : '除外'}
+                                                    ? t('status.included')
+                                                    : t('status.excluded')}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3">
@@ -489,15 +505,17 @@ export default function Index({
                                                     )}
                                                     className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                                 >
-                                                    編集
+                                                    {t('actions.edit')}
                                                 </Link>
                                                 <DangerButton
                                                     type="button"
                                                     onClick={() =>
-                                                        handleDelete(transaction.id)
+                                                        handleDelete(
+                                                            transaction.id,
+                                                        )
                                                     }
                                                 >
-                                                    削除
+                                                    {t('actions.delete')}
                                                 </DangerButton>
                                             </div>
                                         </td>
@@ -512,7 +530,7 @@ export default function Index({
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-sm text-slate-500">
                             {transactions.from ?? 0} - {transactions.to ?? 0} /{' '}
-                            {transactions.total} 件
+                            {t('index.count', { total: transactions.total })}
                         </p>
                         <div className="flex flex-wrap gap-2">
                             {transactions.links.map((link, index) => (

@@ -1,0 +1,166 @@
+{
+    "index": {
+        "title": "口座",
+        "description": "口座一覧を確認し、作成・編集・削除を行えます。",
+        "scope": "ログインユーザーに紐づく口座のみ表示しています。",
+        "empty": "まだ口座がありません。最初の口座を追加してください。",
+        "confirmDelete": "「{{name}}」を削除しますか？"
+    },
+    "create": {
+        "title": "口座を追加",
+        "description": "新しい口座を作成します。",
+        "submit": "作成する"
+    },
+    "edit": {
+        "title": "口座を編集",
+        "description": "既存の口座情報を更新します。",
+        "submit": "更新する"
+    },
+    "actions": {
+        "reconcile": "残高照合",
+        "add": "口座を追加",
+        "valuation": "評価額",
+        "edit": "編集",
+        "delete": "削除",
+        "cancel": "キャンセル",
+        "stopEditing": "編集をやめる",
+        "record": "記録する",
+        "update": "更新する",
+        "backToAccounts": "← 口座一覧へ",
+        "accountSettings": "口座設定"
+    },
+    "table": {
+        "name": "口座名",
+        "type": "種別",
+        "balanceRole": "資産区分",
+        "currency": "通貨",
+        "initialBalance": "初期残高",
+        "status": "状態",
+        "actions": "操作"
+    },
+    "status": {
+        "active": "有効",
+        "inactive": "無効",
+        "includedInNetWorth": "純資産に含む",
+        "excludedFromNetWorth": "純資産から除外",
+        "monthlyCloseRequired": "月次締め確認対象",
+        "beforeTransactions": "{{date}} 取引開始前",
+        "balanceOrigin": "{{label}}の起点"
+    },
+    "types": {
+        "cash": "現金",
+        "bank": "銀行口座",
+        "credit_card": "クレジットカード",
+        "e_money": "電子マネー",
+        "securities": "証券",
+        "point": "ポイント",
+        "other": "その他"
+    },
+    "typeDescriptions": {
+        "credit_card": "カード利用は expense、カード引落は transfer として扱うため、残高は未払残高に近い意味になります。",
+        "e_money": "コード決済利用は expense、請求付替やチャージは transfer として扱うため、残高は利用残高や請求待ち残高として確認します。",
+        "other": "コード決済や請求管理用の口座として使う場合、残高は利用残高や請求待ち残高として確認します。",
+        "securities": "証券口座への積立や資金移動は transfer として扱い、収支には重複計上しません。"
+    },
+    "balanceLabels": {
+        "default": "現在残高相当",
+        "credit_card": "未払残高相当",
+        "e_money": "利用残高 / 請求待ち残高相当",
+        "other": "利用残高 / 請求待ち残高相当"
+    },
+    "form": {
+        "fields": {
+            "name": "口座名",
+            "type": "種別",
+            "currency": "通貨",
+            "initialBalance": "初期残高",
+            "openingBalanceDate": "初期残高の基準日",
+            "displayOrder": "表示順",
+            "active": "有効にする",
+            "balanceRole": "残高ロール",
+            "balanceMethod": "残高計算方式",
+            "includeInNetWorth": "純資産の集計に含める",
+            "monthlyCloseRequired": "月次締めで反映確認する",
+            "note": "メモ",
+            "importAliases": "取込用別名"
+        },
+        "openingBalanceHint": "初期残高は、この日の取引開始前の残高として扱います。未設定の場合は全期間の起点になります。",
+        "activeHint": "無効にした口座は一覧上で状態が分かるように残ります。",
+        "balanceSectionTitle": "資産・負債と残高計算",
+        "balanceSectionDescription": "口座の種類とは別に、純資産上の役割と残高の求め方を設定します。",
+        "clearingHint": "中継口座は請求・チャージ経路の確認用で、純資産には含めません。",
+        "snapshotHint": "証券は評価額を基準にし、評価日より後の入出金だけを加減します。",
+        "netWorthHint": "開発用口座や集計対象外にしたい口座では無効にします。",
+        "monthlyCloseHint": "カード請求、銀行残高、電子マネー、ポイント、投信評価額など、後から反映される口座を月末チェックリストに含めます。",
+        "importAliasesHint": "Money Forward の振替取込で、摘要 / 店舗名に出る別表記を1行ずつ登録できます。例: MasterCard(8658)"
+    },
+    "reconciliation": {
+        "title": "残高照合",
+        "description": "金融機関の実残高と台帳残高を比較し、期首残高の差額を補正します。",
+        "confirmAdjustment": "{{name}}の期首残高へ差額 {{difference}} {{currency}} を反映しますか？",
+        "excluded": "純資産対象外",
+        "ledgerBalance": "台帳残高",
+        "actualLiability": "実際の未払残高（マイナス入力）",
+        "actualBalance": "実際の残高",
+        "source": "確認元",
+        "sourcePlaceholder": "金融機関アプリ",
+        "officialBalance": "取得済みの公式残高",
+        "differenceFromLedger": "台帳との差額 {{difference}}",
+        "nextPayment": "次回引落し:",
+        "amountUnavailable": "金額未取得",
+        "currentOpeningBalance": "現在の期首残高",
+        "difference": "差額",
+        "enterActualBalance": "実残高を入力してください",
+        "adjustedOpeningBalance": "補正後の期首残高",
+        "previousReconciliation": "前回照合: {{date}}・{{balance}} {{currency}}",
+        "optionalNote": "メモ（任意）",
+        "notePlaceholder": "取込みが最新であることを確認",
+        "applyDifference": "差額を期首残高へ反映",
+        "warningTitle": "補正前の確認",
+        "warningDescription": "対象日までの取引をすべて取り込んだ後、金融機関側の残高を入力してください。未取込の取引がある状態で補正すると、その金額も期首残高へ含まれます。",
+        "date": "照合日",
+        "recalculate": "残高を再計算",
+        "importOfficial": "公式残高を取り込む",
+        "ledgerAccounts": "台帳口座",
+        "ledgerAccountsDescription": "資産は実残高を正数、クレジットカード等の負債は未払額を負数で入力します。",
+        "valuationAccounts": "評価額口座",
+        "valuationAccountsDescription": "証券口座は期首残高ではなく、同日の時価評価額を記録します。",
+        "latestValuation": "最新評価額: {{date}}",
+        "valuationMissing": "評価額未登録",
+        "recordValuation": "評価額を記録",
+        "clearingAccounts": "中継口座",
+        "clearingAccountsDescription": "中継口座は実残高を持たないため補正しません。残高が大きい場合は、請求・チャージ経路を確認します。"
+    },
+    "snapshots": {
+        "title": "{{name}}の評価額",
+        "description": "証券口座の時価評価額を日ごとに記録します。",
+        "currentWithSnapshot": "最新評価額＋評価日後の入出金",
+        "currentWithoutSnapshot": "評価額未登録・台帳残高",
+        "methodWarning": "口座設定の残高計算方式を「評価額スナップショット」に変更すると記録できます。",
+        "missingWarning": "現在は入出金の累計を表示しており、実際の時価評価額ではありません。最初の評価額を記録すると、その値が残高計算の基準になります。",
+        "editTitle": "評価額を編集",
+        "recordTitle": "今日の評価額を記録",
+        "formDescription": "同じ日の評価額を再度登録すると、その日の値を更新します。評価額は当日の取引後の残高として扱います。",
+        "date": "評価日",
+        "value": "時価評価額",
+        "source": "取得元",
+        "sourcePlaceholder": "THEOマイページ",
+        "note": "メモ",
+        "historyTitle": "評価額履歴",
+        "latest": "最新は {{date}} の {{balance}} {{currency}} です。",
+        "historyEmpty": "評価額はまだ記録されていません。",
+        "recordFirst": "最初の評価額を記録してください。",
+        "confirmDelete": "{{date}} の評価額を削除しますか？",
+        "table": {
+            "date": "評価日",
+            "value": "評価額",
+            "source": "取得元",
+            "note": "メモ",
+            "actions": "操作"
+        }
+    },
+    "defaults": {
+        "manualEntry": "手動入力",
+        "manualReconciliation": "手動照合"
+    }
+}

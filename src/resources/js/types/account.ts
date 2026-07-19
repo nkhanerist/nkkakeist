@@ -16,6 +16,7 @@ export type AccountListItem = {
     balance_method: AccountBalanceMethod;
     balance_method_label: string;
     include_in_net_worth: boolean;
+    monthly_close_required: boolean;
     currency: string;
     initial_balance: string;
     opening_balance_date: string | null;
@@ -31,6 +32,7 @@ export type AccountFormValues = {
     balance_role: AccountBalanceRole;
     balance_method: AccountBalanceMethod;
     include_in_net_worth: boolean;
+    monthly_close_required: boolean;
     currency: string;
     initial_balance: string;
     opening_balance_date: string;
@@ -47,6 +49,7 @@ export type EditableAccount = {
     balance_role: AccountBalanceRole;
     balance_method: AccountBalanceMethod;
     include_in_net_worth: boolean;
+    monthly_close_required: boolean;
     currency: string;
     initial_balance: string;
     opening_balance_date: string | null;

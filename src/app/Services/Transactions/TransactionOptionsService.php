@@ -11,11 +11,12 @@ class TransactionOptionsService
      */
     public function typeOptions(): array
     {
-        return [
-            ['value' => 'income', 'label' => '収入'],
-            ['value' => 'expense', 'label' => '支出'],
-            ['value' => 'transfer', 'label' => '振替'],
-        ];
+        return collect(['income', 'expense', 'transfer'])
+            ->map(fn (string $type): array => [
+                'value' => $type,
+                'label' => trans("transactions.types.{$type}"),
+            ])
+            ->all();
     }
 
     /**

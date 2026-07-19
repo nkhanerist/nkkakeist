@@ -2,19 +2,20 @@ import AppPage from '@/Components/AppPage';
 import DangerButton from '@/Components/DangerButton';
 import { AccountListItem } from '@/types/account';
 import { PageProps } from '@/types';
-import { getAccountBalanceLabel } from '@/utils/accountType';
 import { formatMoney } from '@/utils/currency';
 import { Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 type IndexProps = {
     accounts: AccountListItem[];
 };
 
 export default function Index({ accounts }: IndexProps) {
+    const { t } = useTranslation('accounts');
     const flashError = usePage<PageProps>().props.flash.error;
 
     const handleDelete = (account: AccountListItem) => {
-        if (! window.confirm(`「${account.name}」を削除しますか？`)) {
+        if (! window.confirm(t('index.confirmDelete', { name: account.name }))) {
             return;
         }
 
@@ -23,8 +24,8 @@ export default function Index({ accounts }: IndexProps) {
 
     return (
         <AppPage
-            title="Accounts"
-            description="口座一覧を確認し、作成・編集・削除を行えます。"
+            title={t('index.title')}
+            description={t('index.description')}
         >
             <div className="space-y-6">
                 {flashError ? (
@@ -36,7 +37,7 @@ export default function Index({ accounts }: IndexProps) {
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm text-slate-500">
-                            ログインユーザーに紐づく口座のみ表示しています。
+                            {t('index.scope')}
                         </p>
                     </div>
 
@@ -45,13 +46,13 @@ export default function Index({ accounts }: IndexProps) {
                             href={route('accounts.reconciliation.index')}
                             className="inline-flex items-center rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold tracking-widest text-indigo-800 transition duration-150 ease-in-out hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >
-                            残高照合
+                            {t('actions.reconcile')}
                         </Link>
                         <Link
                             href={route('accounts.create')}
                             className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >
-                            口座を追加
+                            {t('actions.add')}
                         </Link>
                     </div>
                 </div>
@@ -59,7 +60,7 @@ export default function Index({ accounts }: IndexProps) {
                 {accounts.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
                         <p className="text-sm text-slate-600">
-                            まだ口座がありません。最初の口座を追加してください。
+                            {t('index.empty')}
                         </p>
                     </div>
                 ) : (
@@ -68,13 +69,13 @@ export default function Index({ accounts }: IndexProps) {
                             <table className="min-w-[980px] divide-y divide-slate-200">
                                 <thead className="bg-slate-50">
                                     <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                        <th className="px-4 py-3">口座名</th>
-                                        <th className="px-4 py-3">種別</th>
-                                        <th className="px-4 py-3">資産区分</th>
-                                        <th className="px-4 py-3">通貨</th>
-                                        <th className="px-4 py-3">初期残高</th>
-                                        <th className="px-4 py-3">状態</th>
-                                        <th className="px-4 py-3">操作</th>
+                                        <th className="px-4 py-3">{t('table.name')}</th>
+                                        <th className="px-4 py-3">{t('table.type')}</th>
+                                        <th className="px-4 py-3">{t('table.balanceRole')}</th>
+                                        <th className="px-4 py-3">{t('table.currency')}</th>
+                                        <th className="px-4 py-3">{t('table.initialBalance')}</th>
+                                        <th className="px-4 py-3">{t('table.status')}</th>
+                                        <th className="px-4 py-3">{t('table.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 bg-white text-sm text-slate-700">
@@ -115,9 +116,14 @@ export default function Index({ accounts }: IndexProps) {
                                                     </p>
                                                     <p className="text-xs text-slate-500">
                                                         {account.include_in_net_worth
-                                                            ? '純資産に含む'
-                                                            : '純資産から除外'}
+                                                            ? t('status.includedInNetWorth')
+                                                            : t('status.excludedFromNetWorth')}
                                                     </p>
+                                                    {account.monthly_close_required ? (
+                                                        <p className="text-xs font-medium text-indigo-600">
+                                                            {t('status.monthlyCloseRequired')}
+                                                        </p>
+                                                    ) : null}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4">
@@ -133,8 +139,12 @@ export default function Index({ accounts }: IndexProps) {
                                                     </p>
                                                     <p className="mt-1 text-xs text-slate-500">
                                                         {account.opening_balance_date
-                                                            ? `${account.opening_balance_date} 取引開始前`
-                                                            : `${getAccountBalanceLabel(account.type)}の起点`}
+                                                            ? t('status.beforeTransactions', { date: account.opening_balance_date })
+                                                            : t('status.balanceOrigin', {
+                                                                  label: t(`balanceLabels.${account.type}`, {
+                                                                      defaultValue: t('balanceLabels.default'),
+                                                                  }),
+                                                              })}
                                                     </p>
                                                 </div>
                                             </td>
@@ -147,8 +157,8 @@ export default function Index({ accounts }: IndexProps) {
                                                     }`}
                                                 >
                                                     {account.is_active
-                                                        ? '有効'
-                                                        : '無効'}
+                                                        ? t('status.active')
+                                                        : t('status.inactive')}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4">
@@ -161,7 +171,7 @@ export default function Index({ accounts }: IndexProps) {
                                                             )}
                                                             className="inline-flex items-center rounded-md border border-emerald-300 bg-emerald-50 px-4 py-2 text-xs font-semibold tracking-widest text-emerald-800 shadow-sm transition duration-150 ease-in-out hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                                                         >
-                                                            評価額
+                                                            {t('actions.valuation')}
                                                         </Link>
                                                     ) : null}
                                                     <Link
@@ -171,7 +181,7 @@ export default function Index({ accounts }: IndexProps) {
                                                         )}
                                                         className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                                     >
-                                                        編集
+                                                        {t('actions.edit')}
                                                     </Link>
                                                     <DangerButton
                                                         type="button"
@@ -179,7 +189,7 @@ export default function Index({ accounts }: IndexProps) {
                                                             handleDelete(account)
                                                         }
                                                     >
-                                                        削除
+                                                        {t('actions.delete')}
                                                     </DangerButton>
                                                 </div>
                                             </td>

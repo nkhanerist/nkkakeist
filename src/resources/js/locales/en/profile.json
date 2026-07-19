@@ -1,0 +1,35 @@
+{
+    "page": {
+        "title": "Profile"
+    },
+    "information": {
+        "title": "Profile Information",
+        "description": "Update your name and email address.",
+        "name": "Name",
+        "email": "Email Address",
+        "unverified": "Your email address has not been verified.",
+        "resend": "Resend Verification Email",
+        "verificationSent": "A new verification link has been sent to your email address.",
+        "save": "Save",
+        "saved": "Saved."
+    },
+    "password": {
+        "title": "Change Password",
+        "description": "Use a long, hard-to-guess password to keep your account secure.",
+        "current": "Current Password",
+        "new": "New Password",
+        "confirmation": "Confirm New Password",
+        "save": "Save",
+        "saved": "Saved."
+    },
+    "deletion": {
+        "title": "Delete Account",
+        "description": "Deleting your account permanently removes all of its data. Save any information you need before continuing.",
+        "action": "Delete Account",
+        "confirmTitle": "Delete your account?",
+        "confirmDescription": "This action cannot be undone. Enter your password to permanently delete your account.",
+        "password": "Password",
+        "cancel": "Cancel",
+        "confirm": "Delete Permanently"
+    }
+}

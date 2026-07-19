@@ -1,5 +1,6 @@
 import AppPage from '@/Components/AppPage';
 import { AccountTypeOption, EditableAccount } from '@/types/account';
+import { useTranslation } from 'react-i18next';
 import AccountForm from './Partials/AccountForm';
 
 type EditProps = {
@@ -15,14 +16,16 @@ export default function Edit({
     balanceRoleOptions,
     balanceMethodOptions,
 }: EditProps) {
+    const { t } = useTranslation('accounts');
+
     return (
         <AppPage
-            title="Edit Account"
-            description="既存の口座情報を更新します。"
+            title={t('edit.title')}
+            description={t('edit.description')}
         >
             <AccountForm
                 account={account}
-                submitLabel="更新する"
+                submitLabel={t('edit.submit')}
                 typeOptions={typeOptions}
                 balanceRoleOptions={balanceRoleOptions}
                 balanceMethodOptions={balanceMethodOptions}

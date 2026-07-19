@@ -36,8 +36,8 @@ class DashboardPeriodService
             'selected_month' => $monthStart->format('Y-m'),
             'selected_year' => $yearStart->format('Y'),
             'selected_period_label' => $selectedView === 'year'
-                ? $yearStart->isoFormat('YYYY年')
-                : $monthStart->isoFormat('YYYY年M月'),
+                ? $this->formatYearLabel($yearStart)
+                : $this->formatMonthLabel($monthStart),
             'month_start' => $monthStart,
             'month_end' => $monthStart->endOfMonth(),
             'year_start' => $yearStart,
@@ -45,6 +45,19 @@ class DashboardPeriodService
             'year_options' => $this->yearOptions($selectedYear, $now),
             'month_options' => $this->monthOptions(),
         ];
+    }
+
+    public function formatYearLabel(CarbonImmutable $year): string
+    {
+        return __('dashboard.period.year', ['year' => $year->format('Y')]);
+    }
+
+    public function formatMonthLabel(CarbonImmutable $month): string
+    {
+        return __('dashboard.period.month', [
+            'year' => $month->format('Y'),
+            'month' => $this->monthLabel((int) $month->format('n')),
+        ]);
     }
 
     private function resolveView(mixed $view): string
@@ -99,7 +112,7 @@ class DashboardPeriodService
         for ($year = $end; $year >= $start; $year--) {
             $items[] = [
                 'value' => (string) $year,
-                'label' => sprintf('%d年', $year),
+                'label' => __('dashboard.period.year', ['year' => $year]),
             ];
         }
 
@@ -116,10 +129,15 @@ class DashboardPeriodService
         for ($month = 1; $month <= 12; $month++) {
             $items[] = [
                 'value' => str_pad((string) $month, 2, '0', STR_PAD_LEFT),
-                'label' => sprintf('%d月', $month),
+                'label' => $this->monthLabel($month),
             ];
         }
 
         return $items;
+    }
+
+    private function monthLabel(int $month): string
+    {
+        return __("dashboard.months.{$month}");
     }
 }

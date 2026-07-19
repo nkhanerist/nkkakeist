@@ -1,0 +1,28 @@
+{
+    "app": {
+        "name": "NKKakeist",
+        "tagline": "個人用資産管理"
+    },
+    "navigation": {
+        "dashboard": "Dashboard",
+        "accounts": "口座",
+        "securities": "証券",
+        "categories": "カテゴリ",
+        "transactions": "取引",
+        "categoryReview": "カテゴリ確認",
+        "imports": "Import",
+        "classificationRules": "分類ルール",
+        "menu": "メニュー",
+        "profile": "Profile",
+        "logout": "ログアウト"
+    },
+    "locale": {
+        "label": "表示言語",
+        "short": {
+            "ja": "JA",
+            "en": "EN"
+        },
+        "ja": "日本語",
+        "en": "English"
+    }
+}

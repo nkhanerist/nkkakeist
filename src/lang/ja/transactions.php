@@ -1,0 +1,50 @@
+<?php
+
+return [
+    'types' => [
+        'income' => '収入',
+        'expense' => '支出',
+        'transfer' => '振替',
+    ],
+    'fields' => [
+        'transaction_date' => '取引日',
+        'type' => '種別',
+        'account_id' => '口座',
+        'transfer_account_id' => '振替先口座',
+        'amount' => '金額',
+        'currency' => '通貨',
+        'merchant_name' => '店舗名',
+        'description' => '摘要',
+        'category_id' => 'カテゴリ',
+        'subcategory_id' => '小分類',
+        'payment_method_label' => '支払方法ラベル',
+        'is_confirmed' => '確認状態',
+        'is_calculation_target' => '集計対象',
+        'affects_account_balance' => '口座残高への反映',
+        'memo' => 'メモ',
+        'create_rule' => '分類ルール作成',
+        'rule_match_field' => '判定に使う項目',
+        'rule_match_operator' => '一致方法',
+        'rule_match_value' => '一致値',
+    ],
+    'messages' => [
+        'category_required_for_subcategory' => '小分類を選択する場合はカテゴリを選択してください。',
+        'subcategory_mismatch' => '選択した小分類はカテゴリに属していません。',
+        'account_currency_mismatch' => '取引通貨は選択した口座の通貨と一致している必要があります。',
+        'transfer_currency_mismatch' => '振替元口座と振替先口座は同じ通貨である必要があります。',
+        'category_transfer_not_allowed' => '振替取引にはカテゴリを設定できません。',
+        'category_already_assigned' => 'この取引のカテゴリはすでに設定されています。',
+        'rule_condition_mismatch' => 'この条件は現在の取引に一致しません。対象項目と一致値を確認してください。',
+        'rule_duplicate' => '同じ条件の分類ルールがすでにあります。既存ルールを編集するか、今回はチェックを外してください。',
+    ],
+    'category_review' => [
+        'assigned' => 'カテゴリを設定しました。',
+        'assigned_with_rule' => 'カテゴリを設定し、今後のインポートに使う分類ルールを作成しました。',
+        'reasons' => [
+            'none' => 'カテゴリ提案なし。既存分類または Classification Rule の追加を確認してください。',
+            'rule_match' => 'classification rule #:id に一致',
+            'same_merchant_account' => '同じ摘要・同じ口座の分類済み履歴から推定',
+            'same_merchant' => '同じ摘要の分類済み履歴から推定',
+        ],
+    ],
+];

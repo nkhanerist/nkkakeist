@@ -5,6 +5,7 @@ import {
     ClassificationRuleSubcategoryOption,
 } from '@/types/classification-rule';
 import ClassificationRuleForm from './Partials/ClassificationRuleForm';
+import { useTranslation } from 'react-i18next';
 
 type CreateProps = {
     transactionTypeOptions: ClassificationRuleOption[];
@@ -15,14 +16,16 @@ type CreateProps = {
 };
 
 export default function Create(props: CreateProps) {
+    const { t } = useTranslation('classificationRules');
+
     return (
         <AppPage
-            title="分類ルール作成"
-            description="インポートプレビューの自動分類ルールを追加します。"
+            title={t('create.title')}
+            description={t('create.description')}
         >
             <ClassificationRuleForm
                 method="post"
-                submitLabel="作成する"
+                submitLabel={t('create.submit')}
                 submitRoute={route('classification-rules.store')}
                 {...props}
             />

@@ -98,9 +98,10 @@ class AccountReconciliationController extends Controller
 
         return to_route('accounts.reconciliation.index', [
             'balance_date' => $request->validated('balance_date'),
-        ])->with(
-            'success',
-            sprintf('%sの期首残高を補正しました（差額 %s %s）。', $account->name, $result['difference'], $account->currency),
-        );
+        ])->with('success', trans('accounts.messages.reconciled', [
+            'name' => $account->name,
+            'difference' => $result['difference'],
+            'currency' => $account->currency,
+        ]));
     }
 }

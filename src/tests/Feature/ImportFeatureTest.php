@@ -1657,6 +1657,135 @@ class ImportFeatureTest extends TestCase
                 ->where('rows.1.is_duplicate_candidate', true));
     }
 
+    public function test_credit_card_wallet_charge_is_normalized_to_transfer_when_csv_flag_is_disabled(): void
+    {
+        $user = User::factory()->create();
+        $cardAccount = Account::factory()->for($user)->create([
+            'name' => 'dカード',
+            'type' => 'credit_card',
+            'balance_role' => 'liability',
+            'currency' => 'JPY',
+        ]);
+        $walletAccount = Account::factory()->for($user)->create([
+            'name' => 'kyash',
+            'type' => 'other',
+            'balance_role' => 'asset',
+            'currency' => 'JPY',
+        ]);
+
+        $this->actingAs($user)->post(route('imports.store'), [
+            'source_name' => 'money_forward',
+            'account_id' => '',
+            'csv_file' => $this->moneyForwardUpload([
+                ['1', '2026/04/10', 'Kyash', '-3000', 'dカード', '未分類', '未分類', '', '0', 'row-card-charge-without-transfer-flag'],
+            ]),
+        ])->assertRedirect();
+
+        $import = Import::firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('imports.show', $import))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('rows.0.detected_type', 'transfer')
+                ->where('rows.0.is_calculation_target', false)
+                ->where('rows.0.resolved_account.id', $cardAccount->id)
+                ->where('rows.0.resolved_transfer_account.id', $walletAccount->id));
+
+        $this->actingAs($user)
+            ->post(route('imports.commit', $import))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('transactions', [
+            'account_id' => $cardAccount->id,
+            'transfer_account_id' => $walletAccount->id,
+            'type' => 'transfer',
+            'amount' => '3000.00',
+            'is_calculation_target' => 0,
+        ]);
+    }
+
+    public function test_wallet_side_charge_is_duplicate_of_an_imported_card_side_transfer(): void
+    {
+        $user = User::factory()->create();
+        $cardAccount = Account::factory()->for($user)->create([
+            'name' => 'dカード',
+            'type' => 'credit_card',
+            'balance_role' => 'liability',
+            'currency' => 'JPY',
+            'import_aliases' => ['カード MasterCard(8658)'],
+        ]);
+        $walletAccount = Account::factory()->for($user)->create([
+            'name' => 'kyash',
+            'type' => 'other',
+            'balance_role' => 'asset',
+            'currency' => 'JPY',
+        ]);
+
+        $this->actingAs($user)->post(route('imports.store'), [
+            'source_name' => 'money_forward',
+            'account_id' => '',
+            'csv_file' => $this->moneyForwardUpload([
+                ['1', '2026/04/10', 'Kyash', '-3000', 'dカード', '未分類', '未分類', '', '1', 'row-card-side-charge'],
+            ]),
+        ]);
+        $firstImport = Import::query()->sole();
+        $this->actingAs($user)->post(route('imports.commit', $firstImport));
+
+        $this->actingAs($user)->post(route('imports.store'), [
+            'source_name' => 'money_forward',
+            'account_id' => '',
+            'csv_file' => $this->moneyForwardUpload([
+                ['1', '2026/04/10', 'カード MasterCard(8658)', '3000', 'kyash', '未分類', '未分類', '', '1', 'row-wallet-side-charge'],
+            ]),
+        ]);
+        $secondImport = Import::query()->latest('id')->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('imports.show', $secondImport))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('rows.0.resolved_account.id', $cardAccount->id)
+                ->where('rows.0.resolved_transfer_account.id', $walletAccount->id)
+                ->where('rows.0.is_duplicate_candidate', true));
+
+        $this->actingAs($user)
+            ->post(route('imports.commit', $secondImport))
+            ->assertSessionHasNoErrors();
+
+        self::assertSame(1, Transaction::query()->where('type', 'transfer')->count());
+        self::assertSame(['skipped'], $secondImport->refresh()->importRows()->pluck('status')->all());
+    }
+
+    public function test_kyash_purchase_remains_an_expense(): void
+    {
+        $user = User::factory()->create();
+        $walletAccount = Account::factory()->for($user)->create([
+            'name' => 'kyash',
+            'type' => 'other',
+            'balance_role' => 'asset',
+            'currency' => 'JPY',
+        ]);
+
+        $this->actingAs($user)->post(route('imports.store'), [
+            'source_name' => 'money_forward',
+            'account_id' => '',
+            'csv_file' => $this->moneyForwardUpload([
+                ['1', '2026/04/10', '購入 PAYPAL *SHOP', '-980', 'kyash', '食費', '食料品', '', '0', 'row-kyash-purchase'],
+            ]),
+        ])->assertRedirect();
+
+        $import = Import::query()->sole();
+
+        $this->actingAs($user)
+            ->get(route('imports.show', $import))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('rows.0.detected_type', 'expense')
+                ->where('rows.0.resolved_account.id', $walletAccount->id)
+                ->where('rows.0.resolved_transfer_account', null));
+    }
+
     public function test_transfer_rows_between_banks_use_signed_amount_for_direction(): void
     {
         $user = User::factory()->create();
@@ -2492,7 +2621,10 @@ class ImportFeatureTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('rows.0.resolved_account', null)
                 ->where('rows.0.status', 'error')
-                ->where('rows.0.validation_errors.0', '同名の口座が複数あるため取込先口座を特定できません。共通適用口座を選択してください。'));
+                ->where(
+                    'rows.0.validation_errors.0',
+                    __('imports.stored_messages.destination_ambiguous', locale: 'ja'),
+                ));
     }
 
     /**

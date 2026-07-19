@@ -31,6 +31,15 @@ class StoreAccountReconciliationRequest extends FormRequest
         ];
     }
 
+    /** @return array<string, string> */
+    public function attributes(): array
+    {
+        /** @var array<string, string> $attributes */
+        $attributes = trans('accounts.fields');
+
+        return $attributes;
+    }
+
     public function after(): array
     {
         return [
@@ -44,14 +53,14 @@ class StoreAccountReconciliationRequest extends FormRequest
                 if ($account->balance_method !== 'ledger') {
                     $validator->errors()->add(
                         'actual_balance',
-                        '評価額方式の口座は、評価額画面から時価評価額を記録してください。',
+                        trans('accounts.messages.snapshot_account_required'),
                     );
                 }
 
                 if ($account->balance_role === 'clearing') {
                     $validator->errors()->add(
                         'actual_balance',
-                        '中継口座は期首残高の照合対象ではありません。取引経路を補正してください。',
+                        trans('accounts.messages.clearing_not_reconcilable'),
                     );
                 }
             },
@@ -63,7 +72,7 @@ class StoreAccountReconciliationRequest extends FormRequest
         $this->merge([
             'source_name' => $this->filled('source_name')
                 ? trim((string) $this->input('source_name'))
-                : '手動照合',
+                : trans('accounts.defaults.manual_reconciliation'),
             'note' => $this->filled('note')
                 ? trim((string) $this->input('note'))
                 : null,

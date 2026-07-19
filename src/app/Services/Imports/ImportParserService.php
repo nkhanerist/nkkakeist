@@ -25,7 +25,7 @@ class ImportParserService
             'jre_point' => $this->jrePointJsonParser->parse($contents),
             'balance_snapshot' => $this->balanceSnapshotJsonParser->parse($contents),
             'asset_history' => $this->moneyForwardAssetHistoryCsvParser->parse($contents),
-            default => throw new RuntimeException('対応していない取込フォーマットです。'),
+            default => throw new RuntimeException(trans('imports.parse_errors.unsupported_format')),
         };
     }
 }

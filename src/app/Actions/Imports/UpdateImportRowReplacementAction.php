@@ -27,7 +27,7 @@ class UpdateImportRowReplacementAction
             || $importRow->import_id !== $import->id
         ) {
             throw ValidationException::withMessages([
-                $errorKey => 'この残高行は置き換え対象に指定できません。',
+                $errorKey => trans('imports.messages.replacement_not_allowed'),
             ]);
         }
 
@@ -47,7 +47,7 @@ class UpdateImportRowReplacementAction
                 || $importRow->is_duplicate_candidate
             ) {
                 throw ValidationException::withMessages([
-                    $errorKey => '置き換える同日の既存残高を特定できません。',
+                    $errorKey => trans('imports.messages.replacement_snapshot_not_found'),
                 ]);
             }
 

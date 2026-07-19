@@ -64,7 +64,7 @@ class AccountSnapshotController extends Controller
         );
 
         return to_route('accounts.snapshots.index', $account)
-            ->with('success', '評価額を記録しました。');
+            ->with('success', trans('accounts.messages.valuation_recorded'));
     }
 
     public function update(
@@ -78,7 +78,7 @@ class AccountSnapshotController extends Controller
         );
 
         return to_route('accounts.snapshots.index', $account)
-            ->with('success', '評価額を更新しました。');
+            ->with('success', trans('accounts.messages.valuation_updated'));
     }
 
     public function destroy(
@@ -91,6 +91,6 @@ class AccountSnapshotController extends Controller
         $this->deleteAccountSnapshotAction->handle($accountSnapshot);
 
         return to_route('accounts.snapshots.index', $account)
-            ->with('success', '評価額を削除しました。');
+            ->with('success', trans('accounts.messages.valuation_deleted'));
     }
 }

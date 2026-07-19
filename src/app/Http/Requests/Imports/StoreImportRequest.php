@@ -53,20 +53,28 @@ class StoreImportRequest extends FormRequest
     {
         return [
             'account_id.required' => $this->input('source_name') === 'jre_point'
-                ? 'JRE POINTの取込先口座を選択してください。'
-                : 'モバイルSuicaの取込先口座を選択してください。',
+                ? trans('imports.messages.jre_point_account_required')
+                : trans('imports.messages.mobile_suica_account_required'),
             'account_id.exists' => $this->input('source_name') === 'jre_point'
-                ? '取込先には自分のポイント口座を選択してください。'
-                : '取込先には自分の電子マネー口座を選択してください。',
+                ? trans('imports.messages.jre_point_account_invalid')
+                : trans('imports.messages.mobile_suica_account_invalid'),
             'csv_file.mimes' => $this->input('source_name') === 'mobile_suica'
-                ? 'モバイルSuicaから取得したPDFを選択してください。'
+                ? trans('imports.messages.mobile_suica_file_invalid')
                 : ($this->input('source_name') === 'jre_point'
-                    ? 'JRE POINT書き出しツールで保存したJSONを選択してください。'
+                    ? trans('imports.messages.jre_point_file_invalid')
                     : ($this->input('source_name') === 'balance_snapshot'
-                        ? '対応する残高取得ツールで保存したJSONを選択してください。'
-                        : 'CSVファイルを選択してください。')),
-            'csv_file.max' => 'ファイルサイズは10MB以下にしてください。',
+                        ? trans('imports.messages.balance_snapshot_file_invalid')
+                        : trans('imports.messages.csv_file_invalid'))),
+            'csv_file.max' => trans('imports.messages.file_too_large'),
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return trans('imports.fields');
     }
 
     protected function prepareForValidation(): void

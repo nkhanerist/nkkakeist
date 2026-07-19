@@ -23,7 +23,7 @@ class DeleteImportAction
                 ->exists()
         ) {
             throw ValidationException::withMessages([
-                'import' => '後続のJRE POINT取込があるため、この取込は先に削除できません。新しい取込から順に削除してください。',
+                'import' => trans('imports.action_errors.jre_point_delete_order'),
             ]);
         }
 

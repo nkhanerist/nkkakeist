@@ -73,7 +73,7 @@ class StoreTransactionRequest extends FormRequest
                     $categoryId = $this->input('category_id');
 
                     if ($categoryId === null || $categoryId === '') {
-                        $fail('小分類を選択する場合はカテゴリを選択してください。');
+                        $fail(trans('transactions.messages.category_required_for_subcategory'));
 
                         return;
                     }
@@ -85,7 +85,7 @@ class StoreTransactionRequest extends FormRequest
                         ->exists();
 
                     if (! $exists) {
-                        $fail('選択した小分類はカテゴリに属していません。');
+                        $fail(trans('transactions.messages.subcategory_mismatch'));
                     }
                 },
             ],
@@ -95,6 +95,17 @@ class StoreTransactionRequest extends FormRequest
             'affects_account_balance' => ['required', 'boolean'],
             'memo' => ['nullable', 'string', 'max:2000'],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        /** @var array<string, string> $attributes */
+        $attributes = trans('transactions.fields');
+
+        return $attributes;
     }
 
     protected function prepareForValidation(): void
@@ -172,7 +183,7 @@ class StoreTransactionRequest extends FormRequest
             if ($this->input('currency') !== $sourceAccount->currency) {
                 $validator->errors()->add(
                     'currency',
-                    '取引通貨は選択した口座の通貨と一致している必要があります。',
+                    trans('transactions.messages.account_currency_mismatch'),
                 );
             }
 
@@ -189,7 +200,7 @@ class StoreTransactionRequest extends FormRequest
             if ($sourceAccount->currency !== $destinationAccount->currency) {
                 $validator->errors()->add(
                     'transfer_account_id',
-                    '振替元口座と振替先口座は同じ通貨である必要があります。',
+                    trans('transactions.messages.transfer_currency_mismatch'),
                 );
             }
         });

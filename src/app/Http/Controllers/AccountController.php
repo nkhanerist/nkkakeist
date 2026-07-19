@@ -44,6 +44,7 @@ class AccountController extends Controller
                 'balance_method' => $account->balance_method,
                 'balance_method_label' => $balanceMethodLabels[$account->balance_method] ?? $account->balance_method,
                 'include_in_net_worth' => $account->include_in_net_worth,
+                'monthly_close_required' => $account->monthly_close_required,
                 'currency' => $account->currency,
                 'initial_balance' => $account->initial_balance,
                 'opening_balance_date' => $account->opening_balance_date?->toDateString(),
@@ -91,6 +92,7 @@ class AccountController extends Controller
                 'balance_role' => $account->balance_role,
                 'balance_method' => $account->balance_method,
                 'include_in_net_worth' => $account->include_in_net_worth,
+                'monthly_close_required' => $account->monthly_close_required,
                 'currency' => $account->currency,
                 'initial_balance' => $account->initial_balance,
                 'opening_balance_date' => $account->opening_balance_date?->toDateString(),
@@ -121,7 +123,7 @@ class AccountController extends Controller
         } catch (ValidationException $exception) {
             return to_route('accounts.index')->with(
                 'error',
-                $exception->errors()['account'][0] ?? '口座を削除できませんでした。',
+                $exception->errors()['account'][0] ?? trans('accounts.messages.delete_failed'),
             );
         }
 

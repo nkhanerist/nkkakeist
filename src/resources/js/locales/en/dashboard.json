@@ -1,0 +1,298 @@
+{
+    "index": {
+        "title": "Dashboard",
+        "descriptionMonth": "Review income, expenses, and account balances for {{period}}.",
+        "descriptionYear": "Review annual income and expenses for {{period}}.",
+        "monthlySummary": {
+            "title": "Monthly Summary",
+            "description": "Income, expenses, and net cash flow are shown by currency for this month.",
+            "empty": "No income or expense data for this month.",
+            "income": "Monthly Income",
+            "expense": "Monthly Expenses",
+            "balance": "Monthly Net Cash Flow"
+        },
+        "accountSummary": {
+            "title": "Account Summary",
+            "description": "Balances are calculated from opening balances and transactions through the end of the selected month. Credit cards and payment accounts show outstanding or pending balances.",
+            "name": "Account Name",
+            "type": "Type",
+            "initialBalance": "Opening Balance",
+            "currentBalance": "Current Balance",
+            "status": "Status",
+            "viewTransactions": "View Transactions →",
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "categoryExpenses": {
+            "title": "Expenses by Category",
+            "description": "This month's expenses are aggregated by category.",
+            "empty": "No expense data for this month."
+        },
+        "monthlyTrend": {
+            "title": "Monthly Trend",
+            "description": "Income, expenses, and net cash flow for the last six months.",
+            "report": "View Monthly Report →",
+            "empty": "No income or expense data for this month."
+        },
+        "yearly": {
+            "preparingTitle": "Annual View Is Coming Soon",
+            "preparingDescription": "Period selection and URLs already support annual views. Annual aggregation will be added in the next phase.",
+            "summaryTitle": "Annual Summary",
+            "summaryDescription": "Income, expenses, and net cash flow for the selected year are shown by currency.",
+            "summaryEmpty": "No income or expense data for this year.",
+            "income": "Annual Income",
+            "expense": "Annual Expenses",
+            "balance": "Annual Net Cash Flow",
+            "trendDescription": "Income, expenses, and net cash flow from January through December of the selected year.",
+            "categoryTitle": "Annual Expenses by Category",
+            "categoryDescription": "Expenses for the selected year are aggregated by category and currency.",
+            "categoryEmpty": "No category expense data for this year."
+        },
+        "table": {
+            "currency": "Currency",
+            "income": "Income",
+            "expense": "Expenses",
+            "balance": "Net Cash Flow"
+        },
+        "actions": { "details": "View Details →" },
+        "aria": {
+            "income": "View income transactions for {{period}}",
+            "expense": "View expense transactions for {{period}}",
+            "category": "View {{category}} expense transactions for {{period}}"
+        }
+    },
+    "period": {
+        "unit": "View By",
+        "monthView": "Month",
+        "yearView": "Year",
+        "year": "Year",
+        "month": "Month",
+        "update": "Update View"
+    },
+    "netWorth": {
+        "title": "Daily Assets, Liabilities & Net Worth",
+        "description": "Accounts included in net worth are aggregated for each balance date in {{period}}. Liabilities are shown as positive amounts, and net worth is total assets minus total liabilities.",
+        "emptyAccounts": "No accounts are available for a net worth trend.",
+        "assets": "Total Assets",
+        "liabilities": "Total Liabilities",
+        "netWorth": "Net Worth",
+        "latest": "Latest: {{date}}",
+        "emptyPeriod": "No net worth trend data for this period."
+    },
+    "assetHistory": {
+        "title": "Long-Term Money Forward Total Assets",
+        "description": "History saved from Money Forward asset history CSV files and daily balance imports. Official total assets and asset classes are shown without allocating them to individual accounts.",
+        "totalAssets": "Total Assets",
+        "latestTotal": "Total Assets ({{date}})"
+    },
+    "dailySnapshot": {
+        "title": "Today's Money Forward Update",
+        "description": "Refresh Money Forward, then use the existing one-click export and Official Balances & Valuations import.",
+        "state": {
+            "complete": "Updated Today",
+            "partial": "Partially Updated",
+            "missing": "Not Updated Today"
+        },
+        "accountState": {
+            "updated": "Updated Today",
+            "stale": "Not Updated Today"
+        },
+        "coverageState": {
+            "complete": "Complete",
+            "partial": "Partial",
+            "missing": "Missing",
+            "not_required": "Not Required"
+        },
+        "actions": {
+            "acquire": "Get Today's Data",
+            "reacquire": "Get Again"
+        },
+        "summary": {
+            "date": "Target Date",
+            "accounts": "Target Accounts",
+            "accountCount": "{{updated}} / {{required}} accounts",
+            "positions": "Position Valuations",
+            "positionCount": "{{count}} positions",
+            "totalAssets": "Total Assets Summary",
+            "recorded": "Recorded",
+            "unrecorded": "Not Recorded",
+            "latestImport": "Account balances acquired today: {{count}} · Last import: {{date}}"
+        },
+        "coverage": {
+            "title": "Last 7 Days",
+            "started": "Daily records started on {{date}}. Earlier dates do not require acquisition. After that date, a day is complete when all target accounts and the total assets summary are recorded.",
+            "notStarted": "Daily records have not started yet. Dates before the first import do not require acquisition. After records begin, a day is complete when all target accounts and the total assets summary are recorded.",
+            "beforeStartLine1": "Daily balances and positions",
+            "beforeStartLine2": "had not started yet",
+            "accounts": "Accounts",
+            "positions": "Positions",
+            "totalAssets": "Total Assets"
+        },
+        "accounts": {
+            "title": "Account Update Status",
+            "description": "Select an account to review its balance history or position valuations.",
+            "snapshotDate": "Balance date: {{date}}"
+        },
+        "failures": {
+            "title": "Unresolved Import Failures in the Last 7 Days",
+            "description": "This warning clears when a later import from the same source succeeds or reaches review status.",
+            "history": "View Import History",
+            "sources": {
+                "money_forward": "Money Forward Transactions",
+                "mobile_suica": "Mobile Suica",
+                "jre_point": "JRE POINT",
+                "balance_snapshot": "Official Balances & Valuations",
+                "asset_history": "Money Forward Asset History"
+            }
+        },
+        "never": "Not Yet"
+    },
+    "weeklyImport": {
+        "title": "Weekly JRE POINT & Mobile Suica Update",
+        "description": "Period: {{start}}–{{end}}. Complete login and SMS verification yourself, then upload the acquired files through the existing import flow.",
+        "state": {
+            "updated": "Updated This Week",
+            "stale": "Not Updated This Week",
+            "missing": "Never Imported"
+        },
+        "sources": {
+            "jre_point": {
+                "label": "JRE POINT",
+                "description": "After login and SMS verification, export and import the point history."
+            },
+            "mobile_suica": {
+                "label": "Mobile Suica",
+                "description": "Download the usage history PDF and import it directly."
+            }
+        },
+        "actions": {
+            "update": "Update",
+            "reimport": "Import Again"
+        },
+        "lastUpdated": "Last Updated",
+        "latestHistoryDate": "Latest History Date",
+        "never": "Not Yet",
+        "noHistory": "No History"
+    },
+    "monthlyReport": {
+        "eyebrow": "Monthly Report",
+        "title": "Monthly Report for {{period}}",
+        "description": "Compare with the previous month and the same month last year, review spending patterns, and identify data that needs attention.",
+        "viewTransactions": "View All Transactions This Month",
+        "comparison": {
+            "empty": "No income or expense data for this month or its comparison periods.",
+            "title": "Income & Expense Comparison",
+            "income": "Income This Month",
+            "expense": "Expenses This Month",
+            "previousMonth": "vs. Previous Month",
+            "previousYear": "vs. Same Month Last Year",
+            "zeroBase": "Base 0"
+        },
+        "activity": {
+            "title": "Activity",
+            "empty": "No included transactions for this month.",
+            "transactions": "Transactions",
+            "expenses": "Expense Transactions",
+            "averageExpense": "Average Expense",
+            "largestExpense": "Largest Expense",
+            "count": "{{count}}"
+        },
+        "netWorth": {
+            "title": "Net Worth Change",
+            "description": "Compares the first and last saved balance dates in this month.",
+            "empty": "No balance data is available for comparison.",
+            "singleDay": "Cannot compare with only one balance date"
+        },
+        "merchants": {
+            "title": "Top 5 Spending Destinations",
+            "empty": "No expense data for this month.",
+            "count": "{{count}}"
+        },
+        "quality": {
+            "title": "Data Quality",
+            "description": "Review these items before finalizing the figures.",
+            "uncategorized": "Uncategorized",
+            "unconfirmed": "Unconfirmed Transactions",
+            "pendingImports": "Imports Awaiting Review",
+            "count": "{{count}}"
+        },
+        "categoryFactors": {
+            "title": "Category Mix & Changes from Last Month",
+            "description": "Compare included expenses by currency. Select a category or details button to review its transactions.",
+            "empty": "No category expenses for this month or the previous month.",
+            "categoryCount": "{{count}} categories",
+            "noChanges": "No matching changes.",
+            "previousAmount": "Previous {{amount}}",
+            "currentAmount": "→ Current {{amount}} {{currency}}",
+            "currentDetails": "Current Details",
+            "previousDetails": "Previous Details",
+            "comparisonSource": "Compared with: {{period}}",
+            "previousMonth": "Previous",
+            "currentMonth": "Current",
+            "change": "Change",
+            "compositionTitle": "Category Mix This Month",
+            "compositionEmpty": "No expenses this month.",
+            "compositionAria": "Category share for {{currency}}",
+            "increaseTitle": "Drivers of Increased Spending",
+            "decreaseTitle": "Drivers of Decreased Spending"
+        },
+        "closing": {
+            "title": "Monthly Close",
+            "reviewHelpLabel": "Difference between account and report review",
+            "reviewHelp": "Account review confirms that statements, balances, and valuations from each financial institution are complete. Report review is the final check of categories, unconfirmed transactions, income and expenses, net worth, and the report as a whole. Both are required before closing the month.",
+            "changedBadge": "Changed Since Review",
+            "description": "Confirm delayed card charges and investment contributions by account before closing this month.",
+            "closedAt": "Closed: {{date}}",
+            "reviewedAt": "Last reviewed: {{date}}",
+            "reopen": "Reopen Month",
+            "reviewAgain": "Review Monthly Report Again",
+            "markReviewed": "Mark Monthly Report Reviewed",
+            "close": "Close This Month",
+            "closeConfirm": "Close {{month}}?",
+            "changedNotice": "Transactions, balances, valuations, or account settings changed after review. Check the account status and review the monthly report again.",
+            "accounts": {
+                "title": "Month-End Account Review",
+                "helpLabel": "About month-end account review",
+                "help": "This records that you compared the financial institution's data with the app's transactions, balances, and valuations and found no delayed data remaining for the month. If account data changes afterward, another review is required.",
+                "description": "Select an account name to review its transactions for the month.",
+                "count": "{{confirmed}} / {{total}} accounts",
+                "showDetails": "Show Details",
+                "hideDetails": "Hide Details",
+                "closedSummary": "Month-end updates confirmed for {{count}} accounts.",
+                "closedSummaryHint": "Changes after closing are detected automatically, and account details reappear when needed.",
+                "empty": "No target accounts. Enable Monthly close review required in account settings.",
+                "transactionsTitle": "Open {{account}} transactions for {{month}}",
+                "confirmedAt": "confirmed {{date}}",
+                "guideLabel": "What to check:",
+                "changed": "This account's data changed after confirmation",
+                "unconfirm": "Confirmed (Undo)",
+                "reconfirm": "Confirm Changes",
+                "confirm": "Confirm Month-End Update",
+                "guides": {
+                    "creditCard": "Transactions, billed amount, phone charges, and other recurring charges are complete through month end",
+                    "securities": "Contributions, cash movements, month-end valuation, and position details are reflected",
+                    "bank": "Transactions and month-end balance are reflected with no pending items remaining",
+                    "eMoney": "Payments, charges, point redemptions, and balance are reflected through month end",
+                    "point": "Point earnings, redemptions, charge exchanges, and balance are reflected through month end",
+                    "default": "Transactions and balance are reflected through the end of the selected month"
+                }
+            },
+            "blockers": {
+                "title": "Checks Before Closing",
+                "complete": "All conditions are satisfied."
+            },
+            "note": {
+                "label": "Monthly Note",
+                "placeholder": "Record pending transactions or notes about this month",
+                "save": "Save Note"
+            },
+            "reopenForm": {
+                "reason": "Reason for reopening",
+                "cancel": "Cancel",
+                "submit": "Record Reason and Reopen",
+                "previous": "Previous reopening: {{reason}}",
+                "previousWithDate": "Previous reopening: {{reason}} ({{date}})"
+            }
+        }
+    }
+}

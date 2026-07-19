@@ -1,0 +1,35 @@
+{
+    "page": {
+        "title": "Profile"
+    },
+    "information": {
+        "title": "プロフィール情報",
+        "description": "名前とメールアドレスを更新します。",
+        "name": "名前",
+        "email": "メールアドレス",
+        "unverified": "メールアドレスが確認されていません。",
+        "resend": "確認メールを再送する",
+        "verificationSent": "新しい確認リンクをメールアドレスへ送信しました。",
+        "save": "保存",
+        "saved": "保存しました。"
+    },
+    "password": {
+        "title": "パスワード変更",
+        "description": "安全のため、長く推測されにくいパスワードを使用してください。",
+        "current": "現在のパスワード",
+        "new": "新しいパスワード",
+        "confirmation": "新しいパスワード（確認）",
+        "save": "保存",
+        "saved": "保存しました。"
+    },
+    "deletion": {
+        "title": "アカウント削除",
+        "description": "アカウントを削除すると、すべてのデータが完全に削除されます。必要な情報を事前に保存してから実行してください。",
+        "action": "アカウントを削除",
+        "confirmTitle": "アカウントを削除しますか？",
+        "confirmDescription": "この操作は取り消せません。完全に削除するにはパスワードを入力してください。",
+        "password": "パスワード",
+        "cancel": "キャンセル",
+        "confirm": "完全に削除"
+    }
+}

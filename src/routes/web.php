@@ -7,6 +7,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClassificationRuleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\MonthlyClosingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SecuritiesController;
 use App\Http\Controllers\SubcategoryController;
@@ -22,8 +24,20 @@ Route::get('/', function () {
     ]);
 });
 
+Route::put('/locale', LocaleController::class)->name('locale.update');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::prefix('monthly-closings/{month}')->name('monthly-closings.')->group(function (): void {
+        Route::patch('/', [MonthlyClosingController::class, 'update'])->name('update');
+        Route::post('/review', [MonthlyClosingController::class, 'review'])->name('review');
+        Route::post('/close', [MonthlyClosingController::class, 'close'])->name('close');
+        Route::post('/reopen', [MonthlyClosingController::class, 'reopen'])->name('reopen');
+        Route::put('/accounts/{account}', [MonthlyClosingController::class, 'confirmAccount'])
+            ->name('accounts.confirm');
+        Route::delete('/accounts/{account}', [MonthlyClosingController::class, 'unconfirmAccount'])
+            ->name('accounts.unconfirm');
+    });
     Route::get('/securities', [SecuritiesController::class, 'index'])->name('securities.index');
     Route::get('/securities/{account}', [SecuritiesController::class, 'show'])->name('securities.show');
 

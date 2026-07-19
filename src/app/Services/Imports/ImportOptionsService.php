@@ -13,11 +13,11 @@ class ImportOptionsService
     public function sourceOptions(): array
     {
         return [
-            ['value' => 'money_forward', 'label' => 'Money Forward'],
-            ['value' => 'mobile_suica', 'label' => 'モバイルSuica PDF'],
-            ['value' => 'jre_point', 'label' => 'JRE POINT 履歴'],
-            ['value' => 'balance_snapshot', 'label' => '公式残高・評価額'],
-            ['value' => 'asset_history', 'label' => 'Money Forward 資産推移'],
+            ['value' => 'money_forward', 'label' => trans('imports.sources.money_forward')],
+            ['value' => 'mobile_suica', 'label' => trans('imports.sources.mobile_suica')],
+            ['value' => 'jre_point', 'label' => trans('imports.sources.jre_point')],
+            ['value' => 'balance_snapshot', 'label' => trans('imports.sources.balance_snapshot')],
+            ['value' => 'asset_history', 'label' => trans('imports.sources.asset_history')],
         ];
     }
 
@@ -37,12 +37,37 @@ class ImportOptionsService
     public function statusLabels(): array
     {
         return [
-            'uploaded' => 'アップロード済み',
-            'parsed' => '解析済み',
-            'validated' => '確認待ち',
-            'imported' => '取込済み',
-            'failed' => '失敗',
+            'uploaded' => trans('imports.statuses.uploaded'),
+            'parsed' => trans('imports.statuses.parsed'),
+            'validated' => trans('imports.statuses.validated'),
+            'imported' => trans('imports.statuses.imported'),
+            'failed' => trans('imports.statuses.failed'),
         ];
+    }
+
+    /**
+     * @return array{mobile_suica?: int, jre_point?: int}
+     */
+    public function suggestedAccountIds(User $user): array
+    {
+        $accounts = $user->accounts()
+            ->whereIn('type', ['e_money', 'point'])
+            ->orderBy('display_order')
+            ->orderBy('id')
+            ->get(['id', 'name', 'type']);
+
+        $mobileSuica = $accounts->first(
+            fn ($account): bool => $account->type === 'e_money' && $account->name === 'モバイルSuica',
+        );
+        $jrePoint = $accounts->first(
+            fn ($account): bool => $account->type === 'point'
+                && preg_replace('/\s+/u', '', $account->name) === 'JREポイント',
+        );
+
+        return array_filter([
+            'mobile_suica' => $mobileSuica?->id,
+            'jre_point' => $jrePoint?->id,
+        ], fn (?int $id): bool => $id !== null);
     }
 
     /**

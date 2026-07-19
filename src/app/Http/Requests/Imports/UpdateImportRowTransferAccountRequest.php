@@ -63,7 +63,7 @@ class UpdateImportRowTransferAccountRequest extends FormRequest
                 : 'resolved_transfer_account_id';
 
             if (! is_numeric($value) || (string) (int) $value !== (string) $value) {
-                $validator->errors()->add($errorKey, '相手口座の指定が不正です。');
+                $validator->errors()->add($errorKey, trans('imports.messages.transfer_account_invalid'));
 
                 return;
             }
@@ -74,7 +74,7 @@ class UpdateImportRowTransferAccountRequest extends FormRequest
                 ->exists();
 
             if (! $accountExists) {
-                $validator->errors()->add($errorKey, '選択した相手口座が見つかりません。');
+                $validator->errors()->add($errorKey, trans('imports.messages.transfer_account_not_found'));
 
                 return;
             }
@@ -84,7 +84,7 @@ class UpdateImportRowTransferAccountRequest extends FormRequest
                 && ($sourceAccount = $this->csvSourceAccount($importRow)) instanceof Account
                 && $sourceAccount->id === (int) $value
             ) {
-                $validator->errors()->add($errorKey, '振替元と同じ口座は相手口座に指定できません。');
+                $validator->errors()->add($errorKey, trans('imports.messages.transfer_account_same_as_source'));
             }
         });
     }

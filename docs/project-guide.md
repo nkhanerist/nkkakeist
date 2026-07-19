@@ -13,6 +13,8 @@ The application follows four principles:
 3. **Do not invent missing values.** Asset and net-worth charts use stored snapshots only; missing dates are not interpolated.
 4. **Keep the user in control.** External acquisition is explicit and human-triggered, and financial transactions are not committed unattended.
 
+The complete application interface is available in Japanese and English. The selected locale is stored in the session and applies to client-side labels as well as server-side authentication, validation, import, and domain messages.
+
 ## 2. Account and transaction model
 
 ### Account roles
@@ -83,6 +85,8 @@ Duplicate candidates stay visible in preview and are skipped safely at commit. U
 Official balances and valuations are unique per account, purpose, and date. When a new file contains a different value for an already stored date, preview marks it as a conflict. The user must explicitly choose replacement before commit.
 
 Instrument details can enrich an otherwise duplicate account snapshot without silently changing its account-level value.
+
+Official-balance exports also preserve acquisition-tool and recognized-page-structure metadata. Preview warns when optional summaries are unavailable and rejects files when required account tables can no longer be recognized, making upstream website changes visible before commit.
 
 ## 4. Supported sources
 
@@ -185,6 +189,10 @@ Monthly net-worth change compares the first and last snapshots actually stored w
 
 The yearly view includes annual income, expenses, balance, monthly trends, category totals, and drill-down links to the relevant transaction range.
 
+### Monthly closing
+
+Past months can move through `open`, `reviewed`, and `closed` states. Accounts that may receive delayed card charges, phone bills, bank updates, or investment valuations can require explicit account-level confirmation before closing. The UI links each confirmation to the relevant account records and hides the closing panel for the current month. If source data changes after review or closing, the stored review fingerprint exposes that change instead of silently treating the month as final.
+
 ### Securities detail
 
 The securities overview supports 30-day, 90-day, one-year, and all-history periods. Account cards and chart legends link to an account detail page.
@@ -251,9 +259,9 @@ docker compose exec app php artisan test
 Near-term work focuses on:
 
 1. accumulating reliable daily net-worth, account, and instrument history;
-2. explaining category composition and month-over-month spending changes;
-3. validating acquisition helpers against upstream website changes;
-4. improving explicit month-closing and report annotations; and
+2. validating acquisition helpers against upstream website changes;
+3. operating the monthly-closing workflow against delayed real-world updates;
+4. improving report annotations as recurring review needs emerge; and
 5. evaluating source-specific adapters only when they preserve the same preview-first safety model.
 
 Potential future work includes budgets and carefully constrained automation for sources with proven duplicate detection and reconciliation rules.

@@ -1,9 +1,14 @@
 import PrimaryButton from '@/Components/PrimaryButton';
 import { PageProps } from '@/types';
-import { ImportAccountOption, ImportListItem, ImportPreviewRow } from '@/types/import';
+import {
+    ImportAccountOption,
+    ImportListItem,
+    ImportPreviewRow,
+} from '@/types/import';
 import { formatMoney } from '@/utils/currency';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type BalanceSnapshotPreviewProps = {
     importRecord: ImportListItem;
@@ -16,15 +21,19 @@ type InvestmentPosition = {
     quantity: string | null;
     average_acquisition_price: string | null;
     unit_price: string | null;
+    acquisition_cost: string | null;
     valuation: string;
     unrealized_gain: string | null;
     currency: string;
 };
 
-const kindLabels: Record<string, string> = {
-    valuation: '時価評価額',
-    account_balance: '公式口座残高',
-    card_outstanding: 'カード利用残高',
+type AcquisitionDiagnostics = {
+    exporter_version: number;
+    portfolio_summary_table: boolean;
+    investment_tables: number;
+    deposit_table: boolean;
+    pension_table: boolean;
+    liability_tables: number;
 };
 
 function rawString(row: ImportPreviewRow, key: string): string | null {
@@ -33,10 +42,13 @@ function rawString(row: ImportPreviewRow, key: string): string | null {
     return typeof value === 'string' && value !== '' ? value : null;
 }
 
-function rawPositions(row: ImportPreviewRow, fallbackCurrency: string): InvestmentPosition[] {
+function rawPositions(
+    row: ImportPreviewRow,
+    fallbackCurrency: string,
+): InvestmentPosition[] {
     const value = row.raw_payload.positions;
 
-    if (! Array.isArray(value)) {
+    if (!Array.isArray(value)) {
         return [];
     }
 
@@ -60,22 +72,59 @@ function rawPositions(row: ImportPreviewRow, fallbackCurrency: string): Investme
             return typeof value === 'string' ? value : null;
         };
 
-        return [{
-            instrument_name: candidate.instrument_name,
-            quantity: optionalString('quantity'),
-            average_acquisition_price: optionalString('average_acquisition_price'),
-            unit_price: optionalString('unit_price'),
-            valuation: candidate.valuation,
-            unrealized_gain: optionalString('unrealized_gain'),
-            currency: optionalString('currency') ?? fallbackCurrency,
-        }];
+        return [
+            {
+                instrument_name: candidate.instrument_name,
+                quantity: optionalString('quantity'),
+                average_acquisition_price: optionalString(
+                    'average_acquisition_price',
+                ),
+                unit_price: optionalString('unit_price'),
+                acquisition_cost: optionalString('acquisition_cost'),
+                valuation: candidate.valuation,
+                unrealized_gain: optionalString('unrealized_gain'),
+                currency: optionalString('currency') ?? fallbackCurrency,
+            },
+        ];
     });
 }
 
-function formatQuantity(value: string): string {
-    return new Intl.NumberFormat('ja-JP', {
+function formatQuantity(value: string, locale: string): string {
+    return new Intl.NumberFormat(locale, {
         maximumFractionDigits: 8,
     }).format(Number(value));
+}
+
+function acquisitionDiagnostics(
+    metadata: Record<string, unknown> | null,
+): AcquisitionDiagnostics | null {
+    const value = metadata?.acquisition_diagnostics;
+
+    if (typeof value !== 'object' || value === null) {
+        return null;
+    }
+
+    const candidate = value as Record<string, unknown>;
+
+    if (
+        typeof candidate.exporter_version !== 'number' ||
+        typeof candidate.portfolio_summary_table !== 'boolean' ||
+        typeof candidate.investment_tables !== 'number' ||
+        typeof candidate.deposit_table !== 'boolean' ||
+        typeof candidate.pension_table !== 'boolean' ||
+        typeof candidate.liability_tables !== 'number'
+    ) {
+        return null;
+    }
+
+    return {
+        exporter_version: candidate.exporter_version,
+        portfolio_summary_table: candidate.portfolio_summary_table,
+        investment_tables: candidate.investment_tables,
+        deposit_table: candidate.deposit_table,
+        pension_table: candidate.pension_table,
+        liability_tables: candidate.liability_tables,
+    };
 }
 
 export default function BalanceSnapshotPreview({
@@ -83,7 +132,9 @@ export default function BalanceSnapshotPreview({
     accountOptions,
     rows,
 }: BalanceSnapshotPreviewProps) {
+    const { t, i18n } = useTranslation('imports');
     const page = usePage<PageProps>();
+    const diagnostics = acquisitionDiagnostics(importRecord.source_metadata);
     const buildSelections = () =>
         Object.fromEntries(
             rows.map((row) => [
@@ -95,19 +146,15 @@ export default function BalanceSnapshotPreview({
                 ),
             ]),
         );
-    const [selections, setSelections] = useState<Record<number, string>>(
-        buildSelections,
-    );
+    const [selections, setSelections] =
+        useState<Record<number, string>>(buildSelections);
     const buildRememberMappings = () =>
         Object.fromEntries(
-            rows.map((row) => [
-                row.id,
-                row.account_name === 'Money Forward 年金' && row.resolved_account === null,
-            ]),
+            rows.map((row) => [row.id, row.remember_mapping_recommended]),
         );
-    const [rememberMappings, setRememberMappings] = useState<Record<number, boolean>>(
-        buildRememberMappings,
-    );
+    const [rememberMappings, setRememberMappings] = useState<
+        Record<number, boolean>
+    >(buildRememberMappings);
 
     useEffect(() => {
         setSelections(buildSelections());
@@ -144,7 +191,10 @@ export default function BalanceSnapshotPreview({
         const currency = rawString(row, 'currency');
 
         return accountOptions.filter((account) => {
-            if (! account.is_active || (currency && account.currency !== currency)) {
+            if (
+                !account.is_active ||
+                (currency && account.currency !== currency)
+            ) {
                 return false;
             }
 
@@ -166,8 +216,59 @@ export default function BalanceSnapshotPreview({
     return (
         <div className="space-y-4">
             <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
-                取得元の口座名、残高種別、更新日時を確認してください。カード利用残高はアプリ内では負債として負数保存します。
+                {t('balancePreview.intro')}
             </div>
+
+            {diagnostics ? (
+                <div
+                    className={`rounded-xl border px-4 py-3 text-sm ${
+                        diagnostics.portfolio_summary_table
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                            : 'border-amber-200 bg-amber-50 text-amber-900'
+                    }`}
+                >
+                    <p className="font-semibold">
+                        {t('balancePreview.diagnostics.title', {
+                            status: diagnostics.portfolio_summary_table
+                                ? t('balancePreview.diagnostics.normal')
+                                : t('balancePreview.diagnostics.warning'),
+                        })}
+                    </p>
+                    <p
+                        className={`mt-1 text-xs ${
+                            diagnostics.portfolio_summary_table
+                                ? 'text-emerald-800'
+                                : 'text-amber-800'
+                        }`}
+                    >
+                        {t('balancePreview.diagnostics.summary', {
+                            version: diagnostics.exporter_version,
+                            investments: diagnostics.investment_tables,
+                            deposits: diagnostics.deposit_table
+                                ? t('balancePreview.diagnostics.recognized')
+                                : t('balancePreview.diagnostics.notApplicable'),
+                            pensions: diagnostics.pension_table
+                                ? t('balancePreview.diagnostics.recognized')
+                                : t('balancePreview.diagnostics.notApplicable'),
+                            cards: diagnostics.liability_tables,
+                        })}
+                    </p>
+                    {!diagnostics.portfolio_summary_table ? (
+                        <p className="mt-2 text-xs text-amber-800">
+                            {t('balancePreview.diagnostics.missingPortfolio')}
+                        </p>
+                    ) : null}
+                </div>
+            ) : (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    <p className="font-semibold">
+                        {t('balancePreview.diagnostics.legacyTitle')}
+                    </p>
+                    <p className="mt-1 text-xs text-amber-800">
+                        {t('balancePreview.diagnostics.legacyDescription')}
+                    </p>
+                </div>
+            )}
 
             {rows.map((row) => {
                 const kind = rawString(row, 'balance_kind') ?? 'unknown';
@@ -181,15 +282,16 @@ export default function BalanceSnapshotPreview({
                     0,
                 );
                 const sameDaySnapshot = row.same_day_snapshot;
-                const hasDifferentSameDayBalance = sameDaySnapshot !== null
-                    && row.amount !== null
-                    && Number(sameDaySnapshot.balance) !== Number(row.amount)
-                    && ! row.is_duplicate_candidate;
-                const replacementSelected = sameDaySnapshot !== null
-                    && row.replace_account_snapshot_id === sameDaySnapshot.id;
-                const replacementError = page.props.errors?.[
-                    `replace_existing.${row.id}`
-                ];
+                const hasDifferentSameDayBalance =
+                    sameDaySnapshot !== null &&
+                    row.amount !== null &&
+                    Number(sameDaySnapshot.balance) !== Number(row.amount) &&
+                    !row.is_duplicate_candidate;
+                const replacementSelected =
+                    sameDaySnapshot !== null &&
+                    row.replace_account_snapshot_id === sameDaySnapshot.id;
+                const replacementError =
+                    page.props.errors?.[`replace_existing.${row.id}`];
 
                 return (
                     <div
@@ -200,26 +302,40 @@ export default function BalanceSnapshotPreview({
                             <div>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <h3 className="font-semibold text-slate-900">
-                                        {row.account_name ?? '口座名なし'}
+                                        {row.account_name ??
+                                            t('balancePreview.unnamedAccount')}
                                     </h3>
                                     <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                                        {kindLabels[kind] ?? kind}
+                                        {t(`balancePreview.kinds.${kind}`, {
+                                            defaultValue: kind,
+                                        })}
                                     </span>
                                     {row.is_duplicate_candidate ? (
                                         <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                                            取込済み
+                                            {t(
+                                                'balancePreview.alreadyImported',
+                                            )}
                                         </span>
                                     ) : null}
                                 </div>
                                 <p className="mt-1 text-xs text-slate-500">
-                                    残高日 {row.transaction_date ?? '—'}
+                                    {t('balancePreview.balanceDate', {
+                                        date: row.transaction_date ?? '—',
+                                    })}
                                     {sourceUpdatedAt
-                                        ? ` / 取得元更新 ${sourceUpdatedAt}`
+                                        ? ` / ${t(
+                                              'balancePreview.sourceUpdatedAt',
+                                              {
+                                                  date: sourceUpdatedAt,
+                                              },
+                                          )}`
                                         : ''}
                                 </p>
                             </div>
                             <div className="text-right">
-                                <p className="text-xs text-slate-500">保存する残高</p>
+                                <p className="text-xs text-slate-500">
+                                    {t('balancePreview.savedBalance')}
+                                </p>
                                 <p className="text-xl font-semibold text-slate-900">
                                     {row.amount
                                         ? formatMoney(row.amount, currency)
@@ -233,10 +349,11 @@ export default function BalanceSnapshotPreview({
 
                         {nextPaymentAmount || nextPaymentDate ? (
                             <div className="mt-4 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                                次回引落し:{' '}
-                                {nextPaymentAmount
-                                    ? `${formatMoney(nextPaymentAmount, currency)} ${currency}`
-                                    : '金額未取得'}
+                                {t('balancePreview.nextPayment', {
+                                    amount: nextPaymentAmount
+                                        ? `${formatMoney(nextPaymentAmount, currency)} ${currency}`
+                                        : t('balancePreview.amountUnavailable'),
+                                })}
                                 {nextPaymentDate ? ` / ${nextPaymentDate}` : ''}
                             </div>
                         ) : null}
@@ -251,26 +368,38 @@ export default function BalanceSnapshotPreview({
                             >
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
-                                        <p className={`text-sm font-semibold ${
-                                            replacementSelected
-                                                ? 'text-emerald-900'
-                                                : 'text-amber-900'
-                                        }`}>
-                                            同日残高の置き換え
+                                        <p
+                                            className={`text-sm font-semibold ${
+                                                replacementSelected
+                                                    ? 'text-emerald-900'
+                                                    : 'text-amber-900'
+                                            }`}
+                                        >
+                                            {t(
+                                                'balancePreview.replacement.title',
+                                            )}
                                         </p>
-                                        <p className={`mt-1 text-sm ${
-                                            replacementSelected
-                                                ? 'text-emerald-800'
-                                                : 'text-amber-800'
-                                        }`}>
-                                            既存値{' '}
-                                            {formatMoney(
-                                                sameDaySnapshot.balance,
-                                                currency,
-                                            )}{' '}
-                                            → 新しい値{' '}
-                                            {formatMoney(row.amount ?? '0', currency)}{' '}
-                                            {currency}
+                                        <p
+                                            className={`mt-1 text-sm ${
+                                                replacementSelected
+                                                    ? 'text-emerald-800'
+                                                    : 'text-amber-800'
+                                            }`}
+                                        >
+                                            {t(
+                                                'balancePreview.replacement.values',
+                                                {
+                                                    oldValue: formatMoney(
+                                                        sameDaySnapshot.balance,
+                                                        currency,
+                                                    ),
+                                                    newValue: formatMoney(
+                                                        row.amount ?? '0',
+                                                        currency,
+                                                    ),
+                                                    currency,
+                                                },
+                                            )}
                                         </p>
                                         <p className="mt-1 text-xs text-slate-600">
                                             {sameDaySnapshot.balance_date}
@@ -288,7 +417,7 @@ export default function BalanceSnapshotPreview({
                                             onClick={() =>
                                                 updateReplacement(
                                                     row.id,
-                                                    ! replacementSelected,
+                                                    !replacementSelected,
                                                 )
                                             }
                                             className={`rounded-md border px-3 py-2 text-sm font-semibold shadow-sm ${
@@ -298,19 +427,29 @@ export default function BalanceSnapshotPreview({
                                             }`}
                                         >
                                             {replacementSelected
-                                                ? '置き換えを取り消す'
-                                                : 'この値で置き換える'}
+                                                ? t(
+                                                      'balancePreview.replacement.cancel',
+                                                  )
+                                                : t(
+                                                      'balancePreview.replacement.replace',
+                                                  )}
                                         </button>
                                     ) : null}
                                 </div>
-                                <p className={`mt-2 text-xs ${
-                                    replacementSelected
-                                        ? 'text-emerald-700'
-                                        : 'text-amber-700'
-                                }`}>
+                                <p
+                                    className={`mt-2 text-xs ${
+                                        replacementSelected
+                                            ? 'text-emerald-700'
+                                            : 'text-amber-700'
+                                    }`}
+                                >
                                     {replacementSelected
-                                        ? '確定時に既存の同日残高を削除し、この残高と銘柄明細へ置き換えます。'
-                                        : 'まだ置き換えは実行されません。新旧の金額を確認して選択してください。'}
+                                        ? t(
+                                              'balancePreview.replacement.selectedHint',
+                                          )
+                                        : t(
+                                              'balancePreview.replacement.unselectedHint',
+                                          )}
                                 </p>
                                 {replacementError ? (
                                     <p className="mt-2 text-xs text-rose-700">
@@ -325,64 +464,119 @@ export default function BalanceSnapshotPreview({
                         {positions.length > 0 ? (
                             <details className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                                 <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-slate-800">
-                                    銘柄別内訳 {positions.length}件 / 評価額計{' '}
-                                    {formatMoney(positionValuationTotal, currency)} {currency}
+                                    {t('balancePreview.positions.summary', {
+                                        count: positions.length,
+                                        value: formatMoney(
+                                            positionValuationTotal,
+                                            currency,
+                                        ),
+                                        currency,
+                                    })}
                                 </summary>
                                 <div className="overflow-x-auto border-t border-slate-200 bg-white">
                                     <table className="min-w-full divide-y divide-slate-200 text-sm">
                                         <thead className="bg-slate-50 text-xs text-slate-500">
                                             <tr>
-                                                <th className="px-4 py-2 text-left font-medium">銘柄</th>
-                                                <th className="px-4 py-2 text-right font-medium">保有数</th>
-                                                <th className="px-4 py-2 text-right font-medium">平均取得単価</th>
-                                                <th className="px-4 py-2 text-right font-medium">現在値</th>
-                                                <th className="px-4 py-2 text-right font-medium">評価額</th>
-                                                <th className="px-4 py-2 text-right font-medium">評価損益</th>
+                                                <th className="px-4 py-2 text-left font-medium">
+                                                    {t(
+                                                        'balancePreview.positions.instrument',
+                                                    )}
+                                                </th>
+                                                <th className="px-4 py-2 text-right font-medium">
+                                                    {t(
+                                                        'balancePreview.positions.quantity',
+                                                    )}
+                                                </th>
+                                                <th className="px-4 py-2 text-right font-medium">
+                                                    {t(
+                                                        'balancePreview.positions.averagePrice',
+                                                    )}
+                                                </th>
+                                                <th className="px-4 py-2 text-right font-medium">
+                                                    {t(
+                                                        'balancePreview.positions.currentPrice',
+                                                    )}
+                                                </th>
+                                                <th className="px-4 py-2 text-right font-medium">
+                                                    {t(
+                                                        'balancePreview.positions.cost',
+                                                    )}
+                                                </th>
+                                                <th className="px-4 py-2 text-right font-medium">
+                                                    {t(
+                                                        'balancePreview.positions.valuation',
+                                                    )}
+                                                </th>
+                                                <th className="px-4 py-2 text-right font-medium">
+                                                    {t(
+                                                        'balancePreview.positions.gain',
+                                                    )}
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 text-slate-700">
-                                            {positions.map((position, index) => (
-                                                <tr key={`${position.instrument_name}-${index}`}>
-                                                    <td className="whitespace-nowrap px-4 py-2 font-medium text-slate-900">
-                                                        {position.instrument_name}
-                                                    </td>
-                                                    <td className="whitespace-nowrap px-4 py-2 text-right">
-                                                        {position.quantity
-                                                            ? formatQuantity(position.quantity)
-                                                            : '—'}
-                                                    </td>
-                                                    <td className="whitespace-nowrap px-4 py-2 text-right">
-                                                        {position.average_acquisition_price
-                                                            ? formatMoney(
-                                                                  position.average_acquisition_price,
-                                                                  position.currency,
-                                                              )
-                                                            : '—'}
-                                                    </td>
-                                                    <td className="whitespace-nowrap px-4 py-2 text-right">
-                                                        {position.unit_price
-                                                            ? formatMoney(
-                                                                  position.unit_price,
-                                                                  position.currency,
-                                                              )
-                                                            : '—'}
-                                                    </td>
-                                                    <td className="whitespace-nowrap px-4 py-2 text-right font-medium text-slate-900">
-                                                        {formatMoney(
-                                                            position.valuation,
-                                                            position.currency,
-                                                        )}
-                                                    </td>
-                                                    <td className="whitespace-nowrap px-4 py-2 text-right">
-                                                        {position.unrealized_gain
-                                                            ? formatMoney(
-                                                                  position.unrealized_gain,
-                                                                  position.currency,
-                                                              )
-                                                            : '—'}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {positions.map(
+                                                (position, index) => (
+                                                    <tr
+                                                        key={`${position.instrument_name}-${index}`}
+                                                    >
+                                                        <td className="whitespace-nowrap px-4 py-2 font-medium text-slate-900">
+                                                            {
+                                                                position.instrument_name
+                                                            }
+                                                        </td>
+                                                        <td className="whitespace-nowrap px-4 py-2 text-right">
+                                                            {position.quantity
+                                                                ? formatQuantity(
+                                                                      position.quantity,
+                                                                      i18n.resolvedLanguage ===
+                                                                          'en'
+                                                                          ? 'en-US'
+                                                                          : 'ja-JP',
+                                                                  )
+                                                                : '—'}
+                                                        </td>
+                                                        <td className="whitespace-nowrap px-4 py-2 text-right">
+                                                            {position.average_acquisition_price
+                                                                ? formatMoney(
+                                                                      position.average_acquisition_price,
+                                                                      position.currency,
+                                                                  )
+                                                                : '—'}
+                                                        </td>
+                                                        <td className="whitespace-nowrap px-4 py-2 text-right">
+                                                            {position.unit_price
+                                                                ? formatMoney(
+                                                                      position.unit_price,
+                                                                      position.currency,
+                                                                  )
+                                                                : '—'}
+                                                        </td>
+                                                        <td className="whitespace-nowrap px-4 py-2 text-right">
+                                                            {position.acquisition_cost
+                                                                ? formatMoney(
+                                                                      position.acquisition_cost,
+                                                                      position.currency,
+                                                                  )
+                                                                : '—'}
+                                                        </td>
+                                                        <td className="whitespace-nowrap px-4 py-2 text-right font-medium text-slate-900">
+                                                            {formatMoney(
+                                                                position.valuation,
+                                                                position.currency,
+                                                            )}
+                                                        </td>
+                                                        <td className="whitespace-nowrap px-4 py-2 text-right">
+                                                            {position.unrealized_gain
+                                                                ? formatMoney(
+                                                                      position.unrealized_gain,
+                                                                      position.currency,
+                                                                  )
+                                                                : '—'}
+                                                        </td>
+                                                    </tr>
+                                                ),
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
@@ -395,7 +589,7 @@ export default function BalanceSnapshotPreview({
                                     htmlFor={`resolved-account-${row.id}`}
                                     className="block text-sm font-medium text-slate-700"
                                 >
-                                    アプリ内の取込先口座
+                                    {t('balancePreview.destinationAccount')}
                                 </label>
                                 <select
                                     id={`resolved-account-${row.id}`}
@@ -406,12 +600,19 @@ export default function BalanceSnapshotPreview({
                                             [row.id]: event.target.value,
                                         }))
                                     }
-                                    disabled={importRecord.status === 'imported'}
+                                    disabled={
+                                        importRecord.status === 'imported'
+                                    }
                                     className="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-slate-100"
                                 >
-                                    <option value="">口座を選択してください</option>
+                                    <option value="">
+                                        {t('balancePreview.selectAccount')}
+                                    </option>
                                     {availableAccounts(row).map((account) => (
-                                        <option key={account.id} value={account.id}>
+                                        <option
+                                            key={account.id}
+                                            value={account.id}
+                                        >
                                             {account.name} ({account.currency})
                                         </option>
                                     ))}
@@ -419,7 +620,9 @@ export default function BalanceSnapshotPreview({
                                 <label className="mt-2 flex items-start gap-2 text-xs text-slate-600">
                                     <input
                                         type="checkbox"
-                                        checked={rememberMappings[row.id] ?? false}
+                                        checked={
+                                            rememberMappings[row.id] ?? false
+                                        }
                                         onChange={(event) =>
                                             setRememberMappings((current) => ({
                                                 ...current,
@@ -427,13 +630,14 @@ export default function BalanceSnapshotPreview({
                                             }))
                                         }
                                         disabled={
-                                            importRecord.status === 'imported'
-                                            || ! selections[row.id]
+                                            importRecord.status ===
+                                                'imported' ||
+                                            !selections[row.id]
                                         }
                                         className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
                                     />
                                     <span>
-                                        この取得名を口座の取込用別名に追加し、今後も自動対応する
+                                        {t('balancePreview.rememberMapping')}
                                     </span>
                                 </label>
                             </div>
@@ -442,14 +646,16 @@ export default function BalanceSnapshotPreview({
                                     type="button"
                                     onClick={() => updateAccount(row.id)}
                                 >
-                                    口座対応を保存
+                                    {t('balancePreview.saveMapping')}
                                 </PrimaryButton>
                             ) : null}
                         </div>
 
                         {row.resolved_account ? (
                             <p className="mt-2 text-xs text-emerald-700">
-                                取込先: {row.resolved_account.name}
+                                {t('balancePreview.resolvedAccount', {
+                                    name: row.resolved_account.name,
+                                })}
                             </p>
                         ) : null}
                         {rowError(row.id) ? (
@@ -466,10 +672,10 @@ export default function BalanceSnapshotPreview({
                         ) : (
                             <p className="mt-3 text-xs text-slate-500">
                                 {row.is_duplicate_candidate
-                                    ? '同じ残高はスキップし、未保存の銘柄内訳がある場合だけ追記します。'
+                                    ? t('balancePreview.duplicateHint')
                                     : row.status === 'imported'
-                                      ? '残高へ反映済みです。'
-                                      : '反映準備ができています。'}
+                                      ? t('balancePreview.importedHint')
+                                      : t('balancePreview.readyHint')}
                             </p>
                         )}
                     </div>

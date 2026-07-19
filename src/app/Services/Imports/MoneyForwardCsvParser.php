@@ -26,7 +26,7 @@ class MoneyForwardCsvParser
         $rows = $this->readRows($this->convertToUtf8($contents));
 
         if ($rows === [] || count($rows[0]) === 0) {
-            throw new RuntimeException('CSV のヘッダ行を読み取れませんでした。');
+            throw new RuntimeException(trans('imports.parse_errors.money_forward_header_unreadable'));
         }
 
         $headerMap = $this->buildHeaderMap($rows[0]);
@@ -152,7 +152,7 @@ class MoneyForwardCsvParser
     {
         foreach (['date', 'content', 'amount'] as $requiredHeader) {
             if (! array_key_exists($requiredHeader, $headerMap)) {
-                throw new RuntimeException('Money Forward CSV の必須ヘッダが不足しています。');
+                throw new RuntimeException(trans('imports.parse_errors.money_forward_required_headers'));
             }
         }
     }

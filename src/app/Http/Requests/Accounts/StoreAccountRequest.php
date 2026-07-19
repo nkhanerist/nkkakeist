@@ -25,6 +25,7 @@ class StoreAccountRequest extends FormRequest
             'balance_role' => ['required', 'string', Rule::in(Account::balanceRoles())],
             'balance_method' => ['required', 'string', Rule::in(Account::balanceMethods())],
             'include_in_net_worth' => ['required', 'boolean'],
+            'monthly_close_required' => ['required', 'boolean'],
             'currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             'initial_balance' => ['required', 'numeric', 'between:-999999999999.99,999999999999.99'],
             'opening_balance_date' => ['nullable', 'date'],
@@ -34,6 +35,15 @@ class StoreAccountRequest extends FormRequest
             'import_aliases' => ['nullable', 'array'],
             'import_aliases.*' => ['string', 'max:255'],
         ];
+    }
+
+    /** @return array<string, string> */
+    public function attributes(): array
+    {
+        /** @var array<string, string> $attributes */
+        $attributes = trans('accounts.fields');
+
+        return $attributes;
     }
 
     protected function prepareForValidation(): void
@@ -70,6 +80,9 @@ class StoreAccountRequest extends FormRequest
             'include_in_net_worth' => $balanceRole === 'clearing'
                 ? false
                 : ($this->has('include_in_net_worth') ? $this->boolean('include_in_net_worth') : true),
+            'monthly_close_required' => $this->has('monthly_close_required')
+                ? $this->boolean('monthly_close_required')
+                : in_array($type, ['bank', 'credit_card', 'e_money', 'securities', 'point'], true),
             'opening_balance_date' => $this->filled('opening_balance_date')
                 ? $this->input('opening_balance_date')
                 : null,

@@ -36,7 +36,7 @@ class DeleteAccountAction
             || $account->snapshots()->exists()
         ) {
             throw ValidationException::withMessages([
-                'account' => '取引または取込履歴に紐づく口座は削除できません。必要な場合は無効化してください。',
+                'account' => trans('accounts.messages.delete_blocked'),
             ]);
         }
 

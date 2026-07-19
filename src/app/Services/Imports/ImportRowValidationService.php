@@ -45,6 +45,7 @@ class ImportRowValidationService
             $seenTransferFallbackCounts = [];
 
             foreach ($import->importRows as $importRow) {
+                $this->normalizeCardToWalletTransfer($import, $importRow, $accounts);
                 $hasAmbiguousAccountMatch = $this->hasAmbiguousAccountMatch($import, $importRow, $accounts);
                 $resolvedAccountId = $this->resolveAccountId($import, $importRow, $accounts);
                 $originalResolvedAccountId = $resolvedAccountId;
@@ -251,6 +252,7 @@ class ImportRowValidationService
                 );
 
                 $importRow->update([
+                    'detected_type' => $importRow->detected_type,
                     'resolved_account_id' => $resolvedAccountId,
                     'resolved_transfer_account_id' => $transferResolution['resolved_transfer_account_id'],
                     'resolved_category_id' => $resolvedCategory?->id,
@@ -546,6 +548,46 @@ class ImportRowValidationService
     private function normalizeName(string $value): string
     {
         return Str::lower(Str::squish(mb_convert_kana($value, 'asKV', 'UTF-8')));
+    }
+
+    /** @param Collection<int, Account> $accounts */
+    private function normalizeCardToWalletTransfer(
+        Import $import,
+        ImportRow $importRow,
+        Collection $accounts,
+    ): void {
+        if (
+            $import->source_name !== 'money_forward'
+            || $importRow->detected_type !== 'expense'
+            || $importRow->account_name === null
+            || $importRow->merchant_name === null
+        ) {
+            return;
+        }
+
+        $sourceAccounts = $this->matchedSourceAccounts($importRow, $accounts);
+
+        if ($sourceAccounts->count() !== 1) {
+            return;
+        }
+
+        $sourceAccount = $sourceAccounts->first();
+
+        if (! $sourceAccount instanceof Account || $sourceAccount->type !== 'credit_card') {
+            return;
+        }
+
+        $normalizedMerchant = $this->normalizeName($importRow->merchant_name);
+        $walletAccounts = $accounts
+            ->filter(fn (Account $account): bool => $account->id !== $sourceAccount->id
+                && $account->balance_role === 'asset'
+                && in_array($account->type, ['e_money', 'code_payment', 'other'], true)
+                && $this->accountMatchTokens($account)->contains($normalizedMerchant))
+            ->values();
+
+        if ($walletAccounts->count() === 1) {
+            $importRow->detected_type = 'transfer';
+        }
     }
 
     private function transferMirrorOriginalSideKey(
@@ -898,7 +940,7 @@ class ImportRowValidationService
             $descriptor,
         );
 
-        return $descriptor;
+        return $this->normalizeName($descriptor);
     }
 
     private function transferMirrorSideKey(

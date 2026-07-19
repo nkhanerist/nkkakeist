@@ -1,0 +1,298 @@
+{
+    "index": {
+        "title": "Dashboard",
+        "descriptionMonth": "{{period}}の収支と口座状況を確認します。",
+        "descriptionYear": "{{period}}の年間収支を確認します。",
+        "monthlySummary": {
+            "title": "月次サマリー",
+            "description": "通貨ごとに今月の収入・支出・収支差額を表示しています。",
+            "empty": "当月の収支データはありません。",
+            "income": "今月の収入合計",
+            "expense": "今月の支出合計",
+            "balance": "今月の収支差額"
+        },
+        "accountSummary": {
+            "title": "口座別サマリー",
+            "description": "初期残高と対象月末までの取引から現在残高相当を表示しています。クレジットカードやコード決済用の口座は、未払残高や請求待ち残高として確認します。",
+            "name": "口座名",
+            "type": "種別",
+            "initialBalance": "初期残高",
+            "currentBalance": "現在残高相当",
+            "status": "状態",
+            "viewTransactions": "選択月の取引を見る →",
+            "active": "有効",
+            "inactive": "無効"
+        },
+        "categoryExpenses": {
+            "title": "カテゴリ別支出",
+            "description": "当月の支出をカテゴリ単位で集計しています。",
+            "empty": "当月の支出データはありません。"
+        },
+        "monthlyTrend": {
+            "title": "月別推移",
+            "description": "直近6か月の収入・支出・収支差額を表示しています。",
+            "report": "月次レポートを見る →",
+            "empty": "該当月の収支データはありません。"
+        },
+        "yearly": {
+            "preparingTitle": "年次表示は準備中です",
+            "preparingDescription": "期間選択とURL設計は年次対応済みです。次のフェーズで年次集計を追加します。",
+            "summaryTitle": "年次サマリー",
+            "summaryDescription": "選択年の収入・支出・収支差額を通貨ごとに表示しています。",
+            "summaryEmpty": "該当年の収支データはありません。",
+            "income": "年間収入合計",
+            "expense": "年間支出合計",
+            "balance": "年間収支差額",
+            "trendDescription": "選択年の1月から12月までの収入・支出・収支差額を表示しています。",
+            "categoryTitle": "年次カテゴリ別支出",
+            "categoryDescription": "選択年の支出をカテゴリ単位で通貨ごとに集計しています。",
+            "categoryEmpty": "該当年のカテゴリ別支出データはありません。"
+        },
+        "table": {
+            "currency": "通貨",
+            "income": "収入",
+            "expense": "支出",
+            "balance": "収支"
+        },
+        "actions": { "details": "明細を見る →" },
+        "aria": {
+            "income": "{{period}}の収入明細を表示",
+            "expense": "{{period}}の支出明細を表示",
+            "category": "{{period}}の{{category}}の支出明細を表示"
+        }
+    },
+    "period": {
+        "unit": "表示単位",
+        "monthView": "月次",
+        "yearView": "年次",
+        "year": "年",
+        "month": "月",
+        "update": "表示を更新"
+    },
+    "netWorth": {
+        "title": "総資産・負債・純資産の日次推移",
+        "description": "{{period}}の残高取得日ごとに純資産対象口座を集計しています。負債は未払額を正数で表示し、純資産は総資産から総負債を差し引いています。",
+        "emptyAccounts": "純資産推移を表示できる口座がありません。",
+        "assets": "総資産",
+        "liabilities": "総負債",
+        "netWorth": "純資産",
+        "latest": "最新: {{date}}",
+        "emptyPeriod": "この期間の純資産推移データがありません。"
+    },
+    "assetHistory": {
+        "title": "Money Forward 総資産の長期推移",
+        "description": "Money Forwardの資産推移CSVと日次残高取得から保存した履歴です。口座別残高へ按分せず、公式の総資産・資産分類をそのまま表示します。",
+        "totalAssets": "総資産",
+        "latestTotal": "総資産（{{date}}）"
+    },
+    "dailySnapshot": {
+        "title": "本日のMoney Forward取得状況",
+        "description": "Money Forwardを更新してから、既存のワンクリック取得と「公式残高・評価額」取込を利用します。",
+        "state": {
+            "complete": "本日分取得済み",
+            "partial": "一部のみ取得",
+            "missing": "本日分未取得"
+        },
+        "accountState": {
+            "updated": "本日取得済み",
+            "stale": "本日未更新"
+        },
+        "coverageState": {
+            "complete": "完了",
+            "partial": "一部",
+            "missing": "未取得",
+            "not_required": "取得不要"
+        },
+        "actions": {
+            "acquire": "本日分を取得する",
+            "reacquire": "再取得する"
+        },
+        "summary": {
+            "date": "対象日",
+            "accounts": "対象口座",
+            "accountCount": "{{updated}}/{{required}}口座",
+            "positions": "銘柄別評価額",
+            "positionCount": "{{count}}件",
+            "totalAssets": "総資産サマリー",
+            "recorded": "記録済み",
+            "unrecorded": "未記録",
+            "latestImport": "本日取得した口座残高: {{count}}口座 ・ 最終取込: {{date}}"
+        },
+        "coverage": {
+            "title": "直近7日の取得履歴",
+            "started": "日次記録は{{date}}から開始しています。開始前の日は取得不要です。開始後は、対象口座がすべて揃い、総資産サマリーもある日を完了とします。",
+            "notStarted": "日次記録はまだ開始していません。初回取込前の日は取得不要です。開始後は、対象口座がすべて揃い、総資産サマリーもある日を完了とします。",
+            "beforeStartLine1": "日次残高・銘柄の",
+            "beforeStartLine2": "記録開始前です",
+            "accounts": "口座",
+            "positions": "銘柄",
+            "totalAssets": "総資産"
+        },
+        "accounts": {
+            "title": "口座別の取得状況",
+            "description": "口座名をクリックすると、残高履歴または銘柄別評価額を確認できます。",
+            "snapshotDate": "残高基準日: {{date}}"
+        },
+        "failures": {
+            "title": "直近7日の未解消な取込失敗",
+            "description": "同じ取得元で後続の取込が成功・確認待ちになれば、この警告は消えます。",
+            "history": "取込履歴を見る",
+            "sources": {
+                "money_forward": "Money Forward明細",
+                "mobile_suica": "モバイルSuica",
+                "jre_point": "JRE POINT",
+                "balance_snapshot": "公式残高・評価額",
+                "asset_history": "Money Forward資産推移"
+            }
+        },
+        "never": "まだありません"
+    },
+    "weeklyImport": {
+        "title": "JRE POINT・モバイルSuicaの週次更新",
+        "description": "対象期間: {{start}}〜{{end}}。ログインとSMS認証は本人が行い、取得後のファイルを既存の取込機能へ登録します。",
+        "state": {
+            "updated": "今週更新済み",
+            "stale": "今週未更新",
+            "missing": "未取込"
+        },
+        "sources": {
+            "jre_point": {
+                "label": "JRE POINT",
+                "description": "ログイン・SMS認証後、履歴を書き出して取り込みます。"
+            },
+            "mobile_suica": {
+                "label": "モバイルSuica",
+                "description": "利用履歴PDFを取得し、そのまま取り込みます。"
+            }
+        },
+        "actions": {
+            "update": "更新する",
+            "reimport": "再取込する"
+        },
+        "lastUpdated": "最終更新",
+        "latestHistoryDate": "最新履歴日",
+        "never": "まだありません",
+        "noHistory": "履歴なし"
+    },
+    "monthlyReport": {
+        "eyebrow": "Monthly Report",
+        "title": "{{period}}のマンスリーレポート",
+        "description": "前月・前年同月との比較、支出傾向、確認が必要なデータをまとめています。",
+        "viewTransactions": "この月の全取引を見る",
+        "comparison": {
+            "empty": "当月・比較対象月の収支データはありません。",
+            "title": "収支比較",
+            "income": "当月収入",
+            "expense": "当月支出",
+            "previousMonth": "前月比",
+            "previousYear": "前年同月比",
+            "zeroBase": "比較元 0"
+        },
+        "activity": {
+            "title": "利用状況",
+            "empty": "当月の集計対象取引はありません。",
+            "transactions": "取引件数",
+            "expenses": "支出件数",
+            "averageExpense": "平均支出",
+            "largestExpense": "最大支出",
+            "count": "{{count}}件"
+        },
+        "netWorth": {
+            "title": "純資産の増減",
+            "description": "この月に保存された最初と最後の残高取得日を比較します。",
+            "empty": "比較できる残高データがありません。",
+            "singleDay": "取得日が1日分のため比較不可"
+        },
+        "merchants": {
+            "title": "支出先 上位5件",
+            "empty": "当月の支出データはありません。",
+            "count": "{{count}}件"
+        },
+        "quality": {
+            "title": "データ品質",
+            "description": "数字を確定する前に確認したい項目です。",
+            "uncategorized": "カテゴリ未設定",
+            "unconfirmed": "未確認取引",
+            "pendingImports": "確認待ち取込",
+            "count": "{{count}}件"
+        },
+        "categoryFactors": {
+            "title": "カテゴリ構成と前月からの増減要因",
+            "description": "集計対象の支出を通貨別に比較します。カテゴリ名や明細ボタンから取引を確認できます。",
+            "empty": "当月・前月のカテゴリ別支出はありません。",
+            "categoryCount": "{{count}}カテゴリ",
+            "noChanges": "該当する増減はありません。",
+            "previousAmount": "前月 {{amount}}",
+            "currentAmount": "→ 当月 {{amount}} {{currency}}",
+            "currentDetails": "当月明細",
+            "previousDetails": "前月明細",
+            "comparisonSource": "比較元: {{period}}",
+            "previousMonth": "前月",
+            "currentMonth": "当月",
+            "change": "増減",
+            "compositionTitle": "当月のカテゴリ構成",
+            "compositionEmpty": "当月の支出はありません。",
+            "compositionAria": "{{currency}}のカテゴリ構成比",
+            "increaseTitle": "支出が増えた要因",
+            "decreaseTitle": "支出が減った要因"
+        },
+        "closing": {
+            "title": "月次締め",
+            "reviewHelpLabel": "口座確認と月次レポート確認の違い",
+            "reviewHelp": "口座確認は、各金融機関からの明細・残高・評価額が出そろったことの確認です。月次レポート確認はその後に、カテゴリ、未確認取引、収支、純資産などレポート全体を見直した時点を記録する最終確認です。両方がそろうと締められます。",
+            "changedBadge": "確認後に変更あり",
+            "description": "後から反映されるカード請求や投信積立を口座別に確認してから、この月を締めます。",
+            "closedAt": "締め日時: {{date}}",
+            "reviewedAt": "最終確認: {{date}}",
+            "reopen": "締めを解除",
+            "reviewAgain": "月次レポートを再確認",
+            "markReviewed": "月次レポートを確認済みにする",
+            "close": "この月を締める",
+            "closeConfirm": "{{month}}を締め済みにしますか？",
+            "changedNotice": "確認後に取引・残高・評価額・口座設定のいずれかが変わりました。口座の状態を確認し、「月次レポートを再確認」してください。",
+            "accounts": {
+                "title": "口座別の月末反映確認",
+                "helpLabel": "口座別の月末反映確認の説明",
+                "help": "金融機関側の表示とアプリの明細・残高・評価額を照合し、対象月について遅れて反映されるデータが残っていないと判断した記録です。確認後にその口座のデータが変わると、再確認が必要になります。",
+                "description": "口座名から対象月の取引明細を確認できます。",
+                "count": "{{confirmed}}/{{total}} 口座",
+                "showDetails": "内訳を表示",
+                "hideDetails": "内訳を閉じる",
+                "closedSummary": "{{count}}口座の月末反映を確認済みです。",
+                "closedSummaryHint": "締め後の変更は自動検知され、必要な場合は口座内訳が再表示されます。",
+                "empty": "対象口座がありません。口座編集から「月次締めで反映確認する」を有効にしてください。",
+                "transactionsTitle": "{{account}}の{{month}}の取引明細を開く",
+                "confirmedAt": "{{date}}確認",
+                "guideLabel": "確認する内容:",
+                "changed": "確認後にこの口座のデータが変わりました",
+                "unconfirm": "反映確認済み（取消）",
+                "reconfirm": "変更後を再確認",
+                "confirm": "月末反映を確認",
+                "guides": {
+                    "creditCard": "利用明細・請求額・電話料金などの定期料金が月末分まで出そろったこと",
+                    "securities": "積立・入出金と、月末付近の評価額・銘柄内訳が反映されたこと",
+                    "bank": "入出金明細と月末残高が反映され、処理中の明細が残っていないこと",
+                    "eMoney": "利用・チャージ・ポイント充当と残高が月末分まで反映されたこと",
+                    "point": "ポイントの獲得・利用・チャージ交換と残高が月末分まで反映されたこと",
+                    "default": "対象月の入出金明細と残高が月末分まで反映されたこと"
+                }
+            },
+            "blockers": {
+                "title": "締め前の確認事項",
+                "complete": "すべての条件を満たしています。"
+            },
+            "note": {
+                "label": "月次メモ",
+                "placeholder": "反映待ちの明細や、今月の振り返りを記録",
+                "save": "メモを保存"
+            },
+            "reopenForm": {
+                "reason": "締めを解除する理由",
+                "cancel": "キャンセル",
+                "submit": "理由を記録して解除",
+                "previous": "前回の締め解除: {{reason}}",
+                "previousWithDate": "前回の締め解除: {{reason}}（{{date}}）"
+            }
+        }
+    }
+}

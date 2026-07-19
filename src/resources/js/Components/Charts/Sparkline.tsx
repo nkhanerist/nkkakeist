@@ -1,4 +1,5 @@
 import { TrendPoint } from '@/types/chart';
+import { useTranslation } from 'react-i18next';
 
 type SparklineProps = {
     points: TrendPoint[];
@@ -12,8 +13,14 @@ const tones = {
 };
 
 export default function Sparkline({ points, tone = 'indigo' }: SparklineProps) {
+    const { t } = useTranslation('securities');
+
     if (points.length === 0) {
-        return <span className="text-xs text-slate-400">データなし</span>;
+        return (
+            <span className="text-xs text-slate-400">
+                {t('charts.sparkline.empty')}
+            </span>
+        );
     }
 
     const width = 180;
@@ -23,7 +30,10 @@ export default function Sparkline({ points, tone = 'indigo' }: SparklineProps) {
     const max = Math.max(...values);
     const range = Math.max(max - min, 1);
     const coordinates = points.map((point, index) => {
-        const x = points.length === 1 ? width / 2 : (index / (points.length - 1)) * width;
+        const x =
+            points.length === 1
+                ? width / 2
+                : (index / (points.length - 1)) * width;
         const y = 5 + ((max - Number(point.value)) / range) * (height - 10);
 
         return `${x},${y}`;
@@ -34,7 +44,7 @@ export default function Sparkline({ points, tone = 'indigo' }: SparklineProps) {
             viewBox={`0 0 ${width} ${height}`}
             className="h-12 w-44"
             role="img"
-            aria-label="評価額の小型推移グラフ"
+            aria-label={t('charts.sparkline.aria')}
         >
             <polyline
                 points={coordinates.join(' ')}

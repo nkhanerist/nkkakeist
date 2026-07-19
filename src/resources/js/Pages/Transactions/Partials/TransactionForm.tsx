@@ -12,6 +12,7 @@ import {
 } from '@/types/transaction';
 import { Link, useForm } from '@inertiajs/react';
 import { FormEvent, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type TransactionFormProps = {
     transaction?: EditableTransaction;
@@ -52,6 +53,7 @@ export default function TransactionForm({
     categoryOptions,
     subcategoryOptions,
 }: TransactionFormProps) {
+    const { t } = useTranslation('transactions');
     const { data, setData, post, put, processing, errors } =
         useForm<TransactionFormValues>({
             transaction_date:
@@ -67,8 +69,7 @@ export default function TransactionForm({
             currency: transaction?.currency ?? defaultValues.currency,
             merchant_name:
                 transaction?.merchant_name ?? defaultValues.merchant_name,
-            description:
-                transaction?.description ?? defaultValues.description,
+            description: transaction?.description ?? defaultValues.description,
             category_id: transaction?.category_id
                 ? String(transaction.category_id)
                 : defaultValues.category_id,
@@ -121,7 +122,10 @@ export default function TransactionForm({
         }
 
         const availableSubcategoryIds = subcategoryOptions
-            .filter((subcategory) => String(subcategory.category_id) === data.category_id)
+            .filter(
+                (subcategory) =>
+                    String(subcategory.category_id) === data.category_id,
+            )
             .map((subcategory) => String(subcategory.id));
 
         if (
@@ -182,7 +186,10 @@ export default function TransactionForm({
         <form onSubmit={submit} className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                    <InputLabel htmlFor="transaction_date" value="取引日" />
+                    <InputLabel
+                        htmlFor="transaction_date"
+                        value={t('fields.date')}
+                    />
                     <TextInput
                         id="transaction_date"
                         type="date"
@@ -200,12 +207,14 @@ export default function TransactionForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="type" value="種別" />
+                    <InputLabel htmlFor="type" value={t('fields.type')} />
                     <select
                         id="type"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         value={data.type}
-                        onChange={(event) => setData('type', event.target.value)}
+                        onChange={(event) =>
+                            setData('type', event.target.value)
+                        }
                     >
                         {typeOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -217,7 +226,10 @@ export default function TransactionForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="account_id" value="口座" />
+                    <InputLabel
+                        htmlFor="account_id"
+                        value={t('fields.account')}
+                    />
                     <select
                         id="account_id"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -227,7 +239,7 @@ export default function TransactionForm({
                         }
                         required
                     >
-                        <option value="">選択してください</option>
+                        <option value="">{t('options.choose')}</option>
                         {accountOptions.map((account) => (
                             <option key={account.id} value={account.id}>
                                 {account.name} ({account.currency})
@@ -241,17 +253,20 @@ export default function TransactionForm({
                     <div>
                         <InputLabel
                             htmlFor="transfer_account_id"
-                            value="振替先口座"
+                            value={t('fields.transferAccount')}
                         />
                         <select
                             id="transfer_account_id"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.transfer_account_id}
                             onChange={(event) =>
-                                setData('transfer_account_id', event.target.value)
+                                setData(
+                                    'transfer_account_id',
+                                    event.target.value,
+                                )
                             }
                         >
-                            <option value="">選択してください</option>
+                            <option value="">{t('options.choose')}</option>
                             {accountOptions.map((account) => (
                                 <option key={account.id} value={account.id}>
                                     {account.name} ({account.currency})
@@ -263,13 +278,13 @@ export default function TransactionForm({
                             message={errors.transfer_account_id}
                         />
                         <p className="mt-2 text-xs text-slate-500">
-                            振替は口座間移動・コード決済からカードへの請求付替・カード引落の登録に使います。
+                            {t('form.transferHint')}
                         </p>
                     </div>
                 )}
 
                 <div>
-                    <InputLabel htmlFor="amount" value="金額" />
+                    <InputLabel htmlFor="amount" value={t('fields.amount')} />
                     <TextInput
                         id="amount"
                         type="number"
@@ -277,21 +292,29 @@ export default function TransactionForm({
                         min="0"
                         className="mt-1 block w-full"
                         value={data.amount}
-                        onChange={(event) => setData('amount', event.target.value)}
+                        onChange={(event) =>
+                            setData('amount', event.target.value)
+                        }
                         required
                     />
                     <InputError className="mt-2" message={errors.amount} />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="currency" value="通貨" />
+                    <InputLabel
+                        htmlFor="currency"
+                        value={t('fields.currency')}
+                    />
                     <TextInput
                         id="currency"
                         className="mt-1 block w-full uppercase"
                         maxLength={3}
                         value={data.currency}
                         onChange={(event) =>
-                            setData('currency', event.target.value.toUpperCase())
+                            setData(
+                                'currency',
+                                event.target.value.toUpperCase(),
+                            )
                         }
                         required
                     />
@@ -301,7 +324,10 @@ export default function TransactionForm({
                 {data.type !== 'transfer' && (
                     <>
                         <div>
-                            <InputLabel htmlFor="category_id" value="カテゴリ" />
+                            <InputLabel
+                                htmlFor="category_id"
+                                value={t('fields.category')}
+                            />
                             <select
                                 id="category_id"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -310,9 +336,12 @@ export default function TransactionForm({
                                     setData('category_id', event.target.value)
                                 }
                             >
-                                <option value="">選択してください</option>
+                                <option value="">{t('options.choose')}</option>
                                 {filteredCategories.map((category) => (
-                                    <option key={category.id} value={category.id}>
+                                    <option
+                                        key={category.id}
+                                        value={category.id}
+                                    >
                                         {category.name}
                                     </option>
                                 ))}
@@ -326,17 +355,22 @@ export default function TransactionForm({
                         <div>
                             <InputLabel
                                 htmlFor="subcategory_id"
-                                value="小分類"
+                                value={t('fields.subcategory')}
                             />
                             <select
                                 id="subcategory_id"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 value={data.subcategory_id}
                                 onChange={(event) =>
-                                    setData('subcategory_id', event.target.value)
+                                    setData(
+                                        'subcategory_id',
+                                        event.target.value,
+                                    )
                                 }
                             >
-                                <option value="">未選択</option>
+                                <option value="">
+                                    {t('options.unselected')}
+                                </option>
                                 {filteredSubcategories.map((subcategory) => (
                                     <option
                                         key={subcategory.id}
@@ -355,7 +389,10 @@ export default function TransactionForm({
                 )}
 
                 <div>
-                    <InputLabel htmlFor="merchant_name" value="店舗名" />
+                    <InputLabel
+                        htmlFor="merchant_name"
+                        value={t('fields.merchant')}
+                    />
                     <TextInput
                         id="merchant_name"
                         className="mt-1 block w-full"
@@ -371,7 +408,10 @@ export default function TransactionForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="payment_method_label" value="支払方法ラベル" />
+                    <InputLabel
+                        htmlFor="payment_method_label"
+                        value={t('fields.paymentMethodLabel')}
+                    />
                     <TextInput
                         id="payment_method_label"
                         className="mt-1 block w-full"
@@ -388,19 +428,24 @@ export default function TransactionForm({
             </div>
 
             <div>
-                <InputLabel htmlFor="description" value="摘要" />
+                <InputLabel
+                    htmlFor="description"
+                    value={t('fields.description')}
+                />
                 <textarea
                     id="description"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     rows={3}
                     value={data.description}
-                    onChange={(event) => setData('description', event.target.value)}
+                    onChange={(event) =>
+                        setData('description', event.target.value)
+                    }
                 />
                 <InputError className="mt-2" message={errors.description} />
             </div>
 
             <div>
-                <InputLabel htmlFor="memo" value="メモ" />
+                <InputLabel htmlFor="memo" value={t('fields.memo')} />
                 <textarea
                     id="memo"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -423,9 +468,12 @@ export default function TransactionForm({
                         className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
                     <div>
-                        <InputLabel htmlFor="is_confirmed" value="確認済みにする" />
+                        <InputLabel
+                            htmlFor="is_confirmed"
+                            value={t('form.confirmedLabel')}
+                        />
                         <p className="text-xs text-slate-500">
-                            確認済みフラグは一覧の絞り込みにも利用できます。
+                            {t('form.confirmedHint')}
                         </p>
                     </div>
                 </label>
@@ -436,14 +484,20 @@ export default function TransactionForm({
                         type="checkbox"
                         checked={data.is_calculation_target}
                         onChange={(event) =>
-                            setData('is_calculation_target', event.target.checked)
+                            setData(
+                                'is_calculation_target',
+                                event.target.checked,
+                            )
                         }
                         className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
                     <div>
-                        <InputLabel htmlFor="is_calculation_target" value="集計対象に含める" />
+                        <InputLabel
+                            htmlFor="is_calculation_target"
+                            value={t('form.calculationLabel')}
+                        />
                         <p className="text-xs text-slate-500">
-                            収入・支出の集計に含める取引だけ有効にしてください。振替はこの設定に関係なく口座残高へ反映されます。
+                            {t('form.calculationHint')}
                         </p>
                     </div>
                 </label>
@@ -455,17 +509,20 @@ export default function TransactionForm({
                         checked={data.affects_account_balance}
                         disabled={data.type === 'transfer'}
                         onChange={(event) =>
-                            setData('affects_account_balance', event.target.checked)
+                            setData(
+                                'affects_account_balance',
+                                event.target.checked,
+                            )
                         }
                         className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
                     <div>
                         <InputLabel
                             htmlFor="affects_account_balance"
-                            value="口座残高へ反映する"
+                            value={t('form.balanceLabel')}
                         />
                         <p className="text-xs text-slate-500">
-                            ポイント獲得など、収支集計から除外しても資産残高を増減させる取引で有効にします。
+                            {t('form.balanceHint')}
                         </p>
                     </div>
                 </label>
@@ -476,9 +533,11 @@ export default function TransactionForm({
                     href={route('transactions.index')}
                     className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                    キャンセル
+                    {t('actions.cancel')}
                 </Link>
-                <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
+                <PrimaryButton disabled={processing}>
+                    {submitLabel}
+                </PrimaryButton>
             </div>
         </form>
     );

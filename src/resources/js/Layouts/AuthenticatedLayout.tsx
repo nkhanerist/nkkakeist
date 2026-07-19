@@ -2,6 +2,7 @@ import Dropdown from '@/Components/Dropdown';
 import { PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type NavigationItem = {
     label: string;
@@ -13,50 +14,51 @@ export default function AuthenticatedLayout({
     header,
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
-    const user = usePage<PageProps>().props.auth.user;
+    const user = usePage<PageProps>().props.auth.user!;
+    const { t } = useTranslation('common');
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
 
     const navigationItems: NavigationItem[] = [
         {
-            label: 'ダッシュボード',
+            label: t('navigation.dashboard'),
             href: route('dashboard'),
             active: route().current('dashboard'),
         },
         {
-            label: '口座',
+            label: t('navigation.accounts'),
             href: route('accounts.index'),
             active: route().current('accounts.*'),
         },
         {
-            label: '証券',
+            label: t('navigation.securities'),
             href: route('securities.index'),
             active: route().current('securities.*'),
         },
         {
-            label: 'カテゴリ',
+            label: t('navigation.categories'),
             href: route('categories.index'),
             active: route().current('categories.*'),
         },
         {
-            label: '取引',
+            label: t('navigation.transactions'),
             href: route('transactions.index'),
             active:
                 route().current('transactions.*') &&
                 !route().current('transactions.category-review.*'),
         },
         {
-            label: 'カテゴリ確認',
+            label: t('navigation.categoryReview'),
             href: route('transactions.category-review.index'),
             active: route().current('transactions.category-review.*'),
         },
         {
-            label: 'インポート',
+            label: t('navigation.imports'),
             href: route('imports.index'),
             active: route().current('imports.*'),
         },
         {
-            label: '分類ルール',
+            label: t('navigation.classificationRules'),
             href: route('classification-rules.index'),
             active: route().current('classification-rules.*'),
         },
@@ -69,10 +71,10 @@ export default function AuthenticatedLayout({
                     <div className="flex items-center justify-between px-6 py-5 lg:block">
                         <Link href={route('dashboard')} className="space-y-1">
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                Asset Manager
+                                {t('app.name')}
                             </p>
                             <p className="text-lg font-semibold">
-                                個人用資産管理
+                                {t('app.tagline')}
                             </p>
                         </Link>
 
@@ -83,7 +85,7 @@ export default function AuthenticatedLayout({
                             }
                             className="inline-flex items-center rounded-md border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-800 lg:hidden"
                         >
-                            メニュー
+                            {t('navigation.menu')}
                         </button>
                     </div>
 
@@ -131,7 +133,7 @@ export default function AuthenticatedLayout({
                                 href={route('profile.edit')}
                                 className="block rounded-lg px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
                             >
-                                Profile
+                                {t('navigation.profile')}
                             </Link>
                             <Link
                                 href={route('logout')}
@@ -139,7 +141,7 @@ export default function AuthenticatedLayout({
                                 as="button"
                                 className="mt-1 block w-full rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
                             >
-                                Log Out
+                                {t('navigation.logout')}
                             </Link>
                         </div>
                     </nav>
@@ -178,14 +180,14 @@ export default function AuthenticatedLayout({
 
                                     <Dropdown.Content align="right" width="48">
                                         <Dropdown.Link href={route('profile.edit')}>
-                                            Profile
+                                            {t('navigation.profile')}
                                         </Dropdown.Link>
                                         <Dropdown.Link
                                             href={route('logout')}
                                             method="post"
                                             as="button"
                                         >
-                                            Log Out
+                                            {t('navigation.logout')}
                                         </Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>

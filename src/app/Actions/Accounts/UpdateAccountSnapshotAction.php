@@ -26,7 +26,7 @@ class UpdateAccountSnapshotAction
 
         if ($hasConflict) {
             throw ValidationException::withMessages([
-                'balance_date' => '同じ日の評価額がすでにあります。既存の評価額を編集してください。',
+                'balance_date' => trans('accounts.messages.valuation_date_conflict'),
             ]);
         }
 

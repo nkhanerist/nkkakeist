@@ -279,7 +279,7 @@ class TransactionCategorySuggestionsCommandTest extends TestCase
 
         $this->assertNotNull($missingSuggestion);
         $this->assertSame(
-            'カテゴリ提案なし。既存分類または Classification Rule の追加を確認してください。',
+            __('transactions.category_review.reasons.none'),
             $missingSuggestion['reason'],
         );
 
@@ -335,7 +335,10 @@ class TransactionCategorySuggestionsCommandTest extends TestCase
         $this->assertSame('食費', $suggestion['suggested_category']);
         $this->assertSame('外食', $suggestion['suggested_subcategory']);
         $this->assertSame(85, $suggestion['confidence']);
-        $this->assertSame('同じ摘要の分類済み履歴から推定', $suggestion['reason']);
+        $this->assertSame(
+            __('transactions.category_review.reasons.same_merchant'),
+            $suggestion['reason'],
+        );
         $this->assertSame(3, $suggestion['reference_count']);
         $this->assertSame($reference->id, $suggestion['reference_transaction_id']);
     }

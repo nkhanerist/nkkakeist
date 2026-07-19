@@ -1,0 +1,274 @@
+{
+    "index": {
+        "title": "Import",
+        "description": "Review your CSV and PDF import history.",
+        "scope": "Only your own import history is shown.",
+        "empty": "No imports yet. Upload a transaction file to get started."
+    },
+    "create": {
+        "title": "Import",
+        "description": "Upload a source file, review the preview, and then apply it.",
+        "source": "Source",
+        "selectAccount": "Select an account",
+        "account": {
+            "mobileSuica": "Mobile Suica Account",
+            "jrePoint": "JRE POINT Account",
+            "optional": "Default Account (Optional)"
+        },
+        "automaticAccount": {
+            "balanceSnapshot": "Accounts are matched automatically from names in the JSON and can be changed in Preview.",
+            "assetHistory": "Asset history is stored as the official Money Forward total without allocation to individual accounts."
+        },
+        "file": {
+            "mobileSuica": "Mobile Suica History PDF",
+            "jrePoint": "JRE POINT Export JSON",
+            "balanceSnapshot": "Official Balances & Valuations JSON",
+            "assetHistory": "Money Forward Asset History CSV",
+            "default": "CSV File"
+        }
+    },
+    "actions": {
+        "start": "Import File",
+        "details": "Details",
+        "upload": "Upload and Analyze",
+        "back": "Back to Imports",
+        "copyBookmarklet": "Copy Bookmarklet",
+        "copied": "Copied",
+        "dragBookmarklet": "Drag this to your bookmarks bar"
+    },
+    "table": {
+        "filename": "File Name",
+        "source": "Source",
+        "status": "Status",
+        "totalRows": "Total Rows",
+        "importedRows": "Imported",
+        "duplicates": "Duplicates",
+        "createdAt": "Created At",
+        "importedAt": "Imported At",
+        "actions": "Actions",
+        "account": "Account: {{name}} ({{currency}})"
+    },
+    "pagination": {
+        "summary": "{{from}}–{{to}} of {{total}}"
+    },
+    "guides": {
+        "mobileSuica": {
+            "title": "Mobile Suica PDF Import Rules",
+            "steps": [
+                "Entries with a negative usage amount are imported as expenses.",
+                "Charges, carryovers, and zero-value entries do not create transactions.",
+                "Train and bus usage is classified as transportation; retail purchases remain uncategorized.",
+                "When PDF periods overlap, previously imported entries are excluded as duplicates."
+            ],
+            "open": "Open Mobile Suica History ↗",
+            "hint": "Sign in to the member menu and save a PDF from SF (Electronic Money) Usage History."
+        },
+        "jrePoint": {
+            "title": "JRE POINT Assisted Import",
+            "steps": [
+                "Drag Export JRE POINT History below to your bookmarks bar.",
+                "After second-password authentication on JRE POINT history, run the bookmark.",
+                "Select the saved JSON file on this page."
+            ],
+            "export": "Export JRE POINT History",
+            "open": "Open JRE POINT History ↗",
+            "privacy": "Sign-in details and cookies are not saved. Only history, balances, and expiration dates are exported to JSON."
+        },
+        "balanceSnapshot": {
+            "title": "Money Forward Assisted Balance Import",
+            "steps": [
+                "Refresh your linked accounts in Money Forward.",
+                "Drag Export Money Forward Balances below to your bookmarks bar.",
+                "Run the bookmark from the signed-in Money Forward web app.",
+                "Review the export, then select the saved JSON file on this page."
+            ],
+            "export": "Export Money Forward Balances",
+            "open": "Open Money Forward ↗",
+            "details": [
+                "Bank deposits are aggregated as official account balances for each financial institution.",
+                "Investment funds store account totals plus each holding's quantity, current price, cost basis, valuation, and unrealized gain or loss.",
+                "THEO combines holding valuations and cash into the account valuation.",
+                "Pensions are exported as Money Forward Pension and matched to each user's pension account.",
+                "Card balances are aggregated by card and stored as negative liability balances.",
+                "If a populated holdings, deposits, pension, or card table cannot be recognized, export stops because the page structure may have changed.",
+                "If only the asset allocation table is missing, the export continues with a warning and omits the total-assets summary.",
+                "Opening balances and transactions are unchanged; only balances are recorded after Preview."
+            ],
+            "update": "If you already saved the bookmarklet, replace it with this version that includes page-structure checks.",
+            "privacy": "Sign-in details and cookies are not saved. Data collection runs inside the signed-in Money Forward page and saves only the balance JSON to your device."
+        },
+        "assetHistory": {
+            "title": "Initial Money Forward Asset History Import",
+            "steps": [
+                "Open Asset History in the Money Forward web app.",
+                "Download the asset history CSV from the bottom of the page.",
+                "Select the CSV, review past total assets and asset classes, and apply it."
+            ],
+            "open": "Open Money Forward Asset History ↗",
+            "hint": "The official CSV does not include historical data by holding. Register current holdings from a balance import, then build holding-level history with daily imports."
+        }
+    },
+    "preview": {
+        "title": {
+            "default": "Import Preview",
+            "balanceSnapshot": "Balance Import Preview",
+            "assetHistory": "Asset History Preview"
+        },
+        "description": {
+            "default": "Review parsed rows and duplicate candidates before applying transactions.",
+            "balanceSnapshot": "Review account matches for official balances and valuations before applying them.",
+            "assetHistory": "Review long-term Money Forward total asset and asset class history before applying it."
+        },
+        "summary": {
+            "filename": "File Name",
+            "source": "Source",
+            "status": "Status",
+            "totalRows": "Total Rows",
+            "destination": "Destination Account",
+            "perItem": "Matched per Item",
+            "noAllocation": "No Account Allocation",
+            "none": "Not Selected",
+            "account": "{{name}} ({{currency}})"
+        },
+        "deleteConfirm": "Delete “{{filename}}”?",
+        "deleteImportedConfirm": "Delete “{{filename}}”?\nTransactions created by this import will also be deleted.",
+        "jrePoint": {
+            "title": "JRE POINT Balance Reconciliation",
+            "capturedAt": "As of {{date}}",
+            "nearestExpiry": "Nearest expiration: {{date}}",
+            "matched": "Balances Match",
+            "difference": "Difference: {{value}}",
+            "officialTotal": "Official Balance",
+            "regular": "Regular Points",
+            "limited": "Limited-Time Points",
+            "ledgerBefore": "Ledger Before Import",
+            "expectedAfter": "Expected After Import",
+            "initialAdjustment": "Because this is the first import, the temporary opening balance will be adjusted to {{value}} when applied to match the official balance.",
+            "points": "{{value}} pt"
+        },
+        "transferHelp": "Manual transfer correction fixes the counterparty account. The final direction is recalculated from the amount sign and account types with that account fixed as the candidate. Refunds may run in the opposite direction.",
+        "actions": {
+            "applyBalance": "Apply Balances",
+            "applyAssetHistory": "Apply Asset History",
+            "applyImport": "Apply Import",
+            "reparse": "Reanalyze",
+            "delete": "Delete",
+            "back": "Back to Imports",
+            "update": "Update",
+            "apply": "Apply",
+            "clearManual": "Clear Manual Selection"
+        },
+        "empty": "No parsed rows.",
+        "table": {
+            "row": "Row",
+            "date": "Date",
+            "type": "Type",
+            "calculation": "Reporting",
+            "balance": "Balance",
+            "amount": "Amount",
+            "account": "Account",
+            "counterparty": "Counterparty",
+            "category": "Category",
+            "subcategory": "Subcategory",
+            "merchant": "Description / Merchant",
+            "description": "Details",
+            "status": "Status",
+            "issues": "Errors / Duplicates"
+        },
+        "flags": {
+            "included": "Included",
+            "excluded": "Excluded",
+            "applied": "Applied"
+        },
+        "selectCounterparty": "Select a counterparty account",
+        "transactionTypes": {
+            "income": "Income",
+            "expense": "Expense",
+            "transfer": "Transfer"
+        },
+        "rowStatuses": {
+            "pending": "Pending",
+            "ready": "Ready",
+            "error": "Error",
+            "duplicate": "Duplicate",
+            "imported": "Applied",
+            "skipped": "Skipped"
+        },
+        "rowMessages": {
+            "duplicateCandidate": "Duplicate Candidate",
+            "transferImport": "Import as transfer: {{source}} → {{destination}}",
+            "sourceAccount": "Source-file account: {{message}}",
+            "counterpartyCandidate": "Counterparty candidate: {{message}}",
+            "ruleMatched": "Rule “{{name}}” matched",
+            "fieldsFilled": "Filled fields: {{fields}}",
+            "categoryCsv": "Category resolved from the source file's primary and secondary category columns",
+            "categoryRule": "Category filled by a Classification Rule",
+            "subcategoryRule": "Subcategory filled by a Classification Rule",
+            "calculationFlag": "Reporting flag: {{source}}",
+            "ruleSource": "Filled by a Classification Rule",
+            "fileSource": "Resolved from the source file"
+        }
+    },
+    "balancePreview": {
+        "intro": "Confirm each source account name, balance type, and update time. Card balances are stored as negative liabilities in the app.",
+        "kinds": {
+            "valuation": "Market Valuation",
+            "account_balance": "Official Account Balance",
+            "card_outstanding": "Card Balance"
+        },
+        "diagnostics": {
+            "title": "Money Forward page structure check: {{status}}",
+            "normal": "Passed",
+            "warning": "Review Needed",
+            "summary": "Exporter v{{version}} · {{investments}} holdings tables · deposits: {{deposits}} · pensions: {{pensions}} · {{cards}} card tables",
+            "recognized": "recognized",
+            "notApplicable": "not present",
+            "missingPortfolio": "The asset allocation table was not recognized, so the total-assets summary is omitted. Verify the account balance and holding valuation counts and totals.",
+            "legacyTitle": "Legacy Export File",
+            "legacyDescription": "Page structure diagnostics are unavailable. Review the amounts and account count with extra care."
+        },
+        "unnamedAccount": "Unnamed Account",
+        "alreadyImported": "Imported",
+        "balanceDate": "Balance date: {{date}}",
+        "sourceUpdatedAt": "Source updated: {{date}}",
+        "savedBalance": "Balance to Save",
+        "nextPayment": "Next payment: {{amount}}",
+        "amountUnavailable": "Amount unavailable",
+        "replacement": {
+            "title": "Replace Same-Day Balance",
+            "values": "Existing {{oldValue}} → New {{newValue}} {{currency}}",
+            "cancel": "Cancel Replacement",
+            "replace": "Replace with This Value",
+            "selectedHint": "When applied, the existing same-day balance will be deleted and replaced with this balance and its holding details.",
+            "unselectedHint": "No replacement has been scheduled. Compare both values before selecting one."
+        },
+        "positions": {
+            "summary": "{{count}} holdings / Total valuation {{value}} {{currency}}",
+            "instrument": "Holding",
+            "quantity": "Quantity",
+            "averagePrice": "Average Cost",
+            "currentPrice": "Current Price",
+            "cost": "Cost Basis",
+            "valuation": "Valuation",
+            "gain": "Unrealized Gain/Loss"
+        },
+        "destinationAccount": "Destination Account in the App",
+        "selectAccount": "Select an account",
+        "rememberMapping": "Add this source name as an import alias and match it automatically in future imports",
+        "saveMapping": "Save Account Match",
+        "resolvedAccount": "Destination: {{name}}",
+        "duplicateHint": "The duplicate balance will be skipped; any missing holding details will still be added.",
+        "importedHint": "Applied to the account balance.",
+        "readyHint": "Ready to apply."
+    },
+    "assetHistoryPreview": {
+        "empty": "No parsed asset history.",
+        "date": "Date",
+        "totalAssets": "Total Assets",
+        "breakdown": "Asset Breakdown",
+        "status": "Status",
+        "alreadyImported": "Imported",
+        "applied": "Applied",
+        "ready": "Ready"
+    }
+}

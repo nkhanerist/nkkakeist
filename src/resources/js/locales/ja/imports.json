@@ -1,0 +1,274 @@
+{
+    "index": {
+        "title": "Import",
+        "description": "CSV・PDFの取り込み履歴を確認できます。",
+        "scope": "自分の取り込み履歴のみ表示しています。",
+        "empty": "まだ取り込み履歴がありません。取引ファイルをアップロードしてください。"
+    },
+    "create": {
+        "title": "Import",
+        "description": "取り込み元のファイルをアップロードして、Preview確認後に反映します。",
+        "source": "取り込み元",
+        "selectAccount": "選択してください",
+        "account": {
+            "mobileSuica": "モバイルSuica口座",
+            "jrePoint": "JRE POINT口座",
+            "optional": "共通適用口座（任意）"
+        },
+        "automaticAccount": {
+            "balanceSnapshot": "JSON内の口座名から取り込み先を自動判定し、Previewで変更できます。",
+            "assetHistory": "資産推移は口座へ按分せず、Money Forwardの公式合計として保存します。"
+        },
+        "file": {
+            "mobileSuica": "モバイルSuica利用履歴 PDF",
+            "jrePoint": "JRE POINT書き出し JSON",
+            "balanceSnapshot": "公式残高・評価額 JSON",
+            "assetHistory": "Money Forward 資産推移 CSV",
+            "default": "CSVファイル"
+        }
+    },
+    "actions": {
+        "start": "ファイルを取り込む",
+        "details": "詳細",
+        "upload": "アップロードして解析",
+        "back": "一覧へ戻る",
+        "copyBookmarklet": "ブックマークレットをコピー",
+        "copied": "コピーしました",
+        "dragBookmarklet": "ブックマークバーへドラッグしてください"
+    },
+    "table": {
+        "filename": "ファイル名",
+        "source": "取り込み元",
+        "status": "状態",
+        "totalRows": "総行数",
+        "importedRows": "取り込み済み",
+        "duplicates": "重複候補",
+        "createdAt": "作成日時",
+        "importedAt": "取り込み日時",
+        "actions": "操作",
+        "account": "口座: {{name}} ({{currency}})"
+    },
+    "pagination": {
+        "summary": "{{from}} - {{to}} / {{total}}件"
+    },
+    "guides": {
+        "mobileSuica": {
+            "title": "モバイルSuica PDFの取り込み内容",
+            "steps": [
+                "利用額がマイナスの履歴を支出として取り込みます。",
+                "チャージ・繰越・0円の履歴は取引を作成しません。",
+                "電車とバスは交通費へ分類し、物販はカテゴリ未設定にします。",
+                "期間が重なるPDFは、既に取り込んだ履歴を重複候補として除外します。"
+            ],
+            "open": "モバイルSuica利用履歴を開く ↗",
+            "hint": "会員メニューへログインし、「SF（電子マネー）利用履歴」からPDFを保存します。"
+        },
+        "jrePoint": {
+            "title": "JRE POINT半自動取り込み",
+            "steps": [
+                "下の「JRE POINT履歴を書き出す」をブックマークバーへドラッグします。",
+                "JRE POINTのポイント履歴で第2パスワード認証後、そのブックマークを実行します。",
+                "保存されたJSONをこの画面で選択します。"
+            ],
+            "export": "JRE POINT履歴を書き出す",
+            "open": "JRE POINT履歴を開く ↗",
+            "privacy": "ログイン情報やCookieは保存せず、履歴・残高・有効期限だけをJSONへ書き出します。"
+        },
+        "balanceSnapshot": {
+            "title": "Money Forward残高の半自動取り込み",
+            "steps": [
+                "Money Forwardで連携口座を最新状態へ更新します。",
+                "下の「Money Forward残高を書き出す」をブックマークバーへドラッグします。",
+                "ログイン済みのMoney Forward Web版でブックマークを実行します。",
+                "確認後に保存されたJSONをこの画面で選択します。"
+            ],
+            "export": "Money Forward残高を書き出す",
+            "open": "Money Forwardを開く ↗",
+            "details": [
+                "銀行預金は金融機関ごとの公式口座残高として集計します。",
+                "投資信託は口座合計に加えて、銘柄ごとの保有数・現在値・取得価額・評価額・評価損益も保存します。",
+                "THEOは銘柄評価額と現金部分を口座評価額として合算します。",
+                "年金は「Money Forward 年金」として書き出し、ユーザーごとの年金口座へ対応付けます。",
+                "カード利用残高はカードごとに集計し、負数の負債残高として保存します。",
+                "データがある資産明細・預金・年金・カードの表を認識できない場合は、画面変更の可能性として書き出しを中止します。",
+                "資産構成表だけ未認識の場合は、総資産サマリーを省略して注意付きで書き出します。",
+                "期首残高や取引は変更せず、Preview確認後に残高だけを記録します。"
+            ],
+            "update": "既にブックマークレットを登録している場合は、画面構造チェック対応版へ置き換えてください。",
+            "privacy": "ログイン情報やCookieは保存しません。取得処理はMoney Forwardのログイン済み画面内で実行し、残高JSONだけを端末へ保存します。"
+        },
+        "assetHistory": {
+            "title": "Money Forward 資産推移の初期取り込み",
+            "steps": [
+                "Money Forward Web版の「資産推移」を開きます。",
+                "画面下部のCSVダウンロードから資産推移CSVを保存します。",
+                "保存したCSVを選択し、過去の総資産・資産分類を確認して反映します。"
+            ],
+            "open": "Money Forward 資産推移を開く ↗",
+            "hint": "銘柄別の過去データは公式CSVに含まれません。現在の銘柄を残高取得で起点登録し、以後の日次取得で銘柄別推移を蓄積します。"
+        }
+    },
+    "preview": {
+        "title": {
+            "default": "Import Preview",
+            "balanceSnapshot": "残高取得 Preview",
+            "assetHistory": "資産推移 Preview"
+        },
+        "description": {
+            "default": "解析結果と重複候補を確認して取引へ反映します。",
+            "balanceSnapshot": "取得した公式残高と評価額の口座対応を確認して反映します。",
+            "assetHistory": "Money Forwardの総資産・資産分類の長期履歴を確認して反映します。"
+        },
+        "summary": {
+            "filename": "ファイル名",
+            "source": "取り込み元",
+            "status": "状態",
+            "totalRows": "総行数",
+            "destination": "取り込み先口座",
+            "perItem": "項目ごとに判定",
+            "noAllocation": "口座への配分なし",
+            "none": "未選択",
+            "account": "{{name}} ({{currency}})"
+        },
+        "deleteConfirm": "「{{filename}}」を削除しますか？",
+        "deleteImportedConfirm": "「{{filename}}」を削除しますか？\nこのImportから作成された取引も削除されます。",
+        "jrePoint": {
+            "title": "JRE POINT残高照合",
+            "capturedAt": "{{date}}時点",
+            "nearestExpiry": "直近有効期限 {{date}}",
+            "matched": "残高一致",
+            "difference": "差額 {{value}}",
+            "officialTotal": "公式残高",
+            "regular": "通常ポイント",
+            "limited": "期間限定",
+            "ledgerBefore": "取り込み前台帳残高",
+            "expectedAfter": "取り込み後見込",
+            "initialAdjustment": "初回取り込みのため、反映時に暫定期首残高を{{value}}へ補正し、公式残高と一致させます。",
+            "points": "{{value}} pt"
+        },
+        "transferHelp": "振替の手動補正では「相手口座」を固定します。最終的な振替方向は、選んだ相手口座を候補に固定したうえで、金額の符号と口座種別から再判定します。返金や払戻しでは通常と逆向きになることがあります。",
+        "actions": {
+            "applyBalance": "残高を反映",
+            "applyAssetHistory": "資産推移を反映",
+            "applyImport": "Importを反映",
+            "reparse": "再解析",
+            "delete": "削除",
+            "back": "一覧へ戻る",
+            "update": "更新",
+            "apply": "適用",
+            "clearManual": "手動指定を解除"
+        },
+        "empty": "解析済みの行がありません。",
+        "table": {
+            "row": "行",
+            "date": "日付",
+            "type": "種別",
+            "calculation": "集計",
+            "balance": "残高",
+            "amount": "金額",
+            "account": "口座",
+            "counterparty": "相手口座",
+            "category": "カテゴリ",
+            "subcategory": "小分類",
+            "merchant": "摘要 / 店舗名",
+            "description": "説明",
+            "status": "状態",
+            "issues": "エラー / 重複"
+        },
+        "flags": {
+            "included": "対象",
+            "excluded": "除外",
+            "applied": "反映"
+        },
+        "selectCounterparty": "相手口座を選択",
+        "transactionTypes": {
+            "income": "収入",
+            "expense": "支出",
+            "transfer": "振替"
+        },
+        "rowStatuses": {
+            "pending": "未処理",
+            "ready": "反映対象",
+            "error": "エラー",
+            "duplicate": "重複",
+            "imported": "反映済み",
+            "skipped": "スキップ"
+        },
+        "rowMessages": {
+            "duplicateCandidate": "重複候補",
+            "transferImport": "振替として取り込み: {{source}} → {{destination}}",
+            "sourceAccount": "取込ファイル側口座: {{message}}",
+            "counterpartyCandidate": "相手口座候補: {{message}}",
+            "ruleMatched": "ルール「{{name}}」がヒット",
+            "fieldsFilled": "補完した項目: {{fields}}",
+            "categoryCsv": "カテゴリは取込ファイルの大項目 / 中項目から解決",
+            "categoryRule": "カテゴリはClassification Ruleで補完",
+            "subcategoryRule": "小分類はClassification Ruleで補完",
+            "calculationFlag": "集計対象フラグ: {{source}}",
+            "ruleSource": "Classification Ruleで補完",
+            "fileSource": "取込ファイルから解決"
+        }
+    },
+    "balancePreview": {
+        "intro": "取得元の口座名、残高種別、更新日時を確認してください。カード利用残高はアプリ内では負債として負数保存します。",
+        "kinds": {
+            "valuation": "時価評価額",
+            "account_balance": "公式口座残高",
+            "card_outstanding": "カード利用残高"
+        },
+        "diagnostics": {
+            "title": "Money Forward画面構造チェック: {{status}}",
+            "normal": "正常",
+            "warning": "一部注意",
+            "summary": "取得ツール v{{version}}・銘柄表 {{investments}}件・預金表 {{deposits}}・年金表 {{pensions}}・カード表 {{cards}}件",
+            "recognized": "認識",
+            "notApplicable": "対象なし",
+            "missingPortfolio": "資産構成表は認識できなかったため、総資産サマリーを含みません。口座別残高と銘柄評価額の件数・金額を確認してください。",
+            "legacyTitle": "旧形式の取得ファイル",
+            "legacyDescription": "画面構造チェック情報がありません。金額と口座件数を通常より注意して確認してください。"
+        },
+        "unnamedAccount": "口座名なし",
+        "alreadyImported": "取り込み済み",
+        "balanceDate": "残高日 {{date}}",
+        "sourceUpdatedAt": "取得元更新 {{date}}",
+        "savedBalance": "保存する残高",
+        "nextPayment": "次回引落し: {{amount}}",
+        "amountUnavailable": "金額未取得",
+        "replacement": {
+            "title": "同日残高の置き換え",
+            "values": "既存値 {{oldValue}} → 新しい値 {{newValue}} {{currency}}",
+            "cancel": "置き換えを取り消す",
+            "replace": "この値で置き換える",
+            "selectedHint": "反映時に既存の同日残高を削除し、この残高と銘柄明細へ置き換えます。",
+            "unselectedHint": "まだ置き換えは実行されません。新旧の金額を確認して選択してください。"
+        },
+        "positions": {
+            "summary": "銘柄別内訳 {{count}}件 / 評価額計 {{value}} {{currency}}",
+            "instrument": "銘柄",
+            "quantity": "保有数",
+            "averagePrice": "平均取得単価",
+            "currentPrice": "現在値",
+            "cost": "取得価額",
+            "valuation": "評価額",
+            "gain": "評価損益"
+        },
+        "destinationAccount": "アプリ内の取り込み先口座",
+        "selectAccount": "口座を選択してください",
+        "rememberMapping": "この取得名を口座の取込用別名に追加し、今後も自動対応する",
+        "saveMapping": "口座対応を保存",
+        "resolvedAccount": "取り込み先: {{name}}",
+        "duplicateHint": "同じ残高はスキップし、未保存の銘柄内訳がある場合だけ追記します。",
+        "importedHint": "残高へ反映済みです。",
+        "readyHint": "反映準備ができています。"
+    },
+    "assetHistoryPreview": {
+        "empty": "解析済みの資産推移がありません。",
+        "date": "日付",
+        "totalAssets": "総資産",
+        "breakdown": "資産内訳",
+        "status": "状態",
+        "alreadyImported": "取り込み済み",
+        "applied": "反映済み",
+        "ready": "反映対象"
+    }
+}

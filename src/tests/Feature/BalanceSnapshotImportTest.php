@@ -58,6 +58,8 @@ class BalanceSnapshotImportTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Imports/Show')
                 ->where('import.source_name', 'balance_snapshot')
+                ->where('import.source_metadata.acquisition_diagnostics.exporter_version', 2)
+                ->where('import.source_metadata.acquisition_diagnostics.portfolio_summary_table', true)
                 ->has('rows', 3)
                 ->where('rows.0.resolved_account.id', $theo->id)
                 ->where('rows.0.amount', '412345.67')
@@ -96,6 +98,7 @@ class BalanceSnapshotImportTest extends TestCase
             ->where('instrument_name', 'グロース株式')
             ->sole();
         self::assertSame('123.45678901', (string) $theoPosition->quantity);
+        self::assertSame('206200.00', (string) $theoPosition->acquisition_cost);
         self::assertSame('205000.00', (string) $theoPosition->valuation);
         self::assertSame('-1200.00', (string) $theoPosition->unrealized_gain);
         self::assertSame($import->id, $theoPosition->import_id);
@@ -224,10 +227,85 @@ class BalanceSnapshotImportTest extends TestCase
             ->where('instrument_name', '信託のチカラ日本の株式')
             ->sole();
         self::assertSame('defined_contribution_pension', $stockPosition->asset_class);
+        self::assertSame('475430.00', (string) $stockPosition->acquisition_cost);
         self::assertSame('1042090.00', (string) $stockPosition->valuation);
         self::assertSame('566660.00', (string) $stockPosition->unrealized_gain);
-        self::assertSame('475430.00', $stockPosition->metadata['acquisition_cost']);
         self::assertSame('Money Forward 年金', $snapshot->metadata['source_account_name']);
+    }
+
+    public function test_reimport_does_not_duplicate_pension_positions_when_external_id_format_changes(): void
+    {
+        $user = User::factory()->create();
+        $pension = Account::factory()->for($user)->create([
+            'name' => 'JIS&T(確定拠出年金)',
+            'type' => 'securities',
+            'balance_role' => 'asset',
+            'balance_method' => 'snapshot',
+            'currency' => 'JPY',
+            'initial_balance' => '0.00',
+            'import_aliases' => ['Money Forward 年金'],
+        ]);
+        $legacyPayload = $this->payload();
+        unset($legacyPayload['asset_history']);
+        $legacyPayload['items'] = [[
+            'source_account_name' => 'JIS&T(確定拠出年金)',
+            'balance_kind' => 'valuation',
+            'balance' => '1042090',
+            'currency' => 'JPY',
+            'balance_date' => '2026-07-18',
+            'positions' => [[
+                'instrument_name' => '信託のチカラ日本の株式',
+                'external_id' => 'money_forward:JIS&T(確定拠出年金):信託のチカラ日本の株式',
+                'asset_class' => 'security',
+                'valuation' => '1042090',
+                'currency' => 'JPY',
+            ]],
+        ]];
+
+        $this->actingAs($user)->post(route('imports.store'), [
+            'source_name' => 'balance_snapshot',
+            'account_id' => '',
+            'csv_file' => UploadedFile::fake()->createWithContent(
+                'legacy-pension.json',
+                json_encode($legacyPayload, JSON_THROW_ON_ERROR),
+            ),
+        ]);
+        $firstImport = Import::query()->sole();
+        $this->actingAs($user)
+            ->post(route('imports.commit', $firstImport))
+            ->assertSessionHasNoErrors();
+
+        $position = InvestmentPositionSnapshot::query()->sole();
+        self::assertSame(
+            hash('sha256', 'money_forward:pension:信託のチカラ日本の株式|JPY'),
+            $position->position_key,
+        );
+
+        $currentPayload = $legacyPayload;
+        $currentPayload['items'][0]['source_account_name'] = 'Money Forward 年金';
+        $currentPayload['items'][0]['positions'][0]['external_id'] =
+            'money_forward:pension:信託のチカラ日本の株式';
+        $currentPayload['items'][0]['positions'][0]['asset_class'] = 'defined_contribution_pension';
+
+        $this->actingAs($user)->post(route('imports.store'), [
+            'source_name' => 'balance_snapshot',
+            'account_id' => '',
+            'csv_file' => UploadedFile::fake()->createWithContent(
+                'current-pension.json',
+                json_encode($currentPayload, JSON_THROW_ON_ERROR),
+            ),
+        ]);
+        $secondImport = Import::query()->latest('id')->firstOrFail();
+        self::assertSame(1, $secondImport->duplicate_rows);
+
+        $this->actingAs($user)
+            ->post(route('imports.commit', $secondImport))
+            ->assertSessionHasNoErrors();
+
+        self::assertSame(1, AccountSnapshot::query()->where('account_id', $pension->id)->count());
+        self::assertSame(1, InvestmentPositionSnapshot::query()->where('account_id', $pension->id)->count());
+        self::assertSame(['skipped'], $secondImport->refresh()->importRows()->pluck('status')->all());
+        self::assertSame(0, $secondImport->imported_rows);
     }
 
     public function test_user_can_explicitly_replace_a_different_balance_on_the_same_day(): void
@@ -311,6 +389,14 @@ class BalanceSnapshotImportTest extends TestCase
         self::assertSame($secondImport->id, $replacement->import_id);
         self::assertSame('500000.00', (string) $replacement->balance);
         self::assertSame(2, $replacement->investmentPositions()->count());
+        self::assertSame('公式残高取込から同日残高を置き換え', $replacement->note);
+        self::assertSame([
+            'id' => $oldSnapshot->id,
+            'import_id' => $oldSnapshot->import_id,
+            'balance' => '412345.67',
+            'captured_at' => $oldSnapshot->captured_at->toIso8601String(),
+            'source_name' => 'Money Forward',
+        ], $replacement->metadata['replaced_snapshot']);
         $this->assertDatabaseMissing('account_snapshots', ['id' => $oldSnapshot->id]);
     }
 
@@ -638,6 +724,14 @@ class BalanceSnapshotImportTest extends TestCase
             'version' => 1,
             'source' => 'money_forward',
             'captured_at' => '2026-07-18T21:00:00+09:00',
+            'diagnostics' => [
+                'exporter_version' => 2,
+                'portfolio_summary_table' => true,
+                'investment_tables' => 2,
+                'deposit_table' => true,
+                'pension_table' => true,
+                'liability_tables' => 1,
+            ],
             'asset_history' => [
                 'captured_on' => '2026-07-18',
                 'total_assets' => '22667260',
@@ -664,6 +758,7 @@ class BalanceSnapshotImportTest extends TestCase
                             'quantity' => '123.45678901',
                             'average_acquisition_price' => '9876.5',
                             'unit_price' => '10001',
+                            'acquisition_cost' => '206200',
                             'valuation' => '205000',
                             'unrealized_gain' => '-1200',
                             'currency' => 'JPY',

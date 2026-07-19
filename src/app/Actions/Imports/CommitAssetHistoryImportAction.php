@@ -18,17 +18,23 @@ class CommitAssetHistoryImportAction
     public function handle(Import $import): Import
     {
         if ($import->status === 'imported') {
-            throw ValidationException::withMessages(['import' => 'すでに取込済みです。']);
+            throw ValidationException::withMessages([
+                'import' => trans('imports.action_errors.already_imported'),
+            ]);
         }
 
         if ($import->status !== 'validated') {
-            throw ValidationException::withMessages(['import' => '資産推移を反映できるのはプレビュー完了済みの import のみです。']);
+            throw ValidationException::withMessages([
+                'import' => trans('imports.action_errors.asset_history_preview_required'),
+            ]);
         }
 
         $import = $this->validationService->handle($import);
 
         if ($import->importRows->contains(fn (ImportRow $row): bool => $row->status === 'error')) {
-            throw ValidationException::withMessages(['import' => '資産推移に不正な行があります。']);
+            throw ValidationException::withMessages([
+                'import' => trans('imports.action_errors.asset_history_invalid_rows'),
+            ]);
         }
 
         DB::transaction(function () use ($import): void {

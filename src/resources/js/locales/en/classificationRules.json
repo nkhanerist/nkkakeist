@@ -1,0 +1,79 @@
+{
+    "index": {
+        "title": "Classification Rules",
+        "description": "Manage automatic classification rules used during import preview.",
+        "confirmDelete": "Delete “{{name}}”?",
+        "usageTitle": "Where These Rules Apply",
+        "usage": {
+            "previewOnly": "Rules are used only during CSV import preview.",
+            "csvFirst": "Money Forward CSV categories and subcategories are resolved first.",
+            "fillMissing": "Rules fill only unresolved categories, subcategories, and reporting flags.",
+            "firstMatch": "Active rules are evaluated by ascending priority, and only the first match applies.",
+            "noManual": "Rules are not currently applied to manually entered transactions."
+        },
+        "addHint": "Add rules while confirming a transaction in Category Review. Existing rules can be edited or deleted here.",
+        "empty": "No rules yet. Create one while confirming a transaction in Category Review."
+    },
+    "create": {
+        "title": "Create Classification Rule",
+        "description": "Add an automatic classification rule for import preview.",
+        "submit": "Create"
+    },
+    "edit": {
+        "title": "Edit Classification Rule",
+        "description": "Update this automatic classification rule.",
+        "submit": "Update"
+    },
+    "actions": {
+        "categoryReview": "Category Review",
+        "edit": "Edit",
+        "delete": "Delete"
+    },
+    "table": {
+        "name": "Rule Name",
+        "transactionType": "Transaction Type",
+        "field": "Field",
+        "condition": "Condition",
+        "category": "Category",
+        "subcategory": "Subcategory",
+        "calculation": "Reporting",
+        "priority": "Priority",
+        "status": "Status",
+        "actions": "Actions"
+    },
+    "status": {
+        "included": "Included",
+        "excluded": "Excluded",
+        "active": "Active",
+        "inactive": "Inactive"
+    },
+    "form": {
+        "usageTitle": "Application Order",
+        "usage": {
+            "csvFirst": "First, resolve categories and subcategories from the CSV category fields.",
+            "fillMissing": "Then use this rule only to fill unresolved categories, subcategories, or reporting flags.",
+            "firstMatch": "Active rules are evaluated by ascending priority, and only the first match applies.",
+            "noManual": "Rules are not currently applied to manually entered transactions."
+        },
+        "name": "Rule Name",
+        "priority": "Priority",
+        "conditionTitle": "Matching Condition",
+        "conditionDescription": "Define which import rows this rule should match.",
+        "transactionType": "Transaction Type",
+        "transactionTypeHint": "Evaluate only import rows with the selected transaction type.",
+        "matchField": "Matching Field",
+        "matchFieldHint": "Choose which import-row value to evaluate.",
+        "matchOperator": "Matching Condition",
+        "matchValue": "Matching Value",
+        "matchValueHint": "Rows are evaluated against this text.",
+        "completionTitle": "Values to Fill",
+        "completionDescription": "Fill only unresolved values on matching import rows.",
+        "category": "Category to Fill",
+        "subcategory": "Subcategory to Fill",
+        "calculationTarget": "Reporting Flag to Fill",
+        "doNotFill": "Do Not Fill",
+        "include": "Include",
+        "exclude": "Exclude",
+        "active": "Active"
+    }
+}

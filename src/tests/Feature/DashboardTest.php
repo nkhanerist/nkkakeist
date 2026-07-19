@@ -203,7 +203,11 @@ class DashboardTest extends TestCase
     public function test_dashboard_reports_complete_daily_money_forward_snapshot_status(): void
     {
         $user = User::factory()->create();
-        $account = Account::factory()->for($user)->create();
+        $account = Account::factory()->for($user)->create([
+            'type' => 'bank',
+            'include_in_net_worth' => true,
+            'is_active' => true,
+        ]);
         $import = Import::query()->create([
             'user_id' => $user->id,
             'source_name' => 'balance_snapshot',
@@ -219,6 +223,15 @@ class DashboardTest extends TestCase
             'captured_at' => '2026-04-15 23:59:59',
             'purpose' => 'valuation',
             'balance' => '1000.00',
+            'source_name' => 'Money Forward',
+        ]);
+        AccountSnapshot::query()->create([
+            'user_id' => $user->id,
+            'account_id' => $account->id,
+            'import_id' => $import->id,
+            'captured_at' => '2026-04-14 23:59:59',
+            'purpose' => 'valuation',
+            'balance' => '990.00',
             'source_name' => 'Money Forward',
         ]);
         InvestmentPositionSnapshot::query()->create([
@@ -252,6 +265,25 @@ class DashboardTest extends TestCase
                 ->where('daily_snapshot_status.account_count', 1)
                 ->where('daily_snapshot_status.position_count', 1)
                 ->where('daily_snapshot_status.asset_history_recorded', true)
+                ->where('daily_snapshot_status.required_account_count', 1)
+                ->where('daily_snapshot_status.updated_account_count', 1)
+                ->where('daily_snapshot_status.coverage_started_on', '2026-04-14')
+                ->where('daily_snapshot_status.accounts.0.id', $account->id)
+                ->where('daily_snapshot_status.accounts.0.state', 'updated')
+                ->has('daily_snapshot_status.coverage_days', 7)
+                ->where('daily_snapshot_status.coverage_days.4.state', 'not_required')
+                ->where('daily_snapshot_status.coverage_days.4.required_account_count', 0)
+                ->where('daily_snapshot_status.coverage_days.5.date', '2026-04-14')
+                ->where('daily_snapshot_status.coverage_days.5.state', 'partial')
+                ->where('daily_snapshot_status.coverage_days.5.updated_account_count', 1)
+                ->where('daily_snapshot_status.coverage_days.5.asset_history_recorded', false)
+                ->where('daily_snapshot_status.coverage_days.6.date', '2026-04-15')
+                ->where('daily_snapshot_status.coverage_days.6.updated_account_count', 1)
+                ->where('daily_snapshot_status.coverage_days.6.required_account_count', 1)
+                ->where('daily_snapshot_status.coverage_days.6.asset_history_recorded', true)
+                ->where('daily_snapshot_status.coverage_days.6.state', 'complete')
+                ->where('daily_snapshot_status.coverage_days.6.position_count', 1)
+                ->where('daily_snapshot_status.recent_failures', [])
                 ->where('daily_snapshot_status.last_imported_at', fn ($value): bool => is_string($value)));
     }
 
@@ -277,7 +309,158 @@ class DashboardTest extends TestCase
                 ->where('daily_snapshot_status.account_count', 0)
                 ->where('daily_snapshot_status.position_count', 0)
                 ->where('daily_snapshot_status.asset_history_recorded', false)
+                ->where('daily_snapshot_status.required_account_count', 0)
+                ->where('daily_snapshot_status.updated_account_count', 0)
+                ->where('daily_snapshot_status.coverage_started_on', null)
+                ->where('daily_snapshot_status.accounts', [])
+                ->has('daily_snapshot_status.coverage_days', 7)
+                ->where('daily_snapshot_status.coverage_days.6.state', 'not_required')
+                ->where('daily_snapshot_status.coverage_days.6.updated_account_count', 0)
+                ->where('daily_snapshot_status.coverage_days.6.position_count', 0)
+                ->where('daily_snapshot_status.recent_failures', [])
                 ->where('daily_snapshot_status.last_imported_at', null));
+    }
+
+    public function test_daily_coverage_does_not_require_an_account_before_its_first_snapshot(): void
+    {
+        $user = User::factory()->create();
+        $existingAccount = Account::factory()->for($user)->create([
+            'type' => 'bank',
+            'include_in_net_worth' => true,
+            'is_active' => true,
+        ]);
+        $newAccount = Account::factory()->for($user)->create([
+            'type' => 'securities',
+            'include_in_net_worth' => true,
+            'is_active' => true,
+        ]);
+
+        foreach (['2026-04-14', '2026-04-15'] as $date) {
+            AccountSnapshot::query()->create([
+                'user_id' => $user->id,
+                'account_id' => $existingAccount->id,
+                'captured_at' => $date.' 23:59:59',
+                'purpose' => 'official_balance',
+                'balance' => '1000.00',
+                'source_name' => 'Money Forward',
+            ]);
+            AssetHistorySnapshot::query()->create([
+                'user_id' => $user->id,
+                'captured_on' => $date,
+                'total_assets' => '1000.00',
+                'currency' => 'JPY',
+                'source_name' => 'money_forward',
+                'duplicate_hash' => hash('sha256', 'asset-history-'.$date),
+                'breakdown' => [],
+            ]);
+        }
+
+        AccountSnapshot::query()->create([
+            'user_id' => $user->id,
+            'account_id' => $newAccount->id,
+            'captured_at' => '2026-04-15 23:59:59',
+            'purpose' => 'valuation',
+            'balance' => '500.00',
+            'source_name' => 'Money Forward',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('daily_snapshot_status.coverage_started_on', '2026-04-14')
+                ->where('daily_snapshot_status.coverage_days.4.state', 'not_required')
+                ->where('daily_snapshot_status.coverage_days.5.state', 'complete')
+                ->where('daily_snapshot_status.coverage_days.5.required_account_count', 1)
+                ->where('daily_snapshot_status.coverage_days.5.updated_account_count', 1)
+                ->where('daily_snapshot_status.coverage_days.6.state', 'complete')
+                ->where('daily_snapshot_status.coverage_days.6.required_account_count', 2)
+                ->where('daily_snapshot_status.coverage_days.6.updated_account_count', 2));
+    }
+
+    public function test_dashboard_reports_account_freshness_and_only_unresolved_recent_import_failures(): void
+    {
+        $user = User::factory()->create();
+        $staleBank = Account::factory()->for($user)->create([
+            'name' => 'Stale Bank',
+            'type' => 'bank',
+            'include_in_net_worth' => true,
+            'is_active' => true,
+            'display_order' => 1,
+        ]);
+        $neverCapturedCard = Account::factory()->for($user)->create([
+            'name' => 'Never Captured Card',
+            'type' => 'credit_card',
+            'include_in_net_worth' => true,
+            'is_active' => true,
+            'display_order' => 2,
+        ]);
+        Account::factory()->for($user)->create([
+            'type' => 'point',
+            'include_in_net_worth' => true,
+            'is_active' => true,
+        ]);
+        Account::factory()->for($user)->create([
+            'type' => 'securities',
+            'include_in_net_worth' => false,
+            'is_active' => true,
+        ]);
+
+        AccountSnapshot::query()->create([
+            'user_id' => $user->id,
+            'account_id' => $staleBank->id,
+            'captured_at' => '2026-04-14 23:59:59',
+            'purpose' => 'official_balance',
+            'balance' => '1000.00',
+            'source_name' => 'Money Forward',
+        ]);
+
+        Import::query()->create([
+            'user_id' => $user->id,
+            'source_name' => 'balance_snapshot',
+            'original_filename' => 'failed.json',
+            'storage_path' => 'imports/failed.json',
+            'status' => 'failed',
+            'error_message' => '形式を確認してください。',
+            'created_at' => '2026-04-15 09:00:00',
+        ]);
+        Import::query()->create([
+            'user_id' => $user->id,
+            'source_name' => 'mobile_suica',
+            'original_filename' => 'failed.pdf',
+            'storage_path' => 'imports/failed.pdf',
+            'status' => 'failed',
+            'created_at' => '2026-04-14 09:00:00',
+        ]);
+        Import::query()->create([
+            'user_id' => $user->id,
+            'source_name' => 'mobile_suica',
+            'original_filename' => 'recovered.pdf',
+            'storage_path' => 'imports/recovered.pdf',
+            'status' => 'validated',
+            'created_at' => '2026-04-15 10:00:00',
+        ]);
+        Import::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'source_name' => 'jre_point',
+            'original_filename' => 'other-user.json',
+            'storage_path' => 'imports/other-user.json',
+            'status' => 'failed',
+            'created_at' => '2026-04-15 11:00:00',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('daily_snapshot_status.required_account_count', 1)
+                ->where('daily_snapshot_status.updated_account_count', 0)
+                ->has('daily_snapshot_status.accounts', 1)
+                ->where('daily_snapshot_status.accounts.0.id', $staleBank->id)
+                ->where('daily_snapshot_status.accounts.0.state', 'stale')
+                ->where('daily_snapshot_status.accounts.0.latest_snapshot_date', '2026-04-14')
+                ->where('daily_snapshot_status.accounts', fn ($accounts): bool => collect($accounts)->doesntContain('id', $neverCapturedCard->id))
+                ->has('daily_snapshot_status.recent_failures', 1)
+                ->where('daily_snapshot_status.recent_failures.0.source_name', 'balance_snapshot')
+                ->where('daily_snapshot_status.recent_failures.0.error_message', '形式を確認してください。'));
     }
 
     public function test_dashboard_reports_weekly_jre_point_and_mobile_suica_status(): void
@@ -445,6 +628,80 @@ class DashboardTest extends TestCase
                 ->where('monthly_report.top_merchants.0.total_amount', '1200.00')
                 ->where('monthly_report.top_merchants.1.name', 'Cafe')
                 ->where('monthly_report.top_merchants.1.total_amount', '800.00'));
+    }
+
+    public function test_dashboard_monthly_report_explains_category_expense_changes(): void
+    {
+        $user = User::factory()->create();
+        $account = Account::factory()->for($user)->create(['currency' => 'JPY']);
+        $food = Category::factory()->for($user)->create(['name' => '食費', 'type' => 'expense']);
+        $transport = Category::factory()->for($user)->create(['name' => '交通費', 'type' => 'expense']);
+        $utilities = Category::factory()->for($user)->create(['name' => '水道・光熱費', 'type' => 'expense']);
+
+        foreach ([
+            ['2026-04-03', '1200.00', $food->id],
+            ['2026-04-05', '800.00', $transport->id],
+            ['2026-04-08', '200.00', null],
+            ['2026-03-03', '500.00', $food->id],
+            ['2026-03-05', '1000.00', $utilities->id],
+            ['2026-03-08', '100.00', null],
+        ] as [$date, $amount, $categoryId]) {
+            Transaction::factory()->forAccount($account)->create([
+                'user_id' => $user->id,
+                'transaction_date' => $date,
+                'type' => 'expense',
+                'amount' => $amount,
+                'currency' => 'JPY',
+                'category_id' => $categoryId,
+                'is_calculation_target' => true,
+            ]);
+        }
+
+        Transaction::factory()->forAccount($account)->create([
+            'user_id' => $user->id,
+            'transaction_date' => '2026-04-10',
+            'type' => 'expense',
+            'amount' => '9999.00',
+            'currency' => 'JPY',
+            'category_id' => $food->id,
+            'is_calculation_target' => false,
+        ]);
+
+        $otherUser = User::factory()->create();
+        $otherAccount = Account::factory()->for($otherUser)->create(['currency' => 'JPY']);
+        Transaction::factory()->forAccount($otherAccount)->create([
+            'user_id' => $otherUser->id,
+            'transaction_date' => '2026-04-10',
+            'type' => 'expense',
+            'amount' => '99999.00',
+            'currency' => 'JPY',
+            'is_calculation_target' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard', ['month' => '2026-04']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('monthly_report.category_expense_groups', 1)
+                ->where('monthly_report.category_expense_groups.0.currency', 'JPY')
+                ->where('monthly_report.category_expense_groups.0.previous_month_label', '2026年3月')
+                ->where('monthly_report.category_expense_groups.0.current_total', '2200.00')
+                ->where('monthly_report.category_expense_groups.0.previous_total', '1600.00')
+                ->where('monthly_report.category_expense_groups.0.change_amount', '600.00')
+                ->has('monthly_report.category_expense_groups.0.items', 4)
+                ->where('monthly_report.category_expense_groups.0.items.0.category_name', '食費')
+                ->where('monthly_report.category_expense_groups.0.items.0.current_amount', '1200.00')
+                ->where('monthly_report.category_expense_groups.0.items.0.previous_amount', '500.00')
+                ->where('monthly_report.category_expense_groups.0.items.0.change_amount', '700.00')
+                ->where('monthly_report.category_expense_groups.0.items.0.current_share_percent', '54.5')
+                ->where('monthly_report.category_expense_groups.0.items.1.category_name', '交通費')
+                ->where('monthly_report.category_expense_groups.0.items.1.current_share_percent', '36.4')
+                ->where('monthly_report.category_expense_groups.0.items.2.category_name', 'カテゴリ未設定')
+                ->where('monthly_report.category_expense_groups.0.items.2.current_share_percent', '9.1')
+                ->where('monthly_report.category_expense_groups.0.items.3.category_name', '水道・光熱費')
+                ->where('monthly_report.category_expense_groups.0.items.3.current_amount', '0.00')
+                ->where('monthly_report.category_expense_groups.0.items.3.previous_amount', '1000.00')
+                ->where('monthly_report.category_expense_groups.0.items.3.change_amount', '-1000.00'));
     }
 
     public function test_dashboard_monthly_report_counts_only_the_users_review_items(): void
@@ -1017,7 +1274,7 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('yearly_category_expenses.0.items.1.category_id', null)
-                ->where('yearly_category_expenses.0.items.1.category_name', '未分類')
+                ->where('yearly_category_expenses.0.items.1.category_name', 'カテゴリ未設定')
                 ->where('yearly_category_expenses.0.items.1.total_amount', '250.00'));
     }
 
@@ -1599,7 +1856,7 @@ class DashboardTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->has('category_expenses', 2)
                 ->where('category_expenses.0.name', 'Food')
-                ->where('category_expenses.1.name', '未分類')
+                ->where('category_expenses.1.name', 'カテゴリ未設定')
                 ->where('category_expenses.1.total_amount', '400.00'));
     }
 

@@ -7,8 +7,10 @@ use App\Models\AccountSnapshot;
 use App\Models\AssetHistorySnapshot;
 use App\Models\Import;
 use App\Models\ImportRow;
+use App\Models\InvestmentPositionSnapshot;
 use App\Services\Imports\BalanceSnapshotConflictService;
 use App\Services\Imports\BalanceSnapshotImportValidationService;
+use App\Services\Imports\InvestmentPositionIdentityService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -18,19 +20,20 @@ class CommitBalanceSnapshotImportAction
     public function __construct(
         private readonly BalanceSnapshotImportValidationService $validationService,
         private readonly BalanceSnapshotConflictService $conflictService,
+        private readonly InvestmentPositionIdentityService $positionIdentityService,
     ) {}
 
     public function handle(Import $import): Import
     {
         if ($import->status === 'imported') {
             throw ValidationException::withMessages([
-                'import' => 'すでに取込済みです。',
+                'import' => trans('imports.action_errors.already_imported'),
             ]);
         }
 
         if ($import->status !== 'validated') {
             throw ValidationException::withMessages([
-                'import' => '残高を反映できるのはプレビュー完了済みの import のみです。',
+                'import' => trans('imports.action_errors.balance_preview_required'),
             ]);
         }
 
@@ -39,7 +42,7 @@ class CommitBalanceSnapshotImportAction
 
         if ($import->importRows->contains(fn (ImportRow $row): bool => $row->status === 'error')) {
             throw ValidationException::withMessages([
-                'import' => '未解決の残高項目があります。すべて解決してから確定してください。',
+                'import' => trans('imports.action_errors.balance_unresolved'),
             ]);
         }
 
@@ -105,22 +108,36 @@ class CommitBalanceSnapshotImportAction
             || $snapshot->id !== $importRow->replace_account_snapshot_id
         ) {
             throw ValidationException::withMessages([
-                'import' => '置き換える同日の既存残高を再確認できませんでした。プレビューを更新してください。',
+                'import' => trans('imports.action_errors.replacement_stale'),
             ]);
         }
 
+        $replacementAudit = [
+            'id' => $snapshot->id,
+            'import_id' => $snapshot->import_id,
+            'balance' => (string) $snapshot->balance,
+            'captured_at' => $snapshot->captured_at->toIso8601String(),
+            'source_name' => $snapshot->source_name,
+        ];
+
         $snapshot->delete();
 
-        return $this->createSnapshot($import, $importRow);
+        return $this->createSnapshot($import, $importRow, $replacementAudit);
     }
 
-    private function createSnapshot(Import $import, ImportRow $importRow): AccountSnapshot
-    {
+    /**
+     * @param  array{id: int, import_id: int|null, balance: string, captured_at: string, source_name: string|null}|null  $replacementAudit
+     */
+    private function createSnapshot(
+        Import $import,
+        ImportRow $importRow,
+        ?array $replacementAudit = null,
+    ): AccountSnapshot {
         $account = $importRow->resolvedAccount;
 
         if (! $account instanceof Account || $account->user_id !== $import->user_id) {
             throw ValidationException::withMessages([
-                'import' => '取込先口座を確定できないため残高を反映できません。',
+                'import' => trans('imports.action_errors.balance_account_unresolved'),
             ]);
         }
 
@@ -133,7 +150,7 @@ class CommitBalanceSnapshotImportAction
 
         if ($balanceDate === null || $importRow->amount === null) {
             throw ValidationException::withMessages([
-                'import' => '残高日または金額がないため反映できません。',
+                'import' => trans('imports.action_errors.balance_value_missing'),
             ]);
         }
 
@@ -149,7 +166,9 @@ class CommitBalanceSnapshotImportAction
             'duplicate_hash' => $importRow->duplicate_hash,
             'balance' => $importRow->amount,
             'source_name' => $this->sourceLabel($source),
-            'note' => '公式残高取込から記録',
+            'note' => $replacementAudit === null
+                ? '公式残高取込から記録'
+                : '公式残高取込から同日残高を置き換え',
             'metadata' => [
                 'balance_kind' => $balanceKind,
                 'source' => $source,
@@ -160,6 +179,7 @@ class CommitBalanceSnapshotImportAction
                 'next_payment_date' => $rawPayload['next_payment_date'] ?? null,
                 'external_id' => $rawPayload['external_id'] ?? null,
                 'source_details' => $rawPayload['source_details'] ?? null,
+                'replaced_snapshot' => $replacementAudit,
             ],
         ]);
 
@@ -211,6 +231,11 @@ class CommitBalanceSnapshotImportAction
         }
 
         $created = 0;
+        $existingPositions = $snapshot->investmentPositions()
+            ->get(['id', 'position_key', 'instrument_name', 'currency']);
+        $sourceAccountName = is_string($rawPayload['source_account_name'] ?? null)
+            ? $rawPayload['source_account_name']
+            : null;
 
         foreach ($positions as $position) {
             if (! is_array($position)) {
@@ -218,33 +243,38 @@ class CommitBalanceSnapshotImportAction
             }
 
             $instrumentName = (string) ($position['instrument_name'] ?? '');
-            $instrumentCode = is_string($position['instrument_code'] ?? null)
-                ? $position['instrument_code']
-                : null;
-            $externalId = is_string($position['external_id'] ?? null)
-                ? $position['external_id']
-                : null;
             $currency = (string) ($position['currency'] ?? 'JPY');
-            $identity = $externalId ?? $instrumentCode ?? $instrumentName;
-            $positionKey = hash('sha256', implode('|', [$identity, $currency]));
+            $positionKey = $this->positionIdentityService->positionKey(
+                $position,
+                $source,
+                $sourceAccountName,
+            );
+            $semanticKey = $this->positionIdentityService->semanticKey($instrumentName, $currency);
 
-            if ($snapshot->investmentPositions()->where('position_key', $positionKey)->exists()) {
+            if ($existingPositions->contains(
+                fn (InvestmentPositionSnapshot $existing): bool => $existing->position_key === $positionKey
+                    || $this->positionIdentityService->semanticKey(
+                        $existing->instrument_name,
+                        $existing->currency,
+                    ) === $semanticKey,
+            )) {
                 continue;
             }
 
-            $snapshot->investmentPositions()->create([
+            $createdPosition = $snapshot->investmentPositions()->create([
                 'user_id' => $snapshot->user_id,
                 'account_id' => $snapshot->account_id,
                 'import_id' => $import->id,
                 'captured_at' => $snapshot->captured_at,
                 'position_key' => $positionKey,
                 'instrument_name' => $instrumentName,
-                'instrument_code' => $instrumentCode,
-                'external_id' => $externalId,
+                'instrument_code' => $position['instrument_code'] ?? null,
+                'external_id' => $position['external_id'] ?? null,
                 'asset_class' => $position['asset_class'] ?? null,
                 'quantity' => $position['quantity'] ?? null,
                 'average_acquisition_price' => $position['average_acquisition_price'] ?? null,
                 'unit_price' => $position['unit_price'] ?? null,
+                'acquisition_cost' => $position['acquisition_cost'] ?? null,
                 'valuation' => $position['valuation'],
                 'unrealized_gain' => $position['unrealized_gain'] ?? null,
                 'currency' => $currency,
@@ -252,9 +282,9 @@ class CommitBalanceSnapshotImportAction
                 'metadata' => [
                     'source' => $source,
                     'source_account_name' => $rawPayload['source_account_name'] ?? null,
-                    'acquisition_cost' => $position['acquisition_cost'] ?? null,
                 ],
             ]);
+            $existingPositions->push($createdPosition);
             $created++;
         }
 

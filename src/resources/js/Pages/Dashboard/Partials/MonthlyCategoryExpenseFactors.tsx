@@ -53,6 +53,7 @@ const categoryTransactionsHref = (
         type: 'expense',
         currency,
         calculation_target: 'included',
+        filter_panel: 'collapsed',
         ...(categoryId === null
             ? { category_state: 'uncategorized' }
             : { category_id: categoryId, category_state: 'categorized' }),

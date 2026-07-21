@@ -250,14 +250,14 @@ class BalanceSnapshotImportTest extends TestCase
         $legacyPayload['items'] = [[
             'source_account_name' => 'JIS&T(確定拠出年金)',
             'balance_kind' => 'valuation',
-            'balance' => '1042090',
+            'balance' => '12000',
             'currency' => 'JPY',
             'balance_date' => '2026-07-18',
             'positions' => [[
-                'instrument_name' => '信託のチカラ日本の株式',
-                'external_id' => 'money_forward:JIS&T(確定拠出年金):信託のチカラ日本の株式',
+                'instrument_name' => 'Global_DC Index Fund',
+                'external_id' => 'money_forward:JIS&T(確定拠出年金):Global_DC Index Fund',
                 'asset_class' => 'security',
-                'valuation' => '1042090',
+                'valuation' => '12000',
                 'currency' => 'JPY',
             ]],
         ]];
@@ -277,14 +277,14 @@ class BalanceSnapshotImportTest extends TestCase
 
         $position = InvestmentPositionSnapshot::query()->sole();
         self::assertSame(
-            hash('sha256', 'money_forward:pension:信託のチカラ日本の株式|JPY'),
+            hash('sha256', 'money_forward:pension:global_dc index fund|JPY'),
             $position->position_key,
         );
 
         $currentPayload = $legacyPayload;
         $currentPayload['items'][0]['source_account_name'] = 'Money Forward 年金';
         $currentPayload['items'][0]['positions'][0]['external_id'] =
-            'money_forward:pension:信託のチカラ日本の株式';
+            'money_forward:pension:Global_DC Index Fund';
         $currentPayload['items'][0]['positions'][0]['asset_class'] = 'defined_contribution_pension';
 
         $this->actingAs($user)->post(route('imports.store'), [

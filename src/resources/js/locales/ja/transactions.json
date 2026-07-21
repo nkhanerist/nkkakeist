@@ -28,7 +28,10 @@
         "cancel": "キャンセル",
         "backToList": "一覧へ戻る",
         "reset": "リセット",
-        "filter": "絞り込む"
+        "filter": "絞り込む",
+        "clearAll": "すべて解除",
+        "showFilters": "条件を変更",
+        "hideFilters": "条件を隠す"
     },
     "filters": {
         "dateFrom": "開始日",
@@ -43,6 +46,36 @@
         "type": "種別",
         "confirmation": "確認状態",
         "calculationTarget": "集計対象"
+    },
+    "activeFilters": {
+        "title": "表示条件",
+        "resultCount": "{{count}}件の取引",
+        "allTransactions": "すべての取引",
+        "dateRange": "{{from}}〜{{to}}",
+        "dateFrom": "{{date}}以降",
+        "dateTo": "{{date}}まで",
+        "account": "口座: {{value}}",
+        "category": "カテゴリ: {{value}}",
+        "currency": "通貨: {{value}}",
+        "type": "種別: {{value}}",
+        "keyword": "キーワード: {{value}}",
+        "removeLabel": "{{label}}を解除"
+    },
+    "sorting": {
+        "label": "並び順",
+        "amountCurrencyHint": "複数通貨の場合は、通貨ごとにまとめて金額順に並べます。",
+        "options": {
+            "dateDesc": "取引日（新しい順）",
+            "dateAsc": "取引日（古い順）",
+            "amountDesc": "金額（通貨別・高い順）",
+            "amountAsc": "金額（通貨別・低い順）",
+            "accountAsc": "口座（昇順）",
+            "accountDesc": "口座（降順）",
+            "categoryAsc": "カテゴリ（昇順）",
+            "categoryDesc": "カテゴリ（降順）",
+            "summaryAsc": "摘要・店舗名（昇順）",
+            "summaryDesc": "摘要・店舗名（降順）"
+        }
     },
     "options": {
         "all": "すべて",

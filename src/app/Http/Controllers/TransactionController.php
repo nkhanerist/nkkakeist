@@ -30,6 +30,10 @@ class TransactionController extends Controller
     {
         $this->authorize('viewAny', Transaction::class);
 
+        $sort = request()->string('sort')->toString();
+        $direction = request()->string('direction')->toString();
+        $filterPanel = request()->string('filter_panel')->toString();
+
         $filters = [
             'date_from' => request()->string('date_from')->toString(),
             'date_to' => request()->string('date_to')->toString(),
@@ -55,6 +59,13 @@ class TransactionController extends Controller
             )
                 ? request()->string('calculation_target')->toString()
                 : 'all',
+            'sort' => in_array($sort, ['date', 'amount', 'account', 'category', 'summary'], true)
+                ? $sort
+                : 'date',
+            'direction' => in_array($direction, ['asc', 'desc'], true)
+                ? $direction
+                : 'desc',
+            'filter_panel' => $filterPanel === 'collapsed' ? 'collapsed' : 'expanded',
         ];
 
         $typeLabels = $this->transactionOptionsService->typeLabels();

@@ -53,7 +53,12 @@ const getYearDateRange = (year: string): DateRange => ({
 const buildTransactionHref = (
     range: DateRange,
     filters: Record<string, string | number>,
-) => route('transactions.index', { ...range, ...filters });
+) =>
+    route('transactions.index', {
+        ...range,
+        ...filters,
+        filter_panel: 'collapsed',
+    });
 
 type IndexProps = {
     selected_view: 'month' | 'year';

@@ -383,6 +383,7 @@ export default function MonthlyClosingPanel({
                                                 ...range,
                                                 account_id: account.id,
                                                 calculation_target: 'all',
+                                                filter_panel: 'collapsed',
                                             })}
                                             title={t(
                                                 'monthlyReport.closing.accounts.transactionsTitle',

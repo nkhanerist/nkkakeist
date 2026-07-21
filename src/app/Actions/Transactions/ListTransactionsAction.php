@@ -2,8 +2,11 @@
 
 namespace App\Actions\Transactions;
 
+use App\Models\Account;
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListTransactionsAction
 {
@@ -12,7 +15,8 @@ class ListTransactionsAction
      */
     public function handle(User $user, array $filters): LengthAwarePaginator
     {
-        return $user->transactions()
+        $query = $user->transactions()
+            ->getQuery()
             ->with(['account', 'transferAccount', 'category', 'subcategory'])
             ->when(
                 filled($filters['date_from'] ?? null),
@@ -71,10 +75,60 @@ class ListTransactionsAction
                         ->orWhere('memo', 'like', '%'.$filters['keyword'].'%')
                         ->orWhere('payment_method_label', 'like', '%'.$filters['keyword'].'%');
                 }),
-            )
-            ->orderByDesc('transaction_date')
-            ->orderByDesc('id')
+            );
+
+        $this->applySort(
+            $query,
+            (string) ($filters['sort'] ?? 'date'),
+            (string) ($filters['direction'] ?? 'desc'),
+        );
+
+        return $query
             ->paginate(15)
             ->withQueryString();
+    }
+
+    private function applySort(Builder $query, string $sort, string $direction): void
+    {
+        $sort = in_array($sort, ['date', 'amount', 'account', 'category', 'summary'], true)
+            ? $sort
+            : 'date';
+        $direction = $direction === 'asc' ? 'asc' : 'desc';
+
+        if ($sort === 'date') {
+            $query
+                ->orderBy('transaction_date', $direction)
+                ->orderBy('id', $direction);
+
+            return;
+        }
+
+        match ($sort) {
+            'amount' => $query
+                ->orderBy('currency')
+                ->orderBy('amount', $direction),
+            'account' => $query->orderBy(
+                Account::query()
+                    ->select('name')
+                    ->whereColumn('accounts.id', 'transactions.account_id'),
+                $direction,
+            ),
+            'category' => $query
+                ->orderByRaw('category_id IS NULL')
+                ->orderBy(
+                    Category::query()
+                        ->select('name')
+                        ->whereColumn('categories.id', 'transactions.category_id'),
+                    $direction,
+                ),
+            'summary' => $query->orderByRaw(
+                "COALESCE(merchant_name, description, memo, '') {$direction}",
+            ),
+            default => null,
+        };
+
+        $query
+            ->orderByDesc('transaction_date')
+            ->orderByDesc('id');
     }
 }

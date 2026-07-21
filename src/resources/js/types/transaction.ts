@@ -93,6 +93,9 @@ export type TransactionFilters = {
     keyword: string;
     is_confirmed: string;
     calculation_target: 'all' | 'included' | 'excluded';
+    sort: 'date' | 'amount' | 'account' | 'category' | 'summary';
+    direction: 'asc' | 'desc';
+    filter_panel: 'expanded' | 'collapsed';
 };
 
 export type PaginationLink = {

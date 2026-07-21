@@ -121,6 +121,7 @@ export default function MonthlyReportSection({
                     href={route('transactions.index', {
                         ...range,
                         calculation_target: 'all',
+                        filter_panel: 'collapsed',
                     })}
                     className="inline-flex rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-medium text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-50"
                 >
@@ -440,6 +441,8 @@ export default function MonthlyReportSection({
                                                                             currency,
                                                                             calculation_target:
                                                                                 'included',
+                                                                            filter_panel:
+                                                                                'collapsed',
                                                                             keyword:
                                                                                 merchant.keyword,
                                                                         },
@@ -474,6 +477,7 @@ export default function MonthlyReportSection({
                                 ...range,
                                 category_state: 'uncategorized',
                                 calculation_target: 'included',
+                                filter_panel: 'collapsed',
                             })}
                             className="rounded-xl bg-amber-50 p-3 transition hover:bg-amber-100"
                         >
@@ -491,6 +495,7 @@ export default function MonthlyReportSection({
                                 ...range,
                                 is_confirmed: 0,
                                 calculation_target: 'all',
+                                filter_panel: 'collapsed',
                             })}
                             className="rounded-xl bg-rose-50 p-3 transition hover:bg-rose-100"
                         >

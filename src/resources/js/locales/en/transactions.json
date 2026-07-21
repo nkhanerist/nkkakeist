@@ -28,7 +28,10 @@
         "cancel": "Cancel",
         "backToList": "Back to Transactions",
         "reset": "Reset",
-        "filter": "Apply Filters"
+        "filter": "Apply Filters",
+        "clearAll": "Clear All",
+        "showFilters": "Change Filters",
+        "hideFilters": "Hide Filters"
     },
     "filters": {
         "dateFrom": "From",
@@ -43,6 +46,36 @@
         "type": "Type",
         "confirmation": "Confirmation Status",
         "calculationTarget": "Reporting Status"
+    },
+    "activeFilters": {
+        "title": "Current View",
+        "resultCount": "{{count}} transactions",
+        "allTransactions": "All transactions",
+        "dateRange": "{{from}} to {{to}}",
+        "dateFrom": "From {{date}}",
+        "dateTo": "Through {{date}}",
+        "account": "Account: {{value}}",
+        "category": "Category: {{value}}",
+        "currency": "Currency: {{value}}",
+        "type": "Type: {{value}}",
+        "keyword": "Keyword: {{value}}",
+        "removeLabel": "Remove {{label}}"
+    },
+    "sorting": {
+        "label": "Sort",
+        "amountCurrencyHint": "When multiple currencies are shown, transactions are grouped by currency before sorting by amount.",
+        "options": {
+            "dateDesc": "Date (Newest First)",
+            "dateAsc": "Date (Oldest First)",
+            "amountDesc": "Amount by Currency (High to Low)",
+            "amountAsc": "Amount by Currency (Low to High)",
+            "accountAsc": "Account (A–Z)",
+            "accountDesc": "Account (Z–A)",
+            "categoryAsc": "Category (A–Z)",
+            "categoryDesc": "Category (Z–A)",
+            "summaryAsc": "Description or Merchant (A–Z)",
+            "summaryDesc": "Description or Merchant (Z–A)"
+        }
     },
     "options": {
         "all": "All",

@@ -9,9 +9,60 @@ import {
     TransactionTypeOption,
 } from '@/types/transaction';
 import { Link, useForm, router } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { formatMoney } from '@/utils/currency';
 import { useTranslation } from 'react-i18next';
+
+type TransactionSortKey = TransactionFilters['sort'];
+type TransactionSortDirection = TransactionFilters['direction'];
+
+type SortableHeaderProps = {
+    label: string;
+    sortKey: TransactionSortKey;
+    currentSort: TransactionSortKey;
+    currentDirection: TransactionSortDirection;
+    onSort: (sort: TransactionSortKey) => void;
+    title?: string;
+};
+
+function SortableHeader({
+    label,
+    sortKey,
+    currentSort,
+    currentDirection,
+    onSort,
+    title,
+}: SortableHeaderProps) {
+    const active = currentSort === sortKey;
+
+    return (
+        <th
+            className="px-4 py-3 text-left font-semibold text-slate-600"
+            aria-sort={
+                active
+                    ? currentDirection === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                    : 'none'
+            }
+        >
+            <button
+                type="button"
+                onClick={() => onSort(sortKey)}
+                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm text-left transition hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                title={title}
+            >
+                <span>{label}</span>
+                <span
+                    className={active ? 'text-indigo-600' : 'text-slate-300'}
+                    aria-hidden="true"
+                >
+                    {active ? (currentDirection === 'asc' ? '↑' : '↓') : '↕'}
+                </span>
+            </button>
+        </th>
+    );
+}
 
 type IndexProps = {
     transactions: PaginatedTransactions;
@@ -31,6 +82,9 @@ export default function Index({
     currencyOptions,
 }: IndexProps) {
     const { t } = useTranslation('transactions');
+    const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(
+        filters.filter_panel !== 'collapsed',
+    );
     const { data, setData, get, processing } = useForm<TransactionFilters>({
         date_from: filters.date_from ?? '',
         date_to: filters.date_to ?? '',
@@ -42,7 +96,149 @@ export default function Index({
         keyword: filters.keyword ?? '',
         is_confirmed: filters.is_confirmed ?? '',
         calculation_target: filters.calculation_target ?? 'all',
+        sort: filters.sort ?? 'date',
+        direction: filters.direction ?? 'desc',
+        filter_panel: filters.filter_panel ?? 'expanded',
     });
+
+    useEffect(() => {
+        setIsFilterPanelOpen(filters.filter_panel !== 'collapsed');
+        setData({
+            date_from: filters.date_from ?? '',
+            date_to: filters.date_to ?? '',
+            account_id: filters.account_id ?? '',
+            category_id: filters.category_id ?? '',
+            category_state: filters.category_state ?? 'all',
+            currency: filters.currency ?? '',
+            type: filters.type ?? '',
+            keyword: filters.keyword ?? '',
+            is_confirmed: filters.is_confirmed ?? '',
+            calculation_target: filters.calculation_target ?? 'all',
+            sort: filters.sort ?? 'date',
+            direction: filters.direction ?? 'desc',
+            filter_panel: filters.filter_panel ?? 'expanded',
+        });
+    }, [filters]);
+
+    const activeFilters = useMemo(() => {
+        const items: Array<{
+            key: string;
+            label: string;
+            clear: Partial<TransactionFilters>;
+        }> = [];
+
+        if (filters.date_from !== '' || filters.date_to !== '') {
+            const label =
+                filters.date_from !== '' && filters.date_to !== ''
+                    ? t('activeFilters.dateRange', {
+                          from: filters.date_from,
+                          to: filters.date_to,
+                      })
+                    : filters.date_from !== ''
+                      ? t('activeFilters.dateFrom', {
+                            date: filters.date_from,
+                        })
+                      : t('activeFilters.dateTo', { date: filters.date_to });
+
+            items.push({
+                key: 'date',
+                label,
+                clear: { date_from: '', date_to: '' },
+            });
+        }
+
+        if (filters.account_id !== '') {
+            const account = accountOptions.find(
+                (option) => String(option.id) === filters.account_id,
+            );
+            items.push({
+                key: 'account',
+                label: t('activeFilters.account', {
+                    value: account?.name ?? filters.account_id,
+                }),
+                clear: { account_id: '' },
+            });
+        }
+
+        if (filters.category_id !== '') {
+            const category = categoryOptions.find(
+                (option) => String(option.id) === filters.category_id,
+            );
+            items.push({
+                key: 'category',
+                label: t('activeFilters.category', {
+                    value: category?.name ?? filters.category_id,
+                }),
+                clear: { category_id: '', category_state: 'all' },
+            });
+        } else if (filters.category_state !== 'all') {
+            items.push({
+                key: 'category_state',
+                label:
+                    filters.category_state === 'categorized'
+                        ? t('options.categorized')
+                        : t('options.uncategorized'),
+                clear: { category_state: 'all' },
+            });
+        }
+
+        if (filters.currency !== '') {
+            items.push({
+                key: 'currency',
+                label: t('activeFilters.currency', {
+                    value: filters.currency,
+                }),
+                clear: { currency: '' },
+            });
+        }
+
+        if (filters.type !== '') {
+            const type = typeOptions.find(
+                (option) => option.value === filters.type,
+            );
+            items.push({
+                key: 'type',
+                label: t('activeFilters.type', {
+                    value: type?.label ?? filters.type,
+                }),
+                clear: { type: '' },
+            });
+        }
+
+        if (filters.keyword !== '') {
+            items.push({
+                key: 'keyword',
+                label: t('activeFilters.keyword', {
+                    value: filters.keyword,
+                }),
+                clear: { keyword: '' },
+            });
+        }
+
+        if (filters.is_confirmed !== '') {
+            items.push({
+                key: 'confirmation',
+                label:
+                    filters.is_confirmed === '1'
+                        ? t('options.confirmed')
+                        : t('options.unconfirmed'),
+                clear: { is_confirmed: '' },
+            });
+        }
+
+        if (filters.calculation_target !== 'all') {
+            items.push({
+                key: 'calculation_target',
+                label:
+                    filters.calculation_target === 'included'
+                        ? t('options.included')
+                        : t('options.excluded'),
+                clear: { calculation_target: 'all' },
+            });
+        }
+
+        return items;
+    }, [accountOptions, categoryOptions, filters, t, typeOptions]);
 
     const submitFilters = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -53,7 +249,62 @@ export default function Index({
         });
     };
 
+    const navigateWithAppliedFilters = (
+        overrides: Partial<TransactionFilters>,
+    ) => {
+        router.get(
+            route('transactions.index'),
+            {
+                ...filters,
+                filter_panel: isFilterPanelOpen ? 'expanded' : 'collapsed',
+                ...overrides,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            },
+        );
+    };
+
+    const toggleFilterPanel = () => {
+        const nextOpen = !isFilterPanelOpen;
+
+        setIsFilterPanelOpen(nextOpen);
+        setData('filter_panel', nextOpen ? 'expanded' : 'collapsed');
+        navigateWithAppliedFilters({
+            filter_panel: nextOpen ? 'expanded' : 'collapsed',
+        });
+    };
+
+    const removeFilter = (clear: Partial<TransactionFilters>) => {
+        navigateWithAppliedFilters(clear);
+    };
+
+    const changeSort = (sort: TransactionSortKey) => {
+        const direction: TransactionSortDirection =
+            filters.sort === sort
+                ? filters.direction === 'asc'
+                    ? 'desc'
+                    : 'asc'
+                : sort === 'date' || sort === 'amount'
+                  ? 'desc'
+                  : 'asc';
+
+        navigateWithAppliedFilters({ sort, direction });
+    };
+
+    const selectSort = (value: string) => {
+        const [sort, direction] = value.split(':') as [
+            TransactionSortKey,
+            TransactionSortDirection,
+        ];
+
+        navigateWithAppliedFilters({ sort, direction });
+    };
+
     const resetFilters = () => {
+        setIsFilterPanelOpen(true);
         router.get(
             route('transactions.index'),
             {
@@ -67,6 +318,9 @@ export default function Index({
                 keyword: '',
                 is_confirmed: '',
                 calculation_target: 'all',
+                sort: filters.sort,
+                direction: filters.direction,
+                filter_panel: 'expanded',
             },
             {
                 preserveState: true,
@@ -103,10 +357,82 @@ export default function Index({
                     </Link>
                 </div>
 
-                <form
-                    onSubmit={submitFilters}
-                    className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 md:grid-cols-3"
-                >
+                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <p className="font-semibold text-slate-900">
+                                {t('activeFilters.title')}
+                            </p>
+                            <p className="mt-1 text-sm text-slate-500">
+                                {t('activeFilters.resultCount', {
+                                    count: transactions.total,
+                                })}
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {activeFilters.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={resetFilters}
+                                    className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                >
+                                    {t('actions.clearAll')}
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={toggleFilterPanel}
+                                aria-expanded={isFilterPanelOpen}
+                                aria-controls="transaction-filter-panel"
+                                className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            >
+                                {isFilterPanelOpen
+                                    ? t('actions.hideFilters')
+                                    : t('actions.showFilters')}
+                                <span aria-hidden="true">
+                                    {isFilterPanelOpen ? '↑' : '↓'}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {activeFilters.length === 0 ? (
+                            <span className="inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-600">
+                                {t('activeFilters.allTransactions')}
+                            </span>
+                        ) : (
+                            activeFilters.map((filter) => (
+                                <span
+                                    key={filter.key}
+                                    className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 py-1 pl-3 pr-1.5 text-sm font-medium text-indigo-800"
+                                >
+                                    {filter.label}
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            removeFilter(filter.clear)
+                                        }
+                                        aria-label={t(
+                                            'activeFilters.removeLabel',
+                                            { label: filter.label },
+                                        )}
+                                        className="inline-flex h-6 w-6 items-center justify-center rounded-full text-indigo-500 transition hover:bg-indigo-100 hover:text-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    >
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </span>
+                            ))
+                        )}
+                    </div>
+                </section>
+
+                {isFilterPanelOpen && (
+                    <form
+                        id="transaction-filter-panel"
+                        onSubmit={submitFilters}
+                        className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 md:grid-cols-3"
+                    >
                     <div>
                         <label
                             htmlFor="date_from"
@@ -372,33 +698,101 @@ export default function Index({
                             {t('actions.filter')}
                         </button>
                     </div>
-                </form>
+                    </form>
+                )}
+
+                <div className="flex items-center justify-end md:hidden">
+                    <label
+                        htmlFor="transaction-sort"
+                        className="mr-2 text-sm font-medium text-slate-600"
+                    >
+                        {t('sorting.label')}
+                    </label>
+                    <select
+                        id="transaction-sort"
+                        value={`${filters.sort}:${filters.direction}`}
+                        onChange={(event) => selectSort(event.target.value)}
+                        className="rounded-md border-slate-300 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                        <option value="date:desc">
+                            {t('sorting.options.dateDesc')}
+                        </option>
+                        <option value="date:asc">
+                            {t('sorting.options.dateAsc')}
+                        </option>
+                        <option value="amount:desc">
+                            {t('sorting.options.amountDesc')}
+                        </option>
+                        <option value="amount:asc">
+                            {t('sorting.options.amountAsc')}
+                        </option>
+                        <option value="account:asc">
+                            {t('sorting.options.accountAsc')}
+                        </option>
+                        <option value="account:desc">
+                            {t('sorting.options.accountDesc')}
+                        </option>
+                        <option value="category:asc">
+                            {t('sorting.options.categoryAsc')}
+                        </option>
+                        <option value="category:desc">
+                            {t('sorting.options.categoryDesc')}
+                        </option>
+                        <option value="summary:asc">
+                            {t('sorting.options.summaryAsc')}
+                        </option>
+                        <option value="summary:desc">
+                            {t('sorting.options.summaryDesc')}
+                        </option>
+                    </select>
+                </div>
 
                 <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                    <table className="min-w-full divide-y divide-slate-200 text-sm">
+                    <table className="min-w-[1280px] divide-y divide-slate-200 text-sm">
                         <thead className="bg-slate-50">
                             <tr>
-                                <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    {t('table.date')}
-                                </th>
+                                <SortableHeader
+                                    label={t('table.date')}
+                                    sortKey="date"
+                                    currentSort={filters.sort}
+                                    currentDirection={filters.direction}
+                                    onSort={changeSort}
+                                />
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
                                     {t('table.type')}
                                 </th>
-                                <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    {t('table.account')}
-                                </th>
-                                <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    {t('table.amount')}
-                                </th>
-                                <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    {t('table.category')}
-                                </th>
+                                <SortableHeader
+                                    label={t('table.account')}
+                                    sortKey="account"
+                                    currentSort={filters.sort}
+                                    currentDirection={filters.direction}
+                                    onSort={changeSort}
+                                />
+                                <SortableHeader
+                                    label={t('table.amount')}
+                                    sortKey="amount"
+                                    currentSort={filters.sort}
+                                    currentDirection={filters.direction}
+                                    onSort={changeSort}
+                                    title={t('sorting.amountCurrencyHint')}
+                                />
+                                <SortableHeader
+                                    label={t('table.category')}
+                                    sortKey="category"
+                                    currentSort={filters.sort}
+                                    currentDirection={filters.direction}
+                                    onSort={changeSort}
+                                />
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
                                     {t('table.subcategory')}
                                 </th>
-                                <th className="px-4 py-3 text-left font-semibold text-slate-600">
-                                    {t('table.summary')}
-                                </th>
+                                <SortableHeader
+                                    label={t('table.summary')}
+                                    sortKey="summary"
+                                    currentSort={filters.sort}
+                                    currentDirection={filters.direction}
+                                    onSort={changeSort}
+                                />
                                 <th className="px-4 py-3 text-left font-semibold text-slate-600">
                                     {t('table.confirmation')}
                                 </th>
@@ -423,7 +817,7 @@ export default function Index({
                             ) : (
                                 transactions.data.map((transaction) => (
                                     <tr key={transaction.id}>
-                                        <td className="px-4 py-3 text-slate-700">
+                                        <td className="whitespace-nowrap px-4 py-3 text-slate-700">
                                             <Link
                                                 href={route(
                                                     'transactions.show',
@@ -434,10 +828,10 @@ export default function Index({
                                                 {transaction.transaction_date}
                                             </Link>
                                         </td>
-                                        <td className="px-4 py-3 text-slate-700">
+                                        <td className="whitespace-nowrap px-4 py-3 text-slate-700">
                                             {transaction.type_label}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-700">
+                                        <td className="whitespace-nowrap px-4 py-3 text-slate-700">
                                             {transaction.account?.name ?? '-'}
                                             {transaction.transfer_account && (
                                                 <span className="block text-xs text-slate-500">
@@ -450,7 +844,7 @@ export default function Index({
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-700">
+                                        <td className="whitespace-nowrap px-4 py-3 text-slate-700">
                                             {formatMoney(
                                                 transaction.amount,
                                                 transaction.currency,
@@ -470,7 +864,7 @@ export default function Index({
                                                 transaction.memo ??
                                                 '-'}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-700">
+                                        <td className="whitespace-nowrap px-4 py-3 text-slate-700">
                                             <span
                                                 className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
                                                     transaction.is_confirmed
@@ -483,7 +877,7 @@ export default function Index({
                                                     : t('status.unconfirmed')}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-slate-700">
+                                        <td className="whitespace-nowrap px-4 py-3 text-slate-700">
                                             <span
                                                 className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
                                                     transaction.is_calculation_target

@@ -739,4 +739,109 @@ class TransactionCrudTest extends TestCase
                 ->where('filters.type', 'transfer')
                 ->where('filters.calculation_target', 'excluded'));
     }
+
+    public function test_transactions_index_sorts_with_an_allowlisted_stable_order(): void
+    {
+        $user = User::factory()->create();
+        $zebraAccount = Account::factory()->for($user)->create(['name' => 'Zebra Account']);
+        $alphaAccount = Account::factory()->for($user)->create(['name' => 'Alpha Account']);
+        $travelCategory = Category::factory()->for($user)->create([
+            'name' => 'Travel',
+            'type' => 'expense',
+        ]);
+        $foodCategory = Category::factory()->for($user)->create([
+            'name' => 'Food',
+            'type' => 'expense',
+        ]);
+
+        $zulu = Transaction::factory()
+            ->forAccount($zebraAccount)
+            ->forCategory($travelCategory)
+            ->create([
+                'user_id' => $user->id,
+                'transaction_date' => '2026-04-01',
+                'amount' => '300.00',
+                'merchant_name' => 'Zulu Store',
+            ]);
+        $alpha = Transaction::factory()
+            ->forAccount($alphaAccount)
+            ->forCategory($foodCategory)
+            ->create([
+                'user_id' => $user->id,
+                'transaction_date' => '2026-04-03',
+                'amount' => '100.00',
+                'merchant_name' => 'Alpha Store',
+            ]);
+        $bravo = Transaction::factory()
+            ->forAccount($zebraAccount)
+            ->create([
+                'user_id' => $user->id,
+                'category_id' => null,
+                'transaction_date' => '2026-04-02',
+                'amount' => '200.00',
+                'merchant_name' => 'Bravo Store',
+            ]);
+
+        $this->actingAs($user)
+            ->get(route('transactions.index', [
+                'sort' => 'amount',
+                'direction' => 'asc',
+                'filter_panel' => 'collapsed',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('transactions.data.0.id', $alpha->id)
+                ->where('transactions.data.1.id', $bravo->id)
+                ->where('transactions.data.2.id', $zulu->id)
+                ->where('filters.sort', 'amount')
+                ->where('filters.direction', 'asc')
+                ->where('filters.filter_panel', 'collapsed'));
+
+        $this->actingAs($user)
+            ->get(route('transactions.index', [
+                'sort' => 'account',
+                'direction' => 'asc',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('transactions.data.0.id', $alpha->id)
+                ->where('transactions.data.1.id', $bravo->id)
+                ->where('transactions.data.2.id', $zulu->id));
+
+        $this->actingAs($user)
+            ->get(route('transactions.index', [
+                'sort' => 'category',
+                'direction' => 'asc',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('transactions.data.0.id', $alpha->id)
+                ->where('transactions.data.1.id', $zulu->id)
+                ->where('transactions.data.2.id', $bravo->id));
+
+        $this->actingAs($user)
+            ->get(route('transactions.index', [
+                'sort' => 'summary',
+                'direction' => 'desc',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('transactions.data.0.id', $zulu->id)
+                ->where('transactions.data.1.id', $bravo->id)
+                ->where('transactions.data.2.id', $alpha->id));
+
+        $this->actingAs($user)
+            ->get(route('transactions.index', [
+                'sort' => 'not-a-column',
+                'direction' => 'sideways',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('transactions.data.0.id', $alpha->id)
+                ->where('transactions.data.1.id', $bravo->id)
+                ->where('transactions.data.2.id', $zulu->id)
+                ->where('filters.sort', 'date')
+                ->where('filters.direction', 'desc')
+                ->where('filters.filter_panel', 'expanded'));
+    }
 }
